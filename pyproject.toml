@@ -1,0 +1,67 @@
+[project]
+name = "pyepri"
+version = "1.0.0"
+description = "A CPU & GPU compatible Python package for Electron Paramagnetic Resonance Imaging"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+authors = [
+  {name="Rémy Abergel", email="Remy.Abergel@math.cnrs.fr"},
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pyvista",
+    "finufft",
+    "jupyter",
+]
+
+[project.urls]
+Homepage = "https://github.com/remy-abergel/pyepri"
+Issues = "https://github.com/remy-abergel/pyepri/issues"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+cupy = [
+    "cupy",
+    "cudnn",
+    "cutensor",
+    "nccl",
+    "cufinufft",
+]
+torch = [
+    "torch>=1.6",
+    "torchinterp1d",
+    "cufinufft",
+]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+doc = [
+    "myst_parser",
+    "sphinx-rtd-theme >= 0.4.2",
+    "sphinx-autoapi",
+#    "myst_nb",
+#    "memory_profiler",
+    "sphinx-gallery",
+    "sphinx-tabs",
+    "sphinx-design",
+    "pyvista[all,trame]",
+    "memory_profiler",
+    "ipywidgets",
+    "ipyvtklink",
+    "sphinxcontrib-bibtex", 
+]
+
