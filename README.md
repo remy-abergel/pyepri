@@ -13,7 +13,7 @@ code, don't hesitate to open a
 
 ## Installation
 
-Assuming you have a compatible system with `python3` and `pip`
+Assuming you have a compatible system with `python3`, `pip` and `git`
 installed, the following steps will checkout current code release,
 create a virtual environment, and install `pyepri`.
 
@@ -32,9 +32,9 @@ source ~/.venv/pyepri/bin/activate
 
 ##########################################################
 # Install the `pyepri` package from the checked out code #
-# with the additional `dev` extension                    #
+# (do not forget the . at the end of the command line)   #
 ##########################################################
-pip install -e ".[dev]"
+pip install -e .
 
 ################################################################
 # Optionally (and advised if you have a GPU device with CUDA   #
@@ -44,7 +44,22 @@ pip install -e ".[dev]"
 pip install -e ".[torch]" # for enabling `torch` backend support
 pip install -e ".[cupy]" # for enabling `cupy` backend support
 
+################################################################
+# If you want to compile the documentation by yourself, you    #
+# must install the [doc] optional dependencies of the package, #
+# compilation instructions are provided next                   #
+################################################################
+pip install -e ".[doc]"
+make -C docs html
+firefox docs/_build/html/index.html # open the built documentation 
+                                    # (you can replace firefox by 
+									# any other browser)
 ```
+
+Because this installation was done in *editable* mode (thanks to the
+``-e`` option of ``pip``), any further update of the repository (e.g.,
+using the syncing commang ``git pull``) will also update the current
+installation of the package.
 
 ## License
 

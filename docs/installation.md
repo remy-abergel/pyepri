@@ -60,6 +60,17 @@ pip install -e .
 ################################################################
 pip install -e ".[torch]" # for enabling `torch` backend support
 pip install -e ".[cupy]" # for enabling `cupy` backend support
+
+################################################################
+# If you want to compile the documentation by yourself, you    #
+# must install the [doc] optional dependencies of the package, #
+# compilation instructions are provided next                   #
+################################################################
+pip install -e ".[doc]"
+make -C docs html
+firefox docs/_build/html/index.html # open the built documentation 
+                                    # (you can replace firefox by 
+									# any other browser)
 ```
 
 Because this installation was done in *editable* mode (thanks to the
