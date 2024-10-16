@@ -49,11 +49,9 @@ pip install -e ".[cupy]" # for enabling `cupy` backend support
 # must install the [doc] optional dependencies of the package, #
 # compilation instructions are provided next                   #
 ################################################################
-pip install -e ".[doc]"
-make -C docs html
-firefox docs/_build/html/index.html # open the built documentation 
-                                    # (you can replace firefox by 
-									# any other browser)
+pip install -e ".[doc]" # install optional dependencies
+make -C docs html # build the documentation in html format
+firefox docs/_build/html/index.html # open the built documentation you can replace firefox by any other browser)
 ```
 
 Because this installation was done in *editable* mode (thanks to the
