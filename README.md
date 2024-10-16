@@ -4,7 +4,7 @@ Advanced Algorithms and Low-Level Operators for Electron Paramagnetic
 Resonance Imaging.
 
 **Package documentation and tutorials are available
-[here](https://pyepri.pages.math.cnrs.fr/doc/)**.
+[here](https://pyepri.math.cnrs.fr/)**.
 
 If you have any comments, questions, or suggestions regarding this
 code, don't hesitate to open a

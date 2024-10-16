@@ -39,6 +39,6 @@ projects ([Numpy](https://numpy.org/), [Cupy](https://cupy.dev/),
 Many thanks also to [Plateforme en Ligne
 Mathrice](https://services.math.cnrs.fr/) for hosting the
 [documentation of the PyEPRI
-package](https://pyepri.pages.math.cnrs.fr/doc/), and more generally
+package](https://pyepri.math.cnrs.fr/), and more generally
 for all the great digital services they offer to the French
 mathematical community.
