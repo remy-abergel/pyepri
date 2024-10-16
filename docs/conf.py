@@ -28,7 +28,7 @@ extensions = [
     "autoapi.extension",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
-#    "sphinx.ext.viewcode", # uncomment to provide link toward source code
+    "sphinx.ext.viewcode", # provide link toward source code
     "sphinx_gallery.gen_gallery",
 #    "sphinx_tabs.tabs",
 #    "sphinx_design",
