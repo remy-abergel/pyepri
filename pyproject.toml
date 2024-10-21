@@ -1,6 +1,6 @@
 [project]
 name = "pyepri"
-version = "1.0.0"
+version = "1.0.1"
 description = "A CPU & GPU compatible Python package for Electron Paramagnetic Resonance Imaging"
 readme = "README.md"
 license = {file = "LICENSE"}

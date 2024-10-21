@@ -35,8 +35,8 @@ pip install pyepri
 # installed), you can enable `torch` and/or `cupy` backends by #
 # executing the following commands                             #
 ################################################################
-pip install "pyepri.[torch]" # for enabling `torch` backend support
-pip install "pyepri.[cupy]" # for enabling `cupy` backend support
+pip install pyepri[torch] # for enabling `torch` backend support
+pip install pyepri[cupy] # for enabling `cupy` backend support
 ```
 
 ### Install latest version from sources
