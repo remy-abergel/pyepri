@@ -62,10 +62,10 @@ backend = backends.create_numpy_backend()
 # select ``float64`` precision by setting ``dtype='float64'``).
 #
 dtype = 'float32'
-path_proj = datasets.get_path('phalanx-20220203-proj.DSC') # you can replace here by your own dataset (e.g., filename_proj = '~/my_dataset1.DSC')
+path_proj = datasets.get_path('phalanx-20220203-proj.DSC') # you can replace here by your own dataset (e.g., path_proj = '~/my_dataset1.DSC')
 path_h = datasets.get_path('phalanx-20220203-h.DSC') # same comment
-B, proj, param = io.read_bruker_best3_dataset(path_proj, dtype=dtype, backend=backend) # projections
-_, h, _ = io.read_bruker_best3_dataset(path_h, dtype=dtype, backend=backend) # reference spectrum
+B, proj, param = io.read_bruker_bes3t_dataset(path_proj, dtype=dtype, backend=backend) # projections
+_, h, _ = io.read_bruker_bes3t_dataset(path_h, dtype=dtype, backend=backend) # reference spectrum
 fgrad = param['FGRAD'] # coordinates of the field gradient vectors for each projection
 
 # %%
@@ -95,7 +95,7 @@ fgrad = param['FGRAD'] # coordinates of the field gradient vectors for each proj
 #
 # **Remark**: in this example, the loaded arrays ``B``, ``proj`` and
 # ``h`` have type ``numpy.ndarray`` because a numpy backend was passed
-# to the :py:func:`pyepri.io.read_bruker_best3_dataset` function when
+# to the :py:func:`pyepri.io.read_bruker_bes3t_dataset` function when
 # loading the data). With a different backend, different type of
 # arrays will be loaded (as explained in the :ref:`tutorial_backend`
 # tutorial).
@@ -153,10 +153,10 @@ _ = plt.title('projections (proj)')
 # ``data`` folder of the PyEPRI package.
 #
 fname = 'fusillo-20091002'
-path_proj = datasets.get_path('fusillo-20091002-proj.DSC') # you can replace here by your own dataset (e.g., filename_proj = '~/my_dataset1.DSC')
+path_proj = datasets.get_path('fusillo-20091002-proj.DSC') # you can replace here by your own dataset (e.g., path_proj = '~/my_dataset1.DSC')
 path_h = datasets.get_path('fusillo-20091002-h.DSC') # same comment
-B, proj, param = io.read_bruker_best3_dataset(path_proj, dtype=dtype, backend=backend) # projections
-_, h, _ = io.read_bruker_best3_dataset(path_h, dtype=dtype, backend=backend) # reference spectrum
+B, proj, param = io.read_bruker_bes3t_dataset(path_proj, dtype=dtype, backend=backend) # projections
+_, h, _ = io.read_bruker_bes3t_dataset(path_h, dtype=dtype, backend=backend) # reference spectrum
 fgrad = param['FGRAD'] # coordinates of the field gradient vectors for each projection
 
 #--------------------------------#
@@ -210,7 +210,7 @@ _ = plt.title('projections (proj)')
 # vectors) stored in the ``datasets`` folder of the PyEPRI package.
 #
 fname = 'phalanx-20220203'
-path_proj = datasets.get_path('phalanx-20220203-proj.txt') # you can replace here by your own dataset (e.g., filename_proj = '~/my_dataset1.txt')
+path_proj = datasets.get_path('phalanx-20220203-proj.txt') # you can replace here by your own dataset (e.g., path_proj = '~/my_dataset1.txt')
 path_B = datasets.get_path('phalanx-20220203-B.txt') # same comment
 path_fgrad = datasets.get_path('phalanx-20220203-fgrad.txt') # same comment
 path_h = datasets.get_path('phalanx-20220203-h.txt') # same comment

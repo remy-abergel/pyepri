@@ -9,7 +9,7 @@ below:
   ``read_description_file()`` function coded into the file
   ``deerload.py`` of the DIVE package;
 
-+ :py:func:`read_bruker_best3_dataset` was adapted from the
++ :py:func:`read_bruker_bes3t_dataset` was adapted from the
   ``deerload()`` function of coded ``deerload.py`` of the DIVE
   package.
 
@@ -136,7 +136,7 @@ def read_bruker_description_file(name: str) -> dict:
     
     return Parameters
 
-def read_bruker_best3_dataset(name, squeeze=True, stack=True, dtype=None, backend=None):
+def read_bruker_bes3t_dataset(name, squeeze=True, stack=True, dtype=None, backend=None):
     """Read Bruker data from a .DSC or .DTA file.
     
     Read files in BES3T format (Bruker EPR Standard for Spectrum
@@ -177,7 +177,7 @@ def read_bruker_best3_dataset(name, squeeze=True, stack=True, dtype=None, backen
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
         
-        When backend is None, a numpy backend is instantiated.x
+        When backend is None, a numpy backend is instantiated.
 
     Returns
     -------
@@ -348,3 +348,5 @@ def read_bruker_best3_dataset(name, squeeze=True, stack=True, dtype=None, backen
             parameters['FGRAD'] = backend.cast(parameters['FGRAD'], dtype)
                 
     return B, data, parameters
+
+read_bruker_best3_dataset = read_bruker_bes3t_dataset # for backward compatibility (typo in function name introduced in v1.0.0)
