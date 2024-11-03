@@ -145,7 +145,6 @@ html_show_sourcelink = False
 # other configurations
 html_show_sphinx = False
 
-
 # -- PyVista configuration ---------------------------------------------------
 pyvista.OFF_SCREEN = True  # Not necessary - simply an insurance policy
 pyvista.set_jupyter_backend(None)

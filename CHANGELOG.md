@@ -2,7 +2,18 @@
 
 <!--next-version-placeholder-->
 
-## v1.0.1 (October 21, 2024)
+## v1.0.1 (under development)
+
+### code
+
+- fixed typo in function name (read_bruker_best3_dataset instead of
+  read_bruker_bes3t_dataset), old name was kept available for backward
+  compatibility
+
+- fixed sphinx rendering issues in various function headers in
+  [multisrc.py](src/pyepri/multisrc.py)
+
+### documentation
 
 - fixed pip installation instructions in [README.md](README.md)
 

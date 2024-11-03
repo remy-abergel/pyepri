@@ -160,12 +160,12 @@ def proj2d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
         [B-unit] (can be Gauss (G), millitesla (mT), ...), to use to
         compute the projections.
         
-    fft_h : sequence of sequence of complex array_like (with type
-        `backend.cls`) Contains the discrete Fourier coefficients of
-        the reference spectra (sampled over the grid ``B``) of each
-        individual source (`j`) for each experimental setup
-        (`i`). More precisely, ``fft_h[i][j]`` is a monodimensional
-        array corresponding to the FFT of ``h[i][j]`` (the reference
+    fft_h : sequence of sequence of complex array_like (with type `backend.cls`) 
+        Contains the discrete Fourier coefficients of the reference
+        spectra (sampled over the grid ``B``) of each individual
+        source (`j`) for each experimental setup (`i`). More
+        precisely, ``fft_h[i][j]`` is a monodimensional array
+        corresponding to the FFT of ``h[i][j]`` (the reference
         spectrum of the `j-th` source in the `i-th` experimental
         setting).
         
@@ -210,14 +210,14 @@ def proj2d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
     Return
     ------
     
-    fft_proj : sequence of complex array_like (with type
-        `backend.cls`) A sequence with length `L` containing the
-        discrete Fourier coefficients of the EPR projections
-        synthesized for each experimental setting. More precisely,
-        ``fft_proj[i]`` is an array with shape ``(fgrad[i].shape[1],
-        len(B))`` and ``fft_proj[i][k,:]`` corresponds the FFT of the
-        EPR projection of the mixture `u` with field gradient
-        ``fgrad[i][:,k]`` sampled over the grid `B`.
+    fft_proj : sequence of complex array_like (with type `backend.cls`)
+        A sequence with length `L` containing the discrete Fourier
+        coefficients of the EPR projections synthesized for each
+        experimental setting. More precisely, ``fft_proj[i]`` is an
+        array with shape ``(fgrad[i].shape[1], len(B))`` and
+        ``fft_proj[i][k,:]`` corresponds the FFT of the EPR projection
+        of the mixture `u` with field gradient ``fgrad[i][:,k]``
+        sampled over the grid `B`.
     
     
     See also
@@ -296,14 +296,14 @@ def proj2d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
         [B-unit] (can be Gauss (G), millitesla (mT), ...), to use to
         compute the projections.
         
-    rfft_h : sequence of sequence of complex array_like (with type
-        `backend.cls`) Contains half of the discrete Fourier
-        coefficients of the reference spectra (sampled over the grid
-        ``B``) of each individual source (`j`) for each experimental
-        setup (`i`). More precisely, ``rfft_h[i][j]`` is a
-        monodimensional array corresponding to the real input FFT
-        (rfft) of ``h[i][j]`` (the reference spectrum of the `j-th`
-        source in the `i-th` experimental setting).
+    rfft_h : sequence of sequence of complex array_like (with type `backend.cls`) 
+        Contains half of the discrete Fourier coefficients of the
+        reference spectra (sampled over the grid ``B``) of each
+        individual source (`j`) for each experimental setup
+        (`i`). More precisely, ``rfft_h[i][j]`` is a monodimensional
+        array corresponding to the real input FFT (rfft) of
+        ``h[i][j]`` (the reference spectrum of the `j-th` source in
+        the `i-th` experimental setting).
         
         When ``L > 1`` and ``len(rfft_h) = 1``, we assume that
         ``rfft_h[i][j] = rfft_h[0][j]``` for all ``i in range(L)`` and
@@ -346,14 +346,14 @@ def proj2d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
     Return
     ------
     
-    rfft_proj : sequence of complex array_like (with type
-        `backend.cls`) A sequence with length `L` containing half of
-        the discrete Fourier coefficients of the EPR projections
-        synthesized for each experimental setting. More precisely,
-        ``rfft_proj[i]`` is an array with shape ``(fgrad[i].shape[1],
-        1+len(B)//2)`` and ``rfft_proj[i][k,:]`` corresponds the real
-        input FFT (rfft) of the EPR projection of the mixture `u` with
-        field gradient ``fgrad[i][:,k]`` sampled over the grid `B`.
+    rfft_proj : sequence of complex array_like (with type `backend.cls`)
+        A sequence with length `L` containing half of the discrete
+        Fourier coefficients of the EPR projections synthesized for
+        each experimental setting. More precisely, ``rfft_proj[i]`` is
+        an array with shape ``(fgrad[i].shape[1], 1+len(B)//2)`` and
+        ``rfft_proj[i][k,:]`` corresponds the real input FFT (rfft) of
+        the EPR projection of the mixture `u` with field gradient
+        ``fgrad[i][:,k]`` sampled over the grid `B`.
     
     
     See also
@@ -553,13 +553,13 @@ def backproj2d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
     Parameters
     ----------
     
-    fft_proj : sequence of complex array_like (with type
-        `backend.cls`) A sequence with length `L` containing the
-        discrete Fourier coefficients of the EPR projections
-        associated to each experimental setup. More precisely,
-        ``fft_proj[i][k,:]`` corresponds to the FFT of the EPR
-        projection of the multisources mixture acquired with field
-        gradient ``fgrad[:,k]`` and `i-th` experimental setup.
+    fft_proj : sequence of complex array_like (with type `backend.cls`)
+        A sequence with length `L` containing the discrete Fourier
+        coefficients of the EPR projections associated to each
+        experimental setup. More precisely, ``fft_proj[i][k,:]``
+        corresponds to the FFT of the EPR projection of the
+        multisources mixture acquired with field gradient
+        ``fgrad[:,k]`` and `i-th` experimental setup.
     
     delta : float
         Pixel size given in a length unit denoted below as
@@ -571,11 +571,11 @@ def backproj2d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
         [B-unit] (can be Gauss (G), millitesla (mT), ...), to use to
         compute the projections.
     
-    fft_h_conj : sequence of sequence of complex array_like (with
-        type `backend.cls`) Contains the conjugated discrete Fourier
-        coefficients of the reference spectra (sampled over the grid
-        ``B``) of each individual source (`j`) for each experimental
-        setup (`i`). More precisely, ``fft_h_conj[i][j]`` is a
+    fft_h_conj : sequence of sequence of complex array_like (with type `backend.cls`)
+        Contains the conjugated discrete Fourier coefficients of the
+        reference spectra (sampled over the grid ``B``) of each
+        individual source (`j`) for each experimental setup
+        (`i`). More precisely, ``fft_h_conj[i][j]`` is a
         monodimensional array corresponding to the conjugate of the
         FFT of ``h[i][j]`` (the reference spectrum of the `j-th`
         source in the `i-th` experimental setting).
@@ -700,14 +700,13 @@ def backproj2d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
     Parameters
     ----------
     
-    rfft_proj : sequence of complex array_like (with type
-        `backend.cls`) A sequence with length `L` containing half of
-        the discrete Fourier coefficients of the EPR projections
-        associated to each experimental setup. More precisely,
-        ``rfft_proj[i][k,:]`` corresponds to the real input FFT (rfft)
-        of the EPR projection of the multisources mixture acquired
-        with field gradient ``fgrad[:,k]`` and `i-th` experimental
-        setup.
+    rfft_proj : sequence of complex array_like (with type `backend.cls`)
+        A sequence with length `L` containing half of the discrete
+        Fourier coefficients of the EPR projections associated to each
+        experimental setup. More precisely, ``rfft_proj[i][k,:]``
+        corresponds to the real input FFT (rfft) of the EPR projection
+        of the multisources mixture acquired with field gradient
+        ``fgrad[:,k]`` and `i-th` experimental setup.
     
     delta : float
         Pixel size given in a length unit denoted below as
@@ -719,15 +718,14 @@ def backproj2d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
         [B-unit] (can be Gauss (G), millitesla (mT), ...), to use to
         compute the projections.
     
-    rfft_h_conj : sequence of sequence of complex array_like (with
-        type `backend.cls`) Contains half of the conjugated discrete
-        Fourier coefficients of the reference spectra (sampled over
-        the grid ``B``) of each individual source (`j`) for each
-        experimental setup (`i`). More precisely,
-        ``rfft_h_conj[i][j]`` is a monodimensional array corresponding
-        to the conjugate of the real input FFT of ``h[i][j]`` (the
-        reference spectrum of the `j-th` source in the `i-th`
-        experimental setting).
+    rfft_h_conj : sequence of sequence of complex array_like (with type `backend.cls`) 
+        Contains half of the conjugated discrete Fourier coefficients
+        of the reference spectra (sampled over the grid ``B``) of each
+        individual source (`j`) for each experimental setup
+        (`i`). More precisely, ``rfft_h_conj[i][j]`` is a
+        monodimensional array corresponding to the conjugate of the
+        real input FFT of ``h[i][j]`` (the reference spectrum of the
+        `j-th` source in the `i-th` experimental setting).
         
         When ``L > 1`` and ``len(rfft_h_conj) = 1``, we assume that
         ``rfft_h_conj[i][j] = rfft_h_conj[0][j]``` for all ``i in
@@ -791,7 +789,7 @@ def backproj2d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
     
     backproj2d
     backproj2d_fft
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1012,9 +1010,9 @@ def apply_2d_toeplitz_kernels(u, rfft2_phi, backend=None, notest=False):
         precisely, ``u[j]`` must be a 2D array corresponding to the
         `j-th` source image of the mixture to be projected.
     
-    rfft2_phi : sequence of sequence of complex array_like (with type
-        `backend.cls`) Sequence of real input FFT of the 2D cross
-        sources Toeplitz kernels computed using
+    rfft2_phi : sequence of sequence of complex array_like (with type `backend.cls`)
+        Sequence of real input FFT of the 2D cross sources Toeplitz
+        kernels computed using
         :py:func:`pyepri.multisrc.compute_2d_toeplitz_kernels`.
     
     backend : <class 'pyepri.backends.Backend'> or None, optional
@@ -1240,12 +1238,12 @@ def proj3d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
         [B-unit] (can be Gauss (G), millitesla (mT), ...), to use to
         compute the projections.
         
-    fft_h : sequence of sequence of complex array_like (with type
-        `backend.cls`) Contains the discrete Fourier coefficients of
-        the reference spectra (sampled over the grid ``B``) of each
-        individual source (`j`) for each experimental setup
-        (`i`). More precisely, ``fft_h[i][j]`` is a monodimensional
-        array corresponding to the FFT of ``h[i][j]`` (the reference
+    fft_h : sequence of sequence of complex array_like (with type `backend.cls`)
+        Contains the discrete Fourier coefficients of the reference
+        spectra (sampled over the grid ``B``) of each individual
+        source (`j`) for each experimental setup (`i`). More
+        precisely, ``fft_h[i][j]`` is a monodimensional array
+        corresponding to the FFT of ``h[i][j]`` (the reference
         spectrum of the `j-th` source in the `i-th` experimental
         setting).
         
@@ -1290,14 +1288,14 @@ def proj3d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
     Return
     ------
     
-    fft_proj : sequence of complex array_like (with type
-        `backend.cls`) A sequence with length `L` containing the
-        discrete Fourier coefficients of the EPR projections
-        synthesized for each experimental setting. More precisely,
-        ``fft_proj[i]`` is an array with shape ``(fgrad[i].shape[1],
-        len(B))`` and ``fft_proj[i][k,:]`` corresponds the FFT of the
-        EPR projection of the mixture `u` with field gradient
-        ``fgrad[i][:,k]`` sampled over the grid `B`.
+    fft_proj : sequence of complex array_like (with type `backend.cls`)
+        A sequence with length `L` containing the discrete Fourier
+        coefficients of the EPR projections synthesized for each
+        experimental setting. More precisely, ``fft_proj[i]`` is an
+        array with shape ``(fgrad[i].shape[1], len(B))`` and
+        ``fft_proj[i][k,:]`` corresponds the FFT of the EPR projection
+        of the mixture `u` with field gradient ``fgrad[i][:,k]``
+        sampled over the grid `B`.
     
     
     See also
@@ -1377,14 +1375,14 @@ def proj3d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
         [B-unit] (can be Gauss (G), millitesla (mT), ...), to use to
         compute the projections.
         
-    rfft_h : sequence of sequence of complex array_like (with type
-        `backend.cls`) Contains half of the discrete Fourier
-        coefficients of the reference spectra (sampled over the grid
-        ``B``) of each individual source (`j`) for each experimental
-        setup (`i`). More precisely, ``rfft_h[i][j]`` is a
-        monodimensional array corresponding to the real input FFT
-        (rfft) of ``h[i][j]`` (the reference spectrum of the `j-th`
-        source in the `i-th` experimental setting).
+    rfft_h : sequence of sequence of complex array_like (with type `backend.cls`)
+        Contains half of the discrete Fourier coefficients of the
+        reference spectra (sampled over the grid ``B``) of each
+        individual source (`j`) for each experimental setup
+        (`i`). More precisely, ``rfft_h[i][j]`` is a monodimensional
+        array corresponding to the real input FFT (rfft) of
+        ``h[i][j]`` (the reference spectrum of the `j-th` source in
+        the `i-th` experimental setting).
         
         When ``L > 1`` and ``len(rfft_h) = 1``, we assume that
         ``rfft_h[i][j] = rfft_h[0][j]``` for all ``i in range(L)`` and
@@ -1427,14 +1425,14 @@ def proj3d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
     Return
     ------
     
-    rfft_proj : sequence of complex array_like (with type
-        `backend.cls`) A sequence with length `L` containing half of
-        the discrete Fourier coefficients of the EPR projections
-        synthesized for each experimental setting. More precisely,
-        ``rfft_proj[i]`` is an array with shape ``(fgrad[i].shape[1],
-        1+len(B)//2)`` and ``rfft_proj[i][k,:]`` corresponds the real
-        input FFT (rfft) of the EPR projection of the mixture `u` with
-        field gradient ``fgrad[i][:,k]`` sampled over the grid `B`.
+    rfft_proj : sequence of complex array_like (with type `backend.cls`)
+        A sequence with length `L` containing half of the discrete
+        Fourier coefficients of the EPR projections synthesized for
+        each experimental setting. More precisely, ``rfft_proj[i]`` is
+        an array with shape ``(fgrad[i].shape[1], 1+len(B)//2)`` and
+        ``rfft_proj[i][k,:]`` corresponds the real input FFT (rfft) of
+        the EPR projection of the mixture `u` with field gradient
+        ``fgrad[i][:,k]`` sampled over the grid `B`.
     
     
     See also
@@ -1635,13 +1633,13 @@ def backproj3d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
     Parameters
     ----------
     
-    fft_proj : sequence of complex array_like (with type
-        `backend.cls`) A sequence with length `L` containing the
-        discrete Fourier coefficients of the EPR projections
-        associated to each experimental setup. More precisely,
-        ``fft_proj[i][k,:]`` corresponds to the FFT of the EPR
-        projection of the multisources mixture acquired with field
-        gradient ``fgrad[:,k]`` and `i-th` experimental setup.
+    fft_proj : sequence of complex array_like (with type `backend.cls`)
+        A sequence with length `L` containing the discrete Fourier
+        coefficients of the EPR projections associated to each
+        experimental setup. More precisely, ``fft_proj[i][k,:]``
+        corresponds to the FFT of the EPR projection of the
+        multisources mixture acquired with field gradient
+        ``fgrad[:,k]`` and `i-th` experimental setup.
     
     delta : float
         Pixel size given in a length unit denoted below as
@@ -1653,11 +1651,11 @@ def backproj3d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
         [B-unit] (can be Gauss (G), millitesla (mT), ...), to use to
         compute the projections.
     
-    fft_h_conj : sequence of sequence of complex array_like (with
-        type `backend.cls`) Contains the conjugated discrete Fourier
-        coefficients of the reference spectra (sampled over the grid
-        ``B``) of each individual source (`j`) for each experimental
-        setup (`i`). More precisely, ``fft_h_conj[i][j]`` is a
+    fft_h_conj : sequence of sequence of complex array_like (with type `backend.cls`)
+        Contains the conjugated discrete Fourier coefficients of the
+        reference spectra (sampled over the grid ``B``) of each
+        individual source (`j`) for each experimental setup
+        (`i`). More precisely, ``fft_h_conj[i][j]`` is a
         monodimensional array corresponding to the conjugate of the
         FFT of ``h[i][j]`` (the reference spectrum of the `j-th`
         source in the `i-th` experimental setting).
@@ -1781,14 +1779,13 @@ def backproj3d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
     Parameters
     ----------
     
-    rfft_proj : sequence of complex array_like (with type
-        `backend.cls`) A sequence with length `L` containing half of
-        the discrete Fourier coefficients of the EPR projections
-        associated to each experimental setup. More precisely,
-        ``rfft_proj[i][k,:]`` corresponds to the real input FFT (rfft)
-        of the EPR projection of the multisources mixture acquired
-        with field gradient ``fgrad[:,k]`` and `i-th` experimental
-        setup.
+    rfft_proj : sequence of complex array_like (with type `backend.cls`)
+        A sequence with length `L` containing half of the discrete
+        Fourier coefficients of the EPR projections associated to each
+        experimental setup. More precisely, ``rfft_proj[i][k,:]``
+        corresponds to the real input FFT (rfft) of the EPR projection
+        of the multisources mixture acquired with field gradient
+        ``fgrad[:,k]`` and `i-th` experimental setup.
     
     delta : float
         Pixel size given in a length unit denoted below as
@@ -1800,15 +1797,14 @@ def backproj3d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
         [B-unit] (can be Gauss (G), millitesla (mT), ...), to use to
         compute the projections.
     
-    rfft_h_conj : sequence of sequence of complex array_like (with
-        type `backend.cls`) Contains half of the conjugated discrete
-        Fourier coefficients of the reference spectra (sampled over
-        the grid ``B``) of each individual source (`j`) for each
-        experimental setup (`i`). More precisely,
-        ``rfft_h_conj[i][j]`` is a monodimensional array corresponding
-        to the conjugate of the real input FFT of ``h[i][j]`` (the
-        reference spectrum of the `j-th` source in the `i-th`
-        experimental setting).
+    rfft_h_conj : sequence of sequence of complex array_like (with type `backend.cls`)
+        Contains half of the conjugated discrete Fourier coefficients
+        of the reference spectra (sampled over the grid ``B``) of each
+        individual source (`j`) for each experimental setup
+        (`i`). More precisely, ``rfft_h_conj[i][j]`` is a
+        monodimensional array corresponding to the conjugate of the
+        real input FFT of ``h[i][j]`` (the reference spectrum of the
+        `j-th` source in the `i-th` experimental setting).
         
         When ``L > 1`` and ``len(rfft_h_conj) = 1``, we assume that
         ``rfft_h_conj[i][j] = rfft_h_conj[0][j]``` for all ``i in
@@ -1872,7 +1868,7 @@ def backproj3d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
     
     backproj3d
     backproj3d_fft
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -2091,9 +2087,9 @@ def apply_3d_toeplitz_kernels(u, rfft3_phi, backend=None, notest=False):
         precisely, ``u[j]`` must be a 3D array corresponding to the
         `j-th` source image of the mixture to be projected.
     
-    rfft3_phi : sequence of sequence of complex array_like (with type
-        `backend.cls`) Sequence of real input FFT of the 3D cross
-        sources Toeplitz kernels computed using
+    rfft3_phi : sequence of sequence of complex array_like (with type `backend.cls`)
+        Sequence of real input FFT of the 3D cross sources Toeplitz
+        kernels computed using
         :py:func:`pyepri.multisrc.compute_3d_toeplitz_kernels`.
     
     backend : <class 'pyepri.backends.Backend'> or None, optional
