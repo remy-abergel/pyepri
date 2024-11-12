@@ -78,7 +78,7 @@ proj_mixture = backend.from_numpy(np.load(path_proj).astype(dtype))
 # prepare display
 plt.figure(figsize=(10, 4))
 theta = backend.arctan2(fg[1], fg[0])
-proj_extent = [t.item() for t in (B[0], B[-1], theta[0]*180./math.pi, theta[-1]*180./math.pi)]
+proj_extent = [B[0].item(), B[-1].item(), proj_mixture.shape[0] - 1, 0]
 
 # display reference spectrum of the sample (contains one tube of TAM
 # and one tube of TEMPO)

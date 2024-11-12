@@ -15,6 +15,8 @@
 
 ### documentation
 
+- fixed minor issues in demonstration examples
+
 - fixed pip installation instructions in [README.md](README.md)
 
 ## v1.0.0 (October 16, 2024)

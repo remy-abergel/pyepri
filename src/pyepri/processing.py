@@ -297,7 +297,7 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
                 eval_energy=False, disable_toeplitz_kernel=False,
                 verbose=False, video=False, Ndisplay=20,
                 displayer=None, eps=1e-6, notest=False):
-    r"""EPR source separation TV-regularized least-squares.
+    r"""EPR source separation using TV-regularized least-squares.
     
     This function implements the multi-sources EPR image
     reconstruction method presented in :cite:p:`Boussaa_2023`. This
