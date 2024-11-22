@@ -6,6 +6,8 @@
 
 ### code
 
+- fixed type inference for `backend.from_numpy()` for torch backend
+
 - fixed typo in function name (read_bruker_best3_dataset instead of
   read_bruker_bes3t_dataset), old name was kept available for backward
   compatibility
@@ -14,6 +16,8 @@
   [multisrc.py](src/pyepri/multisrc.py)
 
 ### documentation
+
+- fixed bibtex reference [Bar21]
 
 - fixed minor issues in demonstration examples
 
