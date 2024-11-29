@@ -7,7 +7,7 @@
 ### code
 
 - increased to `1E6` the default maximal number of iterations
-  (parameter `nitermax`) for optimization schemes and related modules
+  (parameter `nitermax`) for optimization schemes and related functions
 
 - fixed type inference for `backend.from_numpy()` for torch backend
 
