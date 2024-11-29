@@ -10,10 +10,10 @@ import pyepri.checks as checks
 import pyepri.displayers as displayers
 
 def tvsolver_cp2011(y, lbda, A, adjA, LA, grad, div, Lgrad,
-                    backend=None, init=None, tol=1e-7, nitermax=1000,
-                    gain=1., verbose=False, video=False,
-                    eval_energy=False, displayer=None, Ndisplay=1,
-                    notest=False):
+                    backend=None, init=None, tol=1e-7,
+                    nitermax=1000000, gain=1., verbose=False,
+                    video=False, eval_energy=False, displayer=None,
+                    Ndisplay=1, notest=False):
     r"""Generic solver for inverse problems with quadratic data-fidelity and discrete total variation regularity.
     
     Compute a minimizer of
@@ -351,9 +351,9 @@ def tvsolver_cp2011(y, lbda, A, adjA, LA, grad, div, Lgrad,
     return out
     
 def tvsolver_cp2016(init, gradf, Lf, lbda, grad, div, Lgrad,
-                    backend=None, tol=1e-7, nitermax=1000, evalE=None,
-                    verbose=False, video=False, displayer=None,
-                    Ndisplay=1, notest=False):
+                    backend=None, tol=1e-7, nitermax=1000000,
+                    evalE=None, verbose=False, video=False,
+                    displayer=None, Ndisplay=1, notest=False):
     r"""Generic solver for inverse problems with Lipschitz differentiable data-fidelity term and discrete total variation regularization.
     
     Compute a minimizer of
@@ -640,7 +640,7 @@ def tvsolver_cp2016(init, gradf, Lf, lbda, grad, div, Lgrad,
 
 
 def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
-                             backend=None, tol=1e-7, nitermax=1000,
+                             backend=None, tol=1e-7, nitermax=1000000,
                              evalE=None, verbose=False, video=False,
                              displayer=None, Ndisplay=1, notest=False):
     r"""Generic solver for inverse problems similar to :py:func:`tvsolver_cp2016` but with primal variable defined as a sequence of subvariables. 

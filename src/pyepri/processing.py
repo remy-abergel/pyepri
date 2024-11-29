@@ -12,7 +12,7 @@ import pyepri.optimization as optimization
 import pyepri.utils as utils
 
 def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
-               backend=None, init=None, tol=1e-5, nitermax=None,
+               backend=None, init=None, tol=1e-5, nitermax=1000000,
                eval_energy=False, verbose=False, video=False,
                displayer=None, Ndisplay=20, eps=1e-6,
                disable_toeplitz_kernel=False, notest=False):
@@ -293,7 +293,7 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
     return out['u']
 
 def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
-                backend=None, init=None, tol=1e-5, nitermax=None,
+                backend=None, init=None, tol=1e-5, nitermax=1000000,
                 eval_energy=False, disable_toeplitz_kernel=False,
                 verbose=False, video=False, Ndisplay=20,
                 displayer=None, eps=1e-6, notest=False):
