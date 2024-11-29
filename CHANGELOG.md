@@ -9,7 +9,7 @@
 - increased to `1E6` the default maximal number of iterations
   (parameter `nitermax`) for optimization schemes and related functions
 
-- fixed type inference for `backend.from_numpy()` for torch backend
+- fixed type inference for `backend.from_numpy()` (torch backend)
 
 - fixed typo in function name (read_bruker_best3_dataset instead of
   read_bruker_bes3t_dataset), old name was kept available for backward
