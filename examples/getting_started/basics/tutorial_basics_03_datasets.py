@@ -6,7 +6,7 @@ Presentation of the EPR datasets embedded with this package.
 
 """
 
-# sphinx_gallery_thumbnail_path = '/tmp/database-file-icon2.png' 
+# sphinx_gallery_thumbnail_path = '_static/thumbnail_datasets.png' 
 # -------------- #
 # Import modules #
 # -------------- #
