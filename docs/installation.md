@@ -24,8 +24,18 @@ pip install pyepri
 # installed), you can enable `torch` and/or `cupy` backends by #
 # executing the following commands                             #
 ################################################################
+
+# enable `torch` backend support
 pip install pyepri[torch] # for enabling `torch` backend support
-pip install pyepri[cupy] # for enabling `cupy` backend support
+
+# enable `cupy` backend support: you need to select the 
+# appropriate line depending on your system 
+#
+# PLEASE BE CAREFUL NOT TO INSTALL MULTIPLE CUPY PACKAGES AT
+# THE SAME TIME TO AVOID INTERNAL CONFLICTS
+#
+pip install pyepri[cupy-cuda12x] # For CUDA 12.x
+pip install pyepri[cupy-cuda11x] # For CUDA 11.x
 ```
 
 ## Install latest version from sources
@@ -58,8 +68,18 @@ pip install -e .
 # installed), you can enable `torch` and/or `cupy` backends by #
 # executing the following commands                             #
 ################################################################
-pip install -e ".[torch]" # for enabling `torch` backend support
-pip install -e ".[cupy]" # for enabling `cupy` backend support
+
+# enable `torch` backend support
+pip install ".[torch]" # for enabling `torch` backend support
+
+# enable `cupy` backend support: you need to select the 
+# appropriate line depending on your system 
+#
+# PLEASE BE CAREFUL NOT TO INSTALL MULTIPLE CUPY PACKAGES AT
+# THE SAME TIME TO AVOID INTERNAL CONFLICTS
+#
+pip install ".[cupy-cuda12x]" # For CUDA 12.x
+pip install ".[cupy-cuda11x]" # For CUDA 11.x
 
 ################################################################
 # If you want to compile the documentation by yourself, you    #

@@ -1,10 +1,18 @@
-# Changelog
+l# Changelog
 
 <!--next-version-placeholder-->
 
 ## v1.0.1 (under development)
 
 ### code
+
+- temporary fix related to a multithreading issue with FINUFFT (see
+  [FINUFFT issue
+  #596](https://github.com/flatironinstitute/finufft/issues/596)):
+  introduced a decorator in [backends.py](src/pyepri/backends.py) to
+  change the default value of the `nthreads` keyword argument of the
+  finufft functions according to the number of physical cores (or the
+  `OMP_NUM_THREADS` environment variable if set)
 
 - increased to `1E6` the default maximal number of iterations
   (parameter `nitermax`) for optimization schemes and related functions
@@ -19,6 +27,9 @@
   [multisrc.py](src/pyepri/multisrc.py)
 
 ### documentation
+
+- updated installation instructions to allow cupy installation using
+  pip
 
 - fixed bibtex reference [Bar21]
 

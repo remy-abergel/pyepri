@@ -38,8 +38,13 @@ in the constructor documentations:
 """
 import functools
 import numpy as np
-import scipy as sp
+import os
+import psutil
 import re
+from psutil import cpu_count # temporary fix for FINUFFT issue #596:
+                             # force OMP_NUM_THREADS = number of
+                             # physical cores in FINUFFT calls for CPU
+                             # backends
 
 def create_numpy_backend():
     """Create a numpy backend.
@@ -514,6 +519,14 @@ class Backend:
         # set minimal doc for the above defined lambda functions
         self.meshgrid.__doc__ = "return " + lib.__name__ + ".meshgrid(*xi, indexing=indexing)\n"
         self.exp.__doc__ = "return " + lib.__name__ + ".exp(arr, out=out)"
+
+        # prepare decorator for temporary fix for FINUFFT issue #596
+        def assign_finufft_nthreads(func):
+            omp_num_threads = os.environ.get("OMP_NUM_THREADS")
+            nthreads = int(omp_num_threads) if omp_num_threads is not None else max(1, cpu_count(logical=False) - 1)
+            def assigned_func(*args, **kwargs):
+                return func(*args, nthreads=nthreads, **kwargs) if 'nthreads' not in kwargs.keys() else func(*args, **kwargs)
+            return assigned_func
         
         # set lib-dependent backends methods
         if lib.__name__ in ['numpy','cupy']: 
@@ -688,10 +701,10 @@ class Backend:
             # for GPU device)
             if lib.__name__ == "numpy":
                 import finufft
-                self.nufft2d = finufft.nufft2d2
-                self.nufft3d = finufft.nufft3d2
-                self.nufft2d_adjoint = finufft.nufft2d1
-                self.nufft3d_adjoint = finufft.nufft3d1
+                self.nufft2d = assign_finufft_nthreads(finufft.nufft2d2)
+                self.nufft3d = assign_finufft_nthreads(finufft.nufft3d2)
+                self.nufft2d_adjoint = assign_finufft_nthreads(finufft.nufft2d1)
+                self.nufft3d_adjoint = assign_finufft_nthreads(finufft.nufft3d1)
             else:
                 import cufinufft
                 self.nufft2d = cufinufft.nufft2d2
@@ -817,10 +830,10 @@ class Backend:
                     return numpyfied_func
 
                 # decorate finufft functions 
-                self.nufft2d = numpyfy(finufft.nufft2d2)
-                self.nufft3d = numpyfy(finufft.nufft3d2)
-                self.nufft2d_adjoint = numpyfy(finufft.nufft2d1)
-                self.nufft3d_adjoint = numpyfy(finufft.nufft3d1)
+                self.nufft2d = numpyfy(assign_finufft_nthreads(finufft.nufft2d2))
+                self.nufft3d = numpyfy(assign_finufft_nthreads(finufft.nufft3d2))
+                self.nufft2d_adjoint = numpyfy(assign_finufft_nthreads(finufft.nufft2d1))
+                self.nufft3d_adjoint = numpyfy(assign_finufft_nthreads(finufft.nufft3d1))
 
                 # add short documentation
                 self.nufft2d.__doc__ = (

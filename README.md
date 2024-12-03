@@ -12,7 +12,7 @@ code, don't hesitate to open a
 [bug issue](https://github.com/remy-abergel/pyepri/issues). 
 
 ## Installation
-### Install latest stable version using pip (recommended)
+### Install latest stable version using pip
 
 Assuming you have a compatible system with `python3` and `pip`
 installed, the following steps will create a virtual environment, and
@@ -35,11 +35,21 @@ pip install pyepri
 # installed), you can enable `torch` and/or `cupy` backends by #
 # executing the following commands                             #
 ################################################################
+
+# enable `torch` backend support
 pip install pyepri[torch] # for enabling `torch` backend support
-pip install pyepri[cupy] # for enabling `cupy` backend support
+
+# enable `cupy` backend support: you need to select the 
+# appropriate line depending on your system 
+#
+# PLEASE BE CAREFUL NOT TO INSTALL MULTIPLE CUPY PACKAGES AT
+# THE SAME TIME TO AVOID INTERNAL CONFLICTS
+#
+pip install pyepri[cupy-cuda12x] # For CUDA 12.x
+pip install pyepri[cupy-cuda11x] # For CUDA 11.x
 ```
 
-### Install latest version from sources
+### Install latest stable version from sources
 
 Assuming you have a compatible system with `python3`, `pip` and `git`
 installed, the following steps will checkout current code release,
@@ -69,8 +79,18 @@ pip install -e .
 # installed), you can enable `torch` and/or `cupy` backends by #
 # executing the following commands                             #
 ################################################################
-pip install -e ".[torch]" # for enabling `torch` backend support
-pip install -e ".[cupy]" # for enabling `cupy` backend support
+
+# enable `torch` backend support
+pip install ".[torch]" # for enabling `torch` backend support
+
+# enable `cupy` backend support: you need to select the 
+# appropriate line depending on your system 
+#
+# PLEASE BE CAREFUL NOT TO INSTALL MULTIPLE CUPY PACKAGES AT
+# THE SAME TIME TO AVOID INTERNAL CONFLICTS
+#
+pip install ".[cupy-cuda12x]" # For CUDA 12.x
+pip install ".[cupy-cuda11x]" # For CUDA 11.x
 
 ################################################################
 # If you want to compile the documentation by yourself, you    #
@@ -91,8 +111,8 @@ installation of the package.
 
 + If the installation of the package or one of its optional dependency
   fails, you may have more chance with
-  [conda](https://anaconda.org/anaconda/conda) (or
-  [miniconda](https://docs.anaconda.com/miniconda/miniconda-install/)).
+  [miniconda](https://docs.anaconda.com/miniconda/miniconda-install/)
+  (or [conda](https://anaconda.org/anaconda/conda)).
 
 + If you still encounter difficulties, feel free to open a [bug
   issue](https://github.com/remy-abergel/pyepri/issues).

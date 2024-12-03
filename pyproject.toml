@@ -22,6 +22,7 @@ dependencies = [
     "pyvista",
     "finufft",
     "jupyter",
+    "psutil",
 ]
 
 [project.urls]
@@ -33,11 +34,24 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]
-cupy = [
-    "cupy",
-    "cudnn",
+cupy-cuda12x = [
+    "cupy-cuda12x",
+#    "cutensor",
+    "cufinufft",
+]
+cupy-cuda11x = [
+    "cupy-cuda11x",
+#    "cutensor",
+    "cufinufft",
+]
+cupy-rocm-5-0 = [
+    "cupy-rocm-5-0",
+#    "cutensor",
+    "cufinufft",
+]
+cupy-rocm-4-3 = [
+    "cupy-rocm-4-3",
     "cutensor",
-    "nccl",
     "cufinufft",
 ]
 torch = [
