@@ -1,7 +1,6 @@
 # PyEPRI
 
-Advanced Algorithms and Low-Level Operators for Electron Paramagnetic
-Resonance Imaging.
+A CPU & GPU compatible Python package for Electron Paramagnetic Resonance Imaging.
 
 **Package documentation and tutorials are available
 [here](https://pyepri.math.cnrs.fr/)**.
@@ -12,11 +11,33 @@ code, don't hesitate to open a
 [bug issue](https://github.com/remy-abergel/pyepri/issues). 
 
 ## Installation
-### Install latest stable version using pip
 
-Assuming you have a compatible system with `python3` and `pip`
-installed, the following steps will create a virtual environment, and
-install the latest stable version of `pyepri`.
+### System requirements 
+
+PyEPRI can be installed on all plateforms (Linux, MacOs or
+Windows). However, GPU support is currently only available for systems
+equipped with an NVIDIA graphics card and a working installation of
+the CUDA drivers (which excludes MAC systems).
+
+The following installation guidelines assume that you have the
+following libraries installed on your system: 
+
+- **[mandatory]** python3 (the Python 3 programming language)
+- **[mandatory]** python3-pip (to install Python packages using the ``pip`` command)
+- **[mandatory]** python3-venv (for the creation of virtual environment)
+- **[recommended]** python3-tk (to avoid display issues on Linux systems)
+- **[optional]** git (if you want to install the PyEPRI package via the
+  [github repository](https://github.com/remy-abergel/pyepri/))
+  
+If you encounter installation difficulties, feel free to reach us by
+opening a [bug
+  issue](https://github.com/remy-abergel/pyepri/issues).
+
+### Install latest stable version using pip (recommended)
+
+Open a terminal and execute the following steps in order to create a
+virtual environment, and install the latest stable version of `pyepri`
+from the [PyPi repository](https://pypi.org/project/pyepri/).
 
 ```bash
 ###################################################
@@ -49,11 +70,12 @@ pip install pyepri[cupy-cuda12x] # For CUDA 12.x
 pip install pyepri[cupy-cuda11x] # For CUDA 11.x
 ```
 
-### Install latest stable version from sources
+### Install latest version from Github
 
-Assuming you have a compatible system with `python3`, `pip` and `git`
-installed, the following steps will checkout current code release,
-create a virtual environment, and install `pyepri`.
+Open a terminal and execute the following steps in order to checkout
+the current code release, create a virtual environment, and install
+`pyepri` from the [github
+repository](https://github.com/remy-abergel/pyepri/).
 
 ```bash
 ##################
@@ -109,10 +131,18 @@ installation of the package.
 
 ### Troubleshooting
 
++ Mac users are strongly recommended to use ``bash`` shell instead of
+  ``zsh`` to avoid slow copy-paste issues (type ``chsh -s /bin/bash``
+  in a terminal).
+
++ Display issues related to matplotlib interactive mode were reported
+  on Linux systems and were solved by installing ``python3-tk`` (type
+  ``sudo apt-get install python3-tk`` in a terminal).
+  
 + If the installation of the package or one of its optional dependency
   fails, you may have more chance with
-  [miniconda](https://docs.anaconda.com/miniconda/miniconda-install/)
-  (or [conda](https://anaconda.org/anaconda/conda)).
+  [miniconda](https://docs.anaconda.com/miniconda/miniconda-install/) (or
+  [conda](https://anaconda.org/anaconda/conda)).
 
 + If you still encounter difficulties, feel free to open a [bug
   issue](https://github.com/remy-abergel/pyepri/issues).
