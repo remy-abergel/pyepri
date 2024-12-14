@@ -2,9 +2,9 @@
 
 <!--next-version-placeholder-->
 
-## v1.0.1 (under development)
+## v1.0.1 (December 3rd, 2024)
 
-### code
+### Code
 
 - temporary fix related to a multithreading issue with FINUFFT (see
   [FINUFFT issue
@@ -26,7 +26,7 @@
 - fixed sphinx rendering issues in various function headers in
   [multisrc.py](src/pyepri/multisrc.py)
 
-### documentation
+### Documentation
 
 - updated installation instructions to allow cupy installation using
   pip
