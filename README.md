@@ -29,10 +29,6 @@ following libraries installed on your system:
 - **[optional]** git (if you want to install the PyEPRI package via the
   [github repository](https://github.com/remy-abergel/pyepri/))
   
-If you encounter installation difficulties, feel free to reach us by
-opening a [bug
-  issue](https://github.com/remy-abergel/pyepri/issues).
-
 ### Install latest stable version using pip (recommended)
 
 Open a terminal and execute the following steps in order to create a
