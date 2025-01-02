@@ -6,6 +6,7 @@ import math
 import matplotlib.pyplot as plt
 import types
 import pyepri.checks as checks
+import pyepri.displayers as displayers
 import pyepri.multisrc as multisrc
 import pyepri.monosrc as monosrc
 import pyepri.optimization as optimization
@@ -675,7 +676,10 @@ def eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1, backend=None,
     
         The last example above, relies on the `torchinterp1d` package
         (available from `Github
-        <https://github.com/aliutkus/torchinterp1d>`).
+        <https://github.com/aliutkus/torchinterp1d>`) and can be
+        easily modified to impose zero value outside from the range of
+        values covered by the input xp (see examples in the PyEPRI
+        documentation).
     
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
@@ -686,8 +690,7 @@ def eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1, backend=None,
     
     frequency_cutoff : float, optional
         Apply a frequency cutoff to the projections during the
-        filtering process (to avoid noise amplification caused by the
-        Ram-Lak filter).
+        filtering process (see documentation).
     
         The input `frequency_cutoff` value corresponds to the
         proportion of Fourier coefficients to preserve (e.g., use
@@ -696,11 +699,10 @@ def eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1, backend=None,
         90% remaining (high-frequency) Fourier coefficients).
     
         Since frequency cutoff causes ringing artifact (i.e.,
-        generates spurious oscillation patterns), we recommend to
-        avoid using this parameter (i.e., to keep ``frequency_cutoff =
-        1.``) and perform instead apodization of the input projections
-        using a smoother apodization profile as a preprocessing before
-        calling this function (see Example section below).
+        generates spurious oscillation patterns), it is recommended to
+        apply an appropriate apodization to the input projections
+        using a smooth apodization profile as a preprocessing before
+        calling this function.
     
     verbose : bool, optional 
         Enable / disable verbose mode (display a message each time a
@@ -766,7 +768,7 @@ def eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1, backend=None,
     eprfbp3d
 
     """
-
+    
     # backend inference (if necessary)
     if backend is None:
         backend = checks._backend_inference_(proj=proj, fgrad=fgrad,
@@ -787,6 +789,9 @@ def eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1, backend=None,
     gx, gy = fgrad 
     mu = backend.sqrt(gx**2 + gy**2)
     
+    # retrieve indexes of non zero-gradient projections
+    idproj = backend.argwhere(mu != 0)
+    
     # compute volumetric sampling nodes
     x, y = backend.meshgrid(xgrid, ygrid)
     x = x.ravel()
@@ -804,17 +809,17 @@ def eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1, backend=None,
     
     # precompute filter in Fourier domain
     Nb = len(B)
-    alf = backend.arange(Nb//2+1, dtype='int32') # low frequency
-                                                 # indexes (half of
-                                                 # the low-frequency
-                                                 # domain)
-    #xi = 2. * math.pi * alf / (Nb * dB) # corresponding pulsations (rad / [B-unit])
-    rfft_w = mu.reshape((-1, 1)) * (-1j / rfft_g).reshape((1, -1))
+    alf = backend.arange(Nb//2 + 1, dtype='int32') # low frequency
+                                                   # indexes (half of
+                                                   # the low-frequency
+                                                   # domain)
+    theta = backend.arctan2(gy, gx) # polar angle
+    cof = 1. / (2. * dB * len(idproj))
+    rfft_g_inv = backend.zeros((Nb//2 + 1,), dtype=backend.lib_to_str_dtypes[rfft_g.dtype])
+    M = max(int(1), int(round(frequency_cutoff * Nb))) # cutoff occurs for |alf| > M/2
+    rfft_g_inv[:(M//2 + 1)] = -1j / rfft_g[:(M//2 + 1)]
+    rfft_w = (cof * mu**2).reshape((-1, 1)) * rfft_g_inv.reshape((1, -1))
     
-    # apply frequency cutoff
-    M = max(int(1), int(round(frequency_cutoff * Nb)))
-    rfft_w[:, (M//2 + 1)::] = 0.
-        
     # compute filtered projections 
     fproj = backend.real(backend.fftshift(backend.irfft(backend.rfft(
         backend.ifftshift(proj, dim=1), dim=1) * rfft_w, n=Nb, dim=1), dim=1))
@@ -823,9 +828,11 @@ def eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1, backend=None,
     # deal with video mode
     if video :
         if displayer is None:
-            displayer = displayers.create_3d_displayer(nsrc=1,
+            extent = [t.item() for t in (xgrid[0], xgrid[-1],
+                                         ygrid[-1], ygrid[0])]
+            displayer = displayers.create_2d_displayer(nsrc=1,
                                                        figsize=None,
-                                                       extents=extents,
+                                                       extent=extent,
                                                        adjust_dynamic=True,
                                                        display_labels=True,
                                                        grids=(ygrid, xgrid),
@@ -835,11 +842,10 @@ def eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1, backend=None,
         fg = displayer.init_display(im_np)
         fgnum = displayer.get_number(fg)
     
-    # avoid zero-gradient projections and deal with shuffle option
-    idproj = backend.argwhere(mu != 0)
+    # deal with shuffle option
     if shuffle :
         idproj = idproj[backend.randperm(len(idproj))]
-
+    
     #############
     # main loop #
     #############
@@ -877,7 +883,7 @@ def eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1, backend=None,
     # close figure when code is running on interactive notebook
     if video and displayer.notebook:
         displayer.clear_output()
-
+    
     return im.reshape([len(ygrid), len(xgrid)])
 
 
@@ -950,7 +956,10 @@ def eprfbp3d(proj, fgrad, h, B, xgrid, ygrid, zgrid, interp1,
     
         The last example above, relies on the `torchinterp1d` package
         (available from `Github
-        <https://github.com/aliutkus/torchinterp1d>`).
+        <https://github.com/aliutkus/torchinterp1d>`) and can be
+        easily modified to impose zero value outside from the range of
+        values covered by the input xp (see examples in the PyEPRI
+        documentation).
     
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
@@ -961,21 +970,19 @@ def eprfbp3d(proj, fgrad, h, B, xgrid, ygrid, zgrid, interp1,
 
     frequency_cutoff : float, optional
         Apply a frequency cutoff to the projections during the
-        filtering process (to avoid noise amplification caused by the
-        Ram-Lak filter).
+        filtering process (see documentation).
     
         The input `frequency_cutoff` value corresponds to the
         proportion of Fourier coefficients to preserve (e.g., use
-        `frequency_cutoff = 0.1` to preserve 10% of the
+        ``frequency_cutoff = 0.1`` to preserve 10% of the
         (lowest-frequency) Fourier coefficients and set to zero the
         90% remaining (high-frequency) Fourier coefficients).
     
         Since frequency cutoff causes ringing artifact (i.e.,
-        generates spurious oscillation patterns), we recommend to
-        avoid using this parameter (i.e., to keep ``frequency_cutoff =
-        1.``) and perform instead apodization of the input projections
-        using a smoother apodization profile as a preprocessing before
-        calling this function (see Example section below).
+        generates spurious oscillation patterns), it is recommended to
+        apply an appropriate apodization to the input projections
+        using a smooth apodization profile as a preprocessing before
+        calling this function.
     
     verbose : bool, optional 
         Enable / disable verbose mode (display a message each time a
@@ -1061,6 +1068,9 @@ def eprfbp3d(proj, fgrad, h, B, xgrid, ygrid, zgrid, interp1,
     gx, gy, gz = fgrad 
     mu = backend.sqrt(gx**2 + gy**2 + gz**2)
     
+    # retrieve indexes of non zero-gradient projections
+    idproj = backend.argwhere(mu != 0)
+    
     # compute volumetric sampling nodes
     x, y, z = backend.meshgrid(xgrid, ygrid, zgrid)
     x = x.ravel()
@@ -1079,18 +1089,21 @@ def eprfbp3d(proj, fgrad, h, B, xgrid, ygrid, zgrid, interp1,
     
     # precompute filter in Fourier domain
     Nb = len(B)
-    alf = backend.arange(Nb//2+1, dtype='int32') # low frequency
-                                                 # indexes (half of
-                                                 # the low-frequency
-                                                 # domain)
+    alf = backend.arange(Nb//2 + 1, dtype='int32') # low frequency
+                                                   # indexes (half of
+                                                   # the low-frequency
+                                                   # domain)
     xi = 2. * math.pi * alf / (Nb * dB) # corresponding pulsations
                                         # (rad / [B-unit])
-    rfft_w = (mu * backend.sin(backend.arccos(gz / mu))).reshape((-1, 1)) * (-1j * xi / rfft_g).reshape((1, -1))
+    theta1 = backend.lib.sign(gy) * backend.arccos(gx / mu) # longitudinal (or polar) angle
+    theta2 = backend.arccos(gz / mu) # latitudinal angle
+    cof = (theta1.max() - theta1.min()) * (theta2.max() - theta2.min()) # adaptively retrieve the actual integration domain
+    cof /= (4 * math.pi**2 * dB * len(idproj))
+    rfft_g_inv = backend.zeros((Nb//2 + 1,), dtype=backend.lib_to_str_dtypes[rfft_g.dtype])
+    M = max(int(1), int(round(frequency_cutoff * Nb))) # cutoff occurs for |alf| > M/2
+    rfft_g_inv[:(M//2 + 1)] = -1j * xi[:(M//2 + 1)] / rfft_g[:(M//2 + 1)]
+    rfft_w = (cof * mu**3 * backend.sin(theta2)).reshape((-1, 1)) * rfft_g_inv.reshape((1, -1))
     
-    # apply frequency cutoff
-    M = max(int(1), int(round(frequency_cutoff * Nb)))
-    rfft_w[:, (M//2 + 1)::] = 0.
-        
     # compute filtered projections 
     fproj = backend.real(backend.fftshift(backend.irfft(backend.rfft(
         backend.ifftshift(proj, dim=1), dim=1) * rfft_w, n=Nb, dim=1), dim=1))
@@ -1119,11 +1132,10 @@ def eprfbp3d(proj, fgrad, h, B, xgrid, ygrid, zgrid, interp1,
         fg = displayer.init_display(vol_np)
         fgnum = displayer.get_number(fg)
     
-    # avoid zero-gradient projections and deal with shuffle option
-    idproj = backend.argwhere(mu != 0)
+    # deal with shuffle option
     if shuffle :
         idproj = idproj[backend.randperm(len(idproj))]
-
+    
     #############
     # main loop #
     #############
