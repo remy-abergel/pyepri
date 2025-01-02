@@ -82,7 +82,7 @@ if backend.lib.__name__ in ['numpy','cupy']:
     interp1 = lambda xp, fp, x : backend.lib.interp(x, xp.flatten(), fp.flatten(), left=0., right=0.)
 else:
     import torchinterp1d
-    interp1 = torchinterp1d.interp1d
+    interp1 = lambda xp, fp, x : torchinterp1d.interp1d(xp, fp, x) * ((x >= xp[0]) & (x <= xp[-1]))
 
 # set optional parameters
 verbose = False # disable console verbose mode
