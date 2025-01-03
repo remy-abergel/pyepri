@@ -892,12 +892,10 @@ tutorial <tutorial_toeplitz>`.
 Filtered backprojection
 -----------------------
 
-Intro pour dire qu'on donne les idées, une description rigoureuse
-nécessite d'introduire un cadre fonctionnel plus compliqué. Se placer
-dans le cadre monosource. Dire que normalement on considère des
-acquisition faites à amplitude du gradient de champ constant même si
-en pratique les formules sont généralisables et cette contrainte n'est
-pas imposée dans nos implémentations.
+In this section, we give mathematical details about the
+filtered-backprojection features implemented in the PyEPRI package.
+Within all this section, we assume that the sample is made of a single
+EPR species.
 
 Inversion formula in the continuous setting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
