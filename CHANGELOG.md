@@ -2,6 +2,24 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.2 (January 3rd, 2025)
+
+### Code 
+
+- minor fix for `processing.eprfbp2d` and `processing.eprfbp3d`
+  functions (`displayer=None` was not working as expected)
+  
+- changed normalization in `processing.eprfbp2d` and
+  `processing.eprfbp3d` to get a consistent quadrature scheme
+  
+### Documentation 
+
+- added the mathematical description of the filtered backrojection
+  scheme implemented in the package
+  
+- fixed Gaussian derivative normalization factor for demo with
+  simulated reference spectra
+
 ## v1.0.1 (December 3rd, 2024)
 
 ### Code
