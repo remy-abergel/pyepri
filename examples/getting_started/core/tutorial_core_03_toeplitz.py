@@ -153,7 +153,7 @@ B = backend.linspace(380, 420, 512, dtype=dtype)
 Br = 400
 sig = .3
 cof = 1. / (sig * math.sqrt(2. * math.pi))
-h = - cof * (B - Br) / sig * backend.exp(- (B - Br)**2 / (2. * sig**2))
+h = - cof * (B - Br) / sig**2 * backend.exp(- (B - Br)**2 / (2. * sig**2))
 
 # field gradient vector coordinates (one vector per projection to
 # compute)
@@ -350,7 +350,7 @@ B = backend.linspace(370, 430, 512, dtype=dtype)
 Br = 400
 sig = .3
 cof = 1. / (sig * math.sqrt(2. * math.pi))
-h = - cof * (B - Br) / sig * backend.exp(- (B - Br)**2 / (2. * sig**2))
+h = - cof * (B - Br) / sig**2 * backend.exp(- (B - Br)**2 / (2. * sig**2))
 
 # field gradient vector coordinates
 t1 = backend.linspace(0, 2. * math.pi, 32, dtype=dtype)
@@ -544,7 +544,7 @@ B = backend.linspace(360, 440, 1200, dtype=dtype)
 Br1 = 399
 sig1 = .36
 cof1 = 1. / (sig1 * math.sqrt(2. * math.pi))
-h1 = - cof1 * (B - Br1) / sig1 * backend.exp(- (B - Br1)**2 / (2. * sig1**2))
+h1 = - cof1 * (B - Br1) / sig1**2 * backend.exp(- (B - Br1)**2 / (2. * sig1**2))
 
 # --------------------------------------------------------------- #
 # Compute synthetic image of the second EPR source (another disk) #
@@ -562,9 +562,9 @@ Br2_middle = 398
 Br2_right = 414
 sig2 = .8
 cof2 = 1. / (3. * sig2 * math.sqrt(2. * math.pi))
-h2_left = - cof2 * (B - Br2_left) / sig2 * backend.exp(- (B - Br2_left)**2 / (2. * sig2**2))
-h2_middle = - cof2 * (B - Br2_middle) / sig2 * backend.exp(- (B - Br2_middle)**2 / (2. * sig2**2))
-h2_right = - cof2 * (B - Br2_right) / sig2 * backend.exp(- (B - Br2_right)**2 / (2. * sig2**2))
+h2_left = - cof2 * (B - Br2_left) / sig2**2 * backend.exp(- (B - Br2_left)**2 / (2. * sig2**2))
+h2_middle = - cof2 * (B - Br2_middle) / sig2**2 * backend.exp(- (B - Br2_middle)**2 / (2. * sig2**2))
+h2_right = - cof2 * (B - Br2_right) / sig2**2 * backend.exp(- (B - Br2_right)**2 / (2. * sig2**2))
 h2 = h2_left + h2_middle + h2_right
 
 # ----------------------------------------------- #
@@ -792,13 +792,13 @@ B = backend.linspace(360, 440, 1200, dtype=dtype)
 Br1 = 399
 sig1_exp1 = .36
 cof1_exp1 = 1. / (sig1_exp1 * math.sqrt(2. * math.pi))
-h1_exp1 = - cof1_exp1 * (B - Br1) / sig1_exp1 * backend.exp(- (B - Br1)**2 / (2. * sig1_exp1**2))
+h1_exp1 = - cof1_exp1 * (B - Br1) / sig1_exp1**2 * backend.exp(- (B - Br1)**2 / (2. * sig1_exp1**2))
 
 # synthetic reference spectrum of the first EPR source in the second
 # experimental setting (dilatation)
 sig1_exp2 = 1.5 * sig1_exp1
 cof1_exp2 = 1. / (sig1_exp2 * math.sqrt(2. * math.pi))
-h1_exp2 = - cof1_exp2 * (B - Br1) / sig1_exp2 * backend.exp(- (B - Br1)**2 / (2. * sig1_exp2**2))
+h1_exp2 = - cof1_exp2 * (B - Br1) / sig1_exp2**2 * backend.exp(- (B - Br1)**2 / (2. * sig1_exp2**2))
 
 
 # ---------------------------------------------------------------- #
@@ -1078,7 +1078,7 @@ B = backend.linspace(360, 440, 1200, dtype=dtype)
 Br1 = 399
 sig1 = .36
 cof1 = 1. / (sig1 * math.sqrt(2. * math.pi))
-h1 = - cof1 * (B - Br1) / sig1 * backend.exp(- (B - Br1)**2 / (2. * sig1**2))
+h1 = - cof1 * (B - Br1) / sig1**2 * backend.exp(- (B - Br1)**2 / (2. * sig1**2))
 
 # -------------------------------------------------------------------- #
 # Compute synthetic reference spectrum of the second EPR source (three #
@@ -1089,9 +1089,9 @@ Br2_middle = 398
 Br2_right = 414
 sig2 = .8
 cof2 = 1. / (3. * sig2 * math.sqrt(2. * math.pi))
-h2_left = - cof2 * (B - Br2_left) / sig2 * backend.exp(- (B - Br2_left)**2 / (2. * sig2**2))
-h2_middle = - cof2 * (B - Br2_middle) / sig2 * backend.exp(- (B - Br2_middle)**2 / (2. * sig2**2))
-h2_right = - cof2 * (B - Br2_right) / sig2 * backend.exp(- (B - Br2_right)**2 / (2. * sig2**2))
+h2_left = - cof2 * (B - Br2_left) / sig2**2 * backend.exp(- (B - Br2_left)**2 / (2. * sig2**2))
+h2_middle = - cof2 * (B - Br2_middle) / sig2**2 * backend.exp(- (B - Br2_middle)**2 / (2. * sig2**2))
+h2_right = - cof2 * (B - Br2_right) / sig2**2 * backend.exp(- (B - Br2_right)**2 / (2. * sig2**2))
 h2 = h2_left + h2_middle + h2_right
 
 # ------------------------------------------ #
