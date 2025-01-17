@@ -1,3 +1,6 @@
+[![PyPI version](https://img.shields.io/pypi/v/pyepri?color=YELLOW)](https://pypi.org/project/pyepri/)
+[![PyPI Downloads](https://static.pepy.tech/badge/pyepri)](https://pypi.org/project/pyepri)
+
 # PyEPRI
 
 A CPU & GPU compatible Python package for Electron Paramagnetic Resonance Imaging.
