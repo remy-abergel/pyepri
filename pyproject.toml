@@ -44,18 +44,13 @@ cupy-cuda11x = [
 #    "cutensor",
     "cufinufft",
 ]
-cupy-rocm-5-0 = [
-    "cupy-rocm-5-0",
-#    "cutensor",
+torch-cpu = [
+    "torch>=2.4",
+    "torchinterp1d",
     "cufinufft",
 ]
-cupy-rocm-4-3 = [
-    "cupy-rocm-4-3",
-    "cutensor",
-    "cufinufft",
-]
-torch = [
-    "torch>=1.6",
+torch-cuda = [
+    "torch>=2.4",
     "torchinterp1d",
     "cufinufft",
 ]
@@ -77,5 +72,17 @@ doc = [
     "ipywidgets",
     "ipyvtklink",
     "sphinxcontrib-bibtex", 
+    "sphinxcontrib-video",
 ]
 
+# rocm support not seriously tested
+cupy-rocm-5-0 = [
+    "cupy-rocm-5-0",
+#    "cutensor",
+    "cufinufft",
+]
+cupy-rocm-4-3 = [
+    "cupy-rocm-4-3",
+    "cutensor",
+    "cufinufft",
+]
