@@ -2,6 +2,18 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.3 (February 5th, 2025)
+
+### Packaging
+
+- split [torch] optional dependencies into [torch-cpu] (with finufft)
+  and [torch-cuda] (cufinufft) in order to avoid pip install error on
+  windows systems
+  
+### Documentation 
+
+- updated installation instructions
+
 ## v1.0.2 (January 3rd, 2025)
 
 ### Code 
