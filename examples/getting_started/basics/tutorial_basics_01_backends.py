@@ -10,7 +10,7 @@ PyEPRI was designed in a modular fashion. The functions of this
 package rely on standard datatypes (mostly arrays) and not on specific
 classes. The only nonstandard object involved in this package is a
 backend system whose role is to facilitate CPU & GPU compatible
-scripting and development. More precisely, the PyEPR backend system
+scripting and development. More precisely, the PyEPRI backend system
 allows the use of the libraries {``numpy``, ``cupy``, ``torch``} in a
 unified framework. Deep understanding of this tutorial is **not
 mandatory** but taking a quick look at this tutorial will facilitate
@@ -27,9 +27,9 @@ the understanding of all upcoming EPR imaging demo examples.
 # Although most common functions of the ``numpy`` libraries are usually
 # also available in the ``cupy``, and ``torch`` libraries, those
 # functions rely on library-dependent types (e.g., ``numpy.ndarray``,
-# ``cupy.ndarray``,``torch.Tensor``, ...) and library-dependent
+# ``cupy.ndarray``, ``torch.Tensor``, ...) and library-dependent
 # datatypes (e.g., ``numpy.float32``, ``cupy.float32``,
-# ``torch.float32``). Besides, parameter naming conventions or default
+# ``torch.float32``, ...). Besides, parameter naming conventions or default
 # values oftenly differ between those libraries. The role of the backend
 # is to remap those library-dependent types, datatypes and common
 # functions towards a standardized counterpart (examples are provided
@@ -38,7 +38,7 @@ the understanding of all upcoming EPR imaging demo examples.
 # Technically, a PyEPRI backend is an instance of the
 # :class:`pyepri.backends.Backend` class and must be passed as input of
 # most functions of this package. It is also recommended to prefer the
-# usage of the backend commends (e.g., ``backend.abs``,
+# usage of the backend commands (e.g., ``backend.abs``,
 # ``backend.meshgrid``, ``backend.rand``, ...) to their
 # library-dependent counterparts in your own script. Doing so, moving
 # from a CPU based computation framework with numpy to a GPU based
@@ -47,7 +47,8 @@ the understanding of all upcoming EPR imaging demo examples.
 # unchanged) as we systematically do in all provided EPR imaging demo
 # examples.
 #
-# **Remark**: The available backend functions have been restricted to
+# **Remark**: The available backend functions (``backend.abs``,
+# ``backend.meshgrid``, ``backend.rand``, ...) have been restricted to
 # the functions needed in the internal submodules and in the tutorial
 # and example scripts. The backend functionalities may be extended in
 # future releases of the PyEPRI package, depending on the needs.
