@@ -40,23 +40,20 @@ source ~/.venv/pyepri/bin/activate
 #########################################################
 pip install pyepri
 
-################################################################
-# Optionally (and advised if you have a GPU device with CUDA   #
-# installed), you can enable `torch` and/or `cupy` backends by #
-# executing the following commands                             #
-################################################################
+###########################################################
+# Optional: enable {torch-cpu, torch-cuda, cupy} backends #
+###########################################################
 
-# enable `torch` backend support
-pip install pyepri[torch] # for enabling `torch` backend support
+# enable `torch-cpu` backend
+pip install pyepri[torch-cpu]
 
-# enable `cupy` backend support: you need to select the 
-# appropriate line depending on your system 
-#
-# PLEASE BE CAREFUL NOT TO INSTALL MULTIPLE CUPY PACKAGES AT
-# THE SAME TIME TO AVOID INTERNAL CONFLICTS
-#
-pip install pyepri[cupy-cuda12x] # For CUDA 12.x
-pip install pyepri[cupy-cuda11x] # For CUDA 11.x
+# enable `torch-cuda` backend (requires a NVIDIA graphics card with CUDA installed)
+pip install pyepri[torch-cuda]
+
+# enable `cupy` backend (requires a NVIDIA graphics card with CUDA installed)
+# (please uncomment the appropriate line depending on your CUDA installation)
+# pip install pyepri[cupy-cuda12x] # For CUDA 12.x
+# pip install pyepri[cupy-cuda11x] # For CUDA 11.x
 ```
 
 ## Install latest version from Github
@@ -85,23 +82,20 @@ source ~/.venv/pyepri/bin/activate
 ##########################################################
 pip install -e .
 
-################################################################
-# Optionally (and advised if you have a GPU device with CUDA   #
-# installed), you can enable `torch` and/or `cupy` backends by #
-# executing the following commands                             #
-################################################################
+###########################################################
+# Optional: enable {torch-cpu, torch-cuda, cupy} backends #
+###########################################################
 
-# enable `torch` backend support
-pip install ".[torch]" # for enabling `torch` backend support
+# enable `torch-cpu` backend
+pip install -e ".[torch-cpu]"
 
-# enable `cupy` backend support: you need to select the 
-# appropriate line depending on your system 
-#
-# PLEASE BE CAREFUL NOT TO INSTALL MULTIPLE CUPY PACKAGES AT
-# THE SAME TIME TO AVOID INTERNAL CONFLICTS
-#
-pip install ".[cupy-cuda12x]" # For CUDA 12.x
-pip install ".[cupy-cuda11x]" # For CUDA 11.x
+# enable `torch-cuda` backend (requires a NVIDIA graphics card with CUDA installed)
+pip install -e ".[torch-cuda]"
+
+# enable `cupy` backend (requires a NVIDIA graphics card with CUDA installed)
+# (please uncomment the appropriate line depending on your CUDA installation)
+# pip install -e ".[cupy-cuda12x]" # For CUDA 12.x
+# pip install -e ".[cupy-cuda11x]" # For CUDA 11.x
 
 ################################################################
 # If you want to compile the documentation by yourself, you    #
