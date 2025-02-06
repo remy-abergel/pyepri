@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="icons.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="2.3786088"
+     inkscape:cx="156.39394"
+     inkscape:cy="112.88111"
+     inkscape:window-width="1920"
+     inkscape:window-height="1131"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g7930"
+       inkscape:export-filename="ico-req.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96">
+      <rect
+         style="fill:none;stroke:#ff0000;stroke-width:1;stroke-opacity:1"
+         id="rect234"
+         width="39.857635"
+         height="8.7859716"
+         x="18.217772"
+         y="11.814791"
+         rx="2.3804183"
+         ry="3.8795795" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:sans-serif;-inkscape-font-specification:sans-serif;fill:#db0404;fill-opacity:1;stroke:none;stroke-width:1;stroke-opacity:1"
+         x="20.739611"
+         y="18.464281"
+         id="text952"><tspan
+           sodipodi:role="line"
+           id="tspan950"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:sans-serif;-inkscape-font-specification:sans-serif;fill:#db0404;fill-opacity:1;stroke:none;stroke-width:1"
+           x="20.739611"
+           y="18.464281">REQUIRED</tspan></text>
+    </g>
+    <g
+       id="g7955"
+       inkscape:export-filename="ico-opt.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96">
+      <rect
+         style="fill:none;stroke:#0000ff;stroke-width:1;stroke-opacity:1"
+         id="rect234-3"
+         width="39.857635"
+         height="8.7859716"
+         x="18.218"
+         y="30.752743"
+         rx="2.3804183"
+         ry="3.8795795" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:sans-serif;-inkscape-font-specification:sans-serif;fill:#0417db;fill-opacity:1;stroke:none;stroke-width:1;stroke-opacity:1"
+         x="20.546612"
+         y="37.60228"
+         id="text952-6"><tspan
+           sodipodi:role="line"
+           id="tspan950-7"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:sans-serif;-inkscape-font-specification:sans-serif;fill:#0417db;fill-opacity:1;stroke:none;stroke-width:1"
+           x="20.546612"
+           y="37.60228">OPTIONAL</tspan></text>
+    </g>
+  </g>
+</svg>

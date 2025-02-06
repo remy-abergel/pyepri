@@ -36,6 +36,7 @@ extensions = [
     "sphinx_design",
     "pyvista.ext.viewer_directive",
     "sphinxcontrib.bibtex",
+    "sphinxcontrib.video",    
 ]
 autoapi_dirs = ["../src"]
 autoapi_template_dir = '_autoapi_templates'
