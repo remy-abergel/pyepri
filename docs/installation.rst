@@ -16,14 +16,13 @@ Windows). However, GPU support is currently only available for systems
 equipped with an NVIDIA graphics card and a working installation of
 the CUDA drivers (which excludes MAC systems).
 
-The following installation guidelines assume that you have the
-following libraries installed on your system: 
 
 .. tabs::
 
    .. group-tab:: Linux
 
-      **Dependencies**
+      The installation guidelines assume that you have the following
+      installed on your system:
       
       - |ico-req| ``python3`` (the Python 3 programming language)	
       - |ico-req| ``python3-pip`` (to install Python packages using the ``pip``
@@ -44,9 +43,10 @@ following libraries installed on your system:
       
    .. group-tab:: Mac OSX
 
-      **Dependencies**
+      The installation guidelines assume that you have the following
+      installed on your system:
       
-      - |ico-req| An official Python 3 obtained from from
+      - |ico-req| an official Python 3 obtained from from
         `<https://www.python.org/downloads/>`_.
       - |ico-opt| an integrated development environment (IDE) suited
         to Python (for instance `Visual Studio Code
@@ -54,9 +54,10 @@ following libraries installed on your system:
       
    .. group-tab:: Windows
 
-      **Dependencies**
+      The installation guidelines assume that you have the following
+      installed on your system:
       
-      - |ico-req| An official Python 3 obtained from from
+      - |ico-req| an official Python 3 obtained from from
         `<https://www.python.org/downloads/>`_.
       - |ico-opt| an integrated development environment (IDE) suited
         to Python (for instance `Visual Studio Code
