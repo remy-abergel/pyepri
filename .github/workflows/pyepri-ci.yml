@@ -23,5 +23,5 @@ jobs:
         pip install .
     - name: Install PyEPRI ("torch-cpu" optional dependency, except for macos-13 runner)
       if: matrix.os != 'macos-13'
-        run: |
-          pip install ".[torch-cpu]"
+      run: |
+        pip install ".[torch-cpu]"
