@@ -45,11 +45,11 @@ cupy-cuda11x = [
     "cufinufft",
 ]
 torch-cpu = [
-    "torch>=2.4",
+    "torch>=2.2",
     "torchinterp1d",
 ]
 torch-cuda = [
-    "torch>=2.4",
+    "torch>=2.2",
     "torchinterp1d",
     "cufinufft",
 ]
