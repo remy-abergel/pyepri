@@ -3,11 +3,11 @@ numpy, cupy and torch libraries (see <class 'backends.Backend'>).
 
 This module also provides constructors of ready-to-use backends, see 
 
-+ :py:func:`create_numpy_backend()`: numpy backend constructor \
++ :py:func:`create_numpy_backend()`: numpy backend constructor
   (CPU only) 
-+ :py:func:`create_cupy_backend()`: cupy backend constructor \
++ :py:func:`create_cupy_backend()`: cupy backend constructor
   (GPU only)
-+ :py:func:`create_torch_backend()`: torch backend constructor \
++ :py:func:`create_torch_backend()`: torch backend constructor
   (CPU or GPU)
 
 A ``backends.Backend`` instance provides attributes for data type
