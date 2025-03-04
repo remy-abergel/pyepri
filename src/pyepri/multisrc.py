@@ -655,10 +655,8 @@ def backproj2d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
                           out_shape=out_shape, out=out, eps=eps,
                           nodes=nodes)
     
-    # retrieve signals dimensions (Nb = number or sample per
-    # projection, L = number of sinograms, K = number of sources)
-    Nb = len(B)
-    #L = max(len(fgrad), len(fft_h_conj))
+    # retrieve signals dimensions (L = number of sinograms, K = number
+    # of sources)
     L = len(fft_proj)
     K = len(out_shape)
     
@@ -803,10 +801,8 @@ def backproj2d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
                           out_shape=out_shape, out=out, eps=eps,
                           nodes=nodes)
     
-    # retrieve signals dimensions (Nb = number or sample per
-    # projection, L = number of sinograms, K = number of sources)
-    Nb = len(B)
-    #L = max(len(fgrad), len(rfft_h_conj))
+    # retrieve signals dimensions (L = number of sinograms, K = number
+    # of sources)
     L = len(rfft_proj)
     K = len(out_shape)
     
@@ -963,13 +959,11 @@ def compute_2d_toeplitz_kernels(B, h, delta, fgrad, src_shape,
                                                     notest=True) for
                  fgi in fgrad]
     
-    # retrieve complex data type
+    # retrieve data type
     dtype = backend.lib_to_str_dtypes[B.dtype]
-    cdtype = backend.mapping_to_complex_dtypes[dtype]
     
-    # retrieve signals dimensions (Nb = number or sample per
-    # projection, L = number of sinograms, K = number of sources)
-    Nb = len(B)
+    # retrieve signals dimensions (L = number of sinograms, K = number
+    # of sources)
     L = max(len(fgrad), len(h))
     K = len(src_shape)
     
@@ -1735,9 +1729,8 @@ def backproj3d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
                           out_shape=out_shape, out=out, eps=eps,
                           nodes=nodes)
     
-    # retrieve signals dimensions (Nb = number or sample per
-    # projection, L = number of sinograms, K = number of sources)
-    Nb = len(B)
+    # retrieve signals dimensions (L = number of sinograms, K = number
+    # of sources)
     L = max(len(fgrad), len(fft_h_conj))
     K = len(out_shape)
     
@@ -1881,9 +1874,8 @@ def backproj3d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
                           fgrad=fgrad, out_shape=out_shape, out=out,
                           eps=eps, nodes=nodes)
     
-    # retrieve signals dimensions (Nb = number or sample per
-    # projection, L = number of sinograms, K = number of sources)
-    Nb = len(B)
+    # retrieve signals dimensions (L = number of sinograms, K = number
+    # of sources)
     L = max(len(fgrad), len(rfft_h_conj))
     K = len(out_shape)
     
@@ -2040,13 +2032,11 @@ def compute_3d_toeplitz_kernels(B, h, delta, fgrad, src_shape,
                                                     notest=True) for
                  fgi in fgrad]
     
-    # retrieve complex data type
+    # retrieve data type
     dtype = backend.lib_to_str_dtypes[B.dtype]
-    cdtype = backend.mapping_to_complex_dtypes[dtype]
     
-    # retrieve signals dimensions (Nb = number or sample per
-    # projection, L = number of sinograms, K = number of sources)
-    Nb = len(B)
+    # retrieve signals dimensions (L = number of sinograms, K = number
+    # of sources)
     L = max(len(fgrad), len(h))
     K = len(src_shape)
     
@@ -2281,7 +2271,7 @@ def _check_nd_inputs_(ndims, backend, B=None, delta=None, fgrad=None,
                     )
 
         # check out or out_shape is provided in backproj?d_* functions
-        if fft_proj is not None or rfft_proj is not None and out == out_shape == None:
+        if (fft_proj is not None or rfft_proj is not None) and (out is None and out_shape is None):
             raise RuntimeError(
                 "At least one of {`out_shape`, `out`} parameters must be given"
             )
@@ -2298,17 +2288,17 @@ def _check_nd_inputs_(ndims, backend, B=None, delta=None, fgrad=None,
                         )
                     if not backend.is_backend_compliant(_nodes['x'], _nodes['y'], _nodes['indexes']):
                         raise RuntimeError(
-                            "The content of the ``%s`` parameter is not consistent with the provided backend.\n"
-                            "Since `backend.lib` is `" + backend.lib.__name__ + "`, ``%s['x']``, ``%s['y']`` and "
-                            "``%s['indexes']`` must all be\n"
-                            "" + str(backend.cls) + " instances." % (strnodes,)*4
+                            f"The content of the ``{strnodes}`` parameter is not consistent with the provided backend.\n"
+                            f"Since `backend.lib` is `{backend.lib.__name__}`, ``{strnodes}['x']``, ``{strnodes}['y']``"
+                            f" and ``{strnodes}['indexes']``\n"
+                            f"must all be {str(backend.cls)} instances."
                         )
                     checks._check_ndim_(1, **{"%s['x']" % strnodes : _nodes['x'],
                                               "%s['y']" % strnodes : _nodes['y'],
                                               "%s['indexes']" % strnodes: _nodes['indexes']})
                     if not len(_nodes['x']) == len(_nodes['y']) == len(_nodes['indexes']):
                         raise RuntimeError(
-                            "%s['x'], %s['y'] and %s['indexes'] must have the same length.\n" % (strnodes,)*3
+                            f"{strnodes}['x'], {strnodes}['y'] and {strnodes}['indexes'] must have the same length.\n"
                         )
                     checks._check_dtype_(dtype, **{"%s['x']" % strnodes : _nodes['x'],
                                                    "%s['y']" % strnodes : _nodes['y']})
@@ -2319,14 +2309,14 @@ def _check_nd_inputs_(ndims, backend, B=None, delta=None, fgrad=None,
                         )
                     if not backend.is_backend_compliant(_nodes['x'], _nodes['y'], _nodes['z'], _nodes['indexes']):
                         raise RuntimeError(
-                            "The content of the ``%s`` parameter is not consistent with the provided backend.\n"
-                            "Since `backend.lib` is `" + backend.lib.__name__ + "`, ``%s['x']``, ``%s['y']`` "
-                            "``%s['z']`` and ``%s['indexes']`` must all be\n"
-                            "" + str(backend.cls) + " instances." % (strnodes,)*5
+                            f"The content of the ``{strnodes}`` parameter is not consistent with the provided backend.\n"
+                            f"Since `backend.lib` is `{backend.lib.__name__}`, ``{strnodes}['x']``, ``{strnodes}['y']`` "
+                            f"``{strnodes}['z']`` and ``{strnodes}['indexes']``\n"
+                            f"must all be {str(backend.cls)} instances."
                         )
                     if not len(_nodes['x']) == len(_nodes['y']) == len(_nodes['z']) == len(_nodes['indexes']):
-                        raise RuntimeError(                    
-                            "%s['x'], %s['y'], %s['z'] and %s['indexes'] must have the same length.\n" % (strnodes,)*4
+                        raise RuntimeError(
+                            f"{strnodes}['x'], {strnodes}['y'], {strnodes}['z'] and {strnodes}['indexes'] must have the same length.\n"
                         )
                     checks._check_dtype_(dtype, **{"%s['x']" % strnodes: nodes['x'],
                                                    "%s['y']" % strnodes: nodes['y'],

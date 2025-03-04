@@ -2,6 +2,7 @@
 (filtered-backprojection, TV-regularized least-squares, ...).
 
 """
+# ruff: noqa: E731
 import math
 import matplotlib.pyplot as plt
 import types
@@ -520,7 +521,7 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
                        notest=True) for fgi in fgrad]
     A = lambda u : project(u, delta, B, h, fgrad, backend=backend,
                            eps=eps, rfft_mode=True, nodes=nodes,
-                           notest=True)
+                           notest=True) 
     adjA = lambda v : backproject(v, delta, B, h, fgrad, out_shape,
                                   backend=backend, eps=eps,
                                   nodes=nodes, rfft_mode=True,
@@ -809,11 +810,11 @@ def eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1, backend=None,
     
     # precompute filter in Fourier domain
     Nb = len(B)
-    alf = backend.arange(Nb//2 + 1, dtype='int32') # low frequency
-                                                   # indexes (half of
-                                                   # the low-frequency
-                                                   # domain)
-    theta = backend.arctan2(gy, gx) # polar angle
+    #alf = backend.arange(Nb//2 + 1, dtype='int32') # low frequency
+    #                                               # indexes (half of
+    #                                               # the low-frequency
+    #                                               # domain)
+    #theta = backend.arctan2(gy, gx) # polar angle
     cof = 1. / (2. * dB * len(idproj))
     rfft_g_inv = backend.zeros((Nb//2 + 1,), dtype=backend.lib_to_str_dtypes[rfft_g.dtype])
     M = max(int(1), int(round(frequency_cutoff * Nb))) # cutoff occurs for |alf| > M/2

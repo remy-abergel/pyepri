@@ -38,8 +38,8 @@ in the constructor documentations:
 """
 import functools
 import numpy as np
+import scipy as sp
 import os
-import psutil
 import re
 from psutil import cpu_count # temporary fix for FINUFFT issue #596:
                              # force OMP_NUM_THREADS = number of

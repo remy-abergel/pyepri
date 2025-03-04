@@ -9,7 +9,7 @@ import numpy as np
 import functools
 import matplotlib.pyplot as plt
 import pylab as pl
-from IPython import display
+from IPython import display, get_ipython
 import time
 import types
 import pyepri.checks as checks
