@@ -527,9 +527,36 @@ class Backend:
             def assigned_func(*args, **kwargs):
                 return func(*args, nthreads=nthreads, **kwargs) if 'nthreads' not in kwargs.keys() else func(*args, **kwargs)
             return assigned_func
-        
+
+        # prepare function to unify default setting for axes/dim inputs of (r)fftn functions
+        def set_fftn_dim(u, s):
+            """Specify axes/dim along which to apply (i)(r)fftn transformation
+            
+            Parameters
+            ----------
+            
+            u : array_like
+                Input array to be passed to (r)fftn
+            
+            s : sequence of int or None
+                Signal size in the transformed dimensions (or axes) to
+                be passed to (i)(r)fftn.
+            
+            Return
+            ------
+            
+            dim : sequence of int
+                Dimensions to be transformed, that is, all dimensions
+                if s is None, or the last len(s) dimensions otherwise.
+            
+            """
+            if s is None: # return all dim
+                return tuple(k for k in range(-u.ndim, 0, 1))
+            else: # return the first len(s) dim
+                return tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1))
+            
         # set lib-dependent backends methods
-        if lib.__name__ in ['numpy','cupy']: 
+        if lib.__name__ in ['numpy', 'cupy']: 
             
             # remap lib-dependant methods using lambda functions
             self.zeros = lambda *size, dtype=None : lib.zeros(*size, dtype=lib.dtype(dtype))
@@ -584,118 +611,56 @@ class Backend:
             self.stack.__doc__ = "return " + lib.__name__ + ".stack(arrays, axis=dim, out=out)"
             self.quantile.__doc__ = "return " + lib.__name__ + ".quantile(u, q, axis=dim, keepdims=keepdim, out=out, method=interpolation)"
             self.frombuffer.__doc__ = "return " + lib.__name__ + ".frombuffer(buffer, dtype=" + lib.__name__ + ".dtype(dtype), count=count, offset=offset)"
-
-            # deal with FFT support (differences of output data type
-            # inference exist between numpy and cupy)
-            if lib.__name__ == "numpy":
-                
-                # direct transform: default behavior of direct FFT
-                # functions provided in numpy.fft is to return a
-                # numpy.complex128 output array whatever the data type
-                # of the input array. We will cast the output with a
-                # custom complex data type inferred from the input
-                # (which is the default behavior for `cupy.fft` and
-                # `torch.fft` functions.
-                self.rfft = lambda u, n=None, dim=-1, norm=None : lib.fft.rfft(u, n=n, axis=dim, norm=norm).astype(self.mapping_to_complex_dtypes[self.lib_to_str_dtypes[u.dtype]])                
-                self.fft = lambda u, n=None, dim=-1, norm=None : lib.fft.fft(u, n=n, axis=dim, norm=norm).astype(self.mapping_to_complex_dtypes[self.lib_to_str_dtypes[u.dtype]])
-                self.rfft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.rfft2(u, s=s, axes=dim, norm=norm).astype(self.mapping_to_complex_dtypes[self.lib_to_str_dtypes[u.dtype]])                
-                self.fft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.fft2(u, s=s, axes=dim, norm=norm).astype(self.mapping_to_complex_dtypes[self.lib_to_str_dtypes[u.dtype]])
-                self.rfftn = lambda u, s=None, dim=None, norm=None : lib.fft.rfftn(u, s=s, axes=dim, norm=norm).astype(self.mapping_to_complex_dtypes[self.lib_to_str_dtypes[u.dtype]])                
-                self.fftn = lambda u, s=None, dim=None, norm=None : lib.fft.fftn(u, s=s, axes=dim, norm=norm).astype(self.mapping_to_complex_dtypes[self.lib_to_str_dtypes[u.dtype]])
-                
-                # inverse transform: the default behavior of numpy.fft.irfft is to return a numpy.float64 array whaterver the data type of the input array. We provide below 
-                mapping_to_real_dtypes = {
-                    'int32'      : 'float32',
-                    'float32'    : 'float32',
-                    'complex64'  : 'float32',
-                    'int64'      : 'float64',
-                    'float64'    : 'float64',
-                    'complex128' : 'float64',
-                }        
-                self.irfft = lambda u, n=None, dim=-1, norm=None : lib.fft.irfft(u, n=n, axis=dim, norm=norm).astype(mapping_to_real_dtypes[self.lib_to_str_dtypes[u.dtype]])
-                self.ifft = lambda u, n=None, dim=-1, norm=None : lib.fft.ifft(u, n=n, axis=dim, norm=norm).astype(self.mapping_to_complex_dtypes[self.lib_to_str_dtypes[u.dtype]])
-                self.irfft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.irfft2(u, s=s, axes=dim, norm=norm).astype(mapping_to_real_dtypes[self.lib_to_str_dtypes[u.dtype]])
-                self.ifft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.ifft2(u, s=s, axes=dim, norm=norm).astype(self.mapping_to_complex_dtypes[self.lib_to_str_dtypes[u.dtype]])
-                self.irfftn = lambda u, s=None, dim=None, norm=None : lib.fft.irfftn(u, s=s, axes=dim, norm=norm).astype(mapping_to_real_dtypes[self.lib_to_str_dtypes[u.dtype]])
-                self.ifftn = lambda u, s=None, dim=None, norm=None : lib.fft.ifftn(u, s=s, axes=dim, norm=norm).astype(self.mapping_to_complex_dtypes[self.lib_to_str_dtypes[u.dtype]])
-                
-                # set minimal doc for the above defined lambda functions
-                self.rfft.__doc__ = (
-                    "return " + lib.__name__ + ".fft.rfft(u, n=n, axis=dim, norm=norm).astype(cdtype)\n"
-                    "where `cdtype` is a complex data type inferred from `u`."
-                )
-                self.fft.__doc__ = (
-                    "return " + lib.__name__ + ".fft.fft(u, n=n, axis=dim, norm=norm).astype(cdtype)\n"
-                    "where `cdtype` is a complex data type inferred from `u`."
-                )
-                self.rfft2.__doc__ = (
-                    "return " + lib.__name__ + ".fft.rfft2(u, n=n, axes=dim, norm=norm).astype(cdtype)\n"
-                    "where `cdtype` is a complex data type inferred from `u`."
-                )
-                self.fft2.__doc__ = (
-                    "return " + lib.__name__ + ".fft.fft2(u, n=n, axes=dim, norm=norm).astype(cdtype)\n"
-                    "where `cdtype` is a complex data type inferred from `u`."
-                )
-                self.rfftn.__doc__ = (
-                    "return " + lib.__name__ + ".fft.rfftn(u, n=n, axes=dim, norm=norm).astype(cdtype)\n"
-                    "where `cdtype` is a complex data type inferred from `u`."
-                )
-                self.fftn.__doc__ = (
-                    "return " + lib.__name__ + ".fft.fftn(u, n=n, axes=dim, norm=norm).astype(cdtype)\n"
-                    "where `cdtype` is a complex data type inferred from `u`."
-                )
-                self.irfft.__doc__ = (
-                    "return " + lib.__name__ + ".fft.irfft(u, n=n, axis=dim, norm=norm).astype(dtype)\n"
-                    "where `dtype` is a real data type inferred from `u`."
-                )
-                self.ifft.__doc__ = (
-                    "return " + lib.__name__ + ".fft.ifft(u, n=n, axis=dim, norm=norm).astype(cdtype)\n"
-                    "where `cdtype` is a complex data type inferred from `u`."
-                )
-                self.irfft2.__doc__ = (
-                    "return " + lib.__name__ + ".fft.irfft2(u, n=n, axes=dim, norm=norm).astype(dtype)\n"
-                    "where `dtype` is a real data type inferred from `u`."
-                )
-                self.ifft2.__doc__ = (
-                    "return " + lib.__name__ + ".fft.ifft2(u, n=n, axes=dim, norm=norm).astype(cdtype)\n"
-                    "where `cdtype` is a complex data type inferred from `u`."
-                )
-                self.irfftn.__doc__ = (
-                    "return " + lib.__name__ + ".fft.irfftn(u, n=n, axes=dim, norm=norm).astype(dtype)\n"
-                    "where `dtype` is a real data type inferred from `u`."
-                )
-                self.ifftn.__doc__ = (
-                    "return " + lib.__name__ + ".fft.ifftn(u, n=n, axes=dim, norm=norm).astype(cdtype)\n"
-                    "where `cdtype` is a complex data type inferred from `u`."
-                )
-                
-            else: # lib == "cupy"
-                # default output data type inference provided by
-                # `cupy.fft` functions are kept unchanged
-                self.rfft = lambda u, n=None, dim=-1, norm=None : lib.fft.rfft(u, n=n, axis=dim, norm=norm)
-                self.irfft = lambda u, n=None, dim=-1, norm=None : lib.fft.irfft(u, n=n, axis=dim, norm=norm)
-                self.fft = lambda u, n=None, dim=-1, norm=None : lib.fft.fft(u, n=n, axis=dim, norm=norm)
-                self.ifft = lambda u, n=None, dim=-1, norm=None : lib.fft.ifft(u, n=n, axis=dim, norm=norm)
-                self.rfft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.rfft2(u, s=s, axes=dim, norm=norm)
-                self.irfft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.irfft2(u, s=s, axes=dim, norm=norm)
-                self.fft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.fft2(u, s=s, axes=dim, norm=norm)
-                self.ifft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.ifft2(u, s=s, axes=dim, norm=norm)
-                self.rfftn = lambda u, s=None, dim=None, norm=None : lib.fft.rfftn(u, s=s, axes=dim, norm=norm)
-                self.irfftn = lambda u, s=None, dim=None, norm=None : lib.fft.irfftn(u, s=s, axes=dim, norm=norm)
-                self.fftn = lambda u, s=None, dim=None, norm=None : lib.fft.fftn(u, s=s, axes=dim, norm=norm)
-                self.ifftn = lambda u, s=None, dim=None, norm=None : lib.fft.ifftn(u, s=s, axes=dim, norm=norm)
-                self.rfft.__doc__ = "return " + lib.__name__ + ".fft.rfft(u, n=n, axis=dim, norm=norm)"
-                self.irfft.__doc__ = "return " + lib.__name__ + ".fft.irfft(u, n=n, axis=dim, norm=norm)"
-                self.fft.__doc__ = "return " + lib.__name__ + ".fft.fft(u, n=n, axis=dim, norm=norm)"
-                self.ifft.__doc__ = "return " + lib.__name__ + ".fft.ifft(u, n=n, axis=dim, norm=norm)"
-                self.rfft2.__doc__ = "return " + lib.__name__ + ".fft.rfft2(u, n=n, axes=dim, norm=norm)"
-                self.irfft2.__doc__ = "return " + lib.__name__ + ".fft.irfft2(u, n=n, axes=dim, norm=norm)"
-                self.fft2.__doc__ = "return " + lib.__name__ + ".fft.fft2(u, n=n, axes=dim, norm=norm)"
-                self.ifft2.__doc__ = "return " + lib.__name__ + ".fft.ifft2(u, n=n, axes=dim, norm=norm)"
-                self.rfftn.__doc__ = "return " + lib.__name__ + ".fft.rfftn(u, n=n, axes=dim, norm=norm)"
-                self.irfftn.__doc__ = "return " + lib.__name__ + ".fft.irfftn(u, n=n, axes=dim, norm=norm)"
-                self.fftn.__doc__ = "return " + lib.__name__ + ".fft.fftn(u, n=n, axes=dim, norm=norm)"
-                self.ifftn.__doc__ = "return " + lib.__name__ + ".fft.ifftn(u, n=n, axes=dim, norm=norm)"
+            
+            # deal with FFT support
+            self.rfft = lambda u, n=None, dim=-1, norm=None : lib.fft.rfft(u, n=n, axis=dim, norm=norm)
+            self.irfft = lambda u, n=None, dim=-1, norm=None : lib.fft.irfft(u, n=n, axis=dim, norm=norm)
+            self.fft = lambda u, n=None, dim=-1, norm=None : lib.fft.fft(u, n=n, axis=dim, norm=norm)
+            self.ifft = lambda u, n=None, dim=-1, norm=None : lib.fft.ifft(u, n=n, axis=dim, norm=norm)
+            self.rfft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.rfft2(u, s=s, axes=dim, norm=norm)
+            self.irfft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.irfft2(u, s=s, axes=dim, norm=norm)
+            self.fft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.fft2(u, s=s, axes=dim, norm=norm)
+            self.ifft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.ifft2(u, s=s, axes=dim, norm=norm)
+            self.rfftn = lambda u, s=None, dim=None, norm=None : lib.fft.rfftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
+            self.irfftn = lambda u, s=None, dim=None, norm=None : lib.fft.irfftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
+            self.fftn = lambda u, s=None, dim=None, norm=None : lib.fft.fftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
+            self.ifftn = lambda u, s=None, dim=None, norm=None : lib.fft.ifftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
+            self.rfft.__doc__ = "return " + lib.__name__ + ".fft.rfft(u, n=n, axis=dim, norm=norm)"
+            self.irfft.__doc__ = "return " + lib.__name__ + ".fft.irfft(u, n=n, axis=dim, norm=norm)"
+            self.fft.__doc__ = "return " + lib.__name__ + ".fft.fft(u, n=n, axis=dim, norm=norm)"
+            self.ifft.__doc__ = "return " + lib.__name__ + ".fft.ifft(u, n=n, axis=dim, norm=norm)"
+            self.rfft2.__doc__ = "return " + lib.__name__ + ".fft.rfft2(u, n=n, axes=dim, norm=norm)"
+            self.irfft2.__doc__ = "return " + lib.__name__ + ".fft.irfft2(u, n=n, axes=dim, norm=norm)"
+            self.fft2.__doc__ = "return " + lib.__name__ + ".fft.fft2(u, n=n, axes=dim, norm=norm)"
+            self.ifft2.__doc__ = "return " + lib.__name__ + ".fft.ifft2(u, n=n, axes=dim, norm=norm)"
+            self.rfftn.__doc__ = (
+                "return " + lib.__name__ + ".fft.rfftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "where\n"
+                "+ g(u, s, dim) = dim if dim is not None\n"
+                "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
+                "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
+            )
+            self.irfftn.__doc__ = (
+                "return " + lib.__name__ + ".fft.irfftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "where\n"
+                "+ g(u, s, dim) = dim if dim is not None\n"
+                "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
+                "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
+            )
+            self.fftn.__doc__ = (
+                "return " + lib.__name__ + ".fft.fftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "where\n"
+                "+ g(u, s, dim) = dim if dim is not None\n"
+                "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
+                "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
+            )
+            self.ifftn.__doc__ = (
+                "return " + lib.__name__ + ".fft.ifftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "where\n"
+                "+ g(u, s, dim) = dim if dim is not None\n"
+                "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
+                "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
+            )
             
             # nufft support (use finufft for CPU device and cufinufft
             # for GPU device)
