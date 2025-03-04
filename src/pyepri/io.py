@@ -7,7 +7,9 @@ below:
 
 + :py:func:`read_bruker_description_file` is a copy of the
   ``read_description_file()`` function coded into the file
-  ``deerload.py`` of the DIVE package;
+  ``deerload.py`` of the DIVE package (with the slight modification of
+  variable naming (l -> L) to avoid ruff ambiguous-variable-name error
+  (E741))
 
 + :py:func:`read_bruker_bes3t_dataset` was adapted from the
   ``deerload()`` function of coded ``deerload.py`` of the DIVE
@@ -46,6 +48,7 @@ import numpy as np
 import os
 import re
 import pyepri.backends as backends
+from warnings import warn
 
 def read_bruker_description_file(name: str) -> dict:
     """Retrieves the parameters from a .DSC files as a dictionary.
@@ -64,13 +67,13 @@ def read_bruker_description_file(name: str) -> dict:
         allLines = f.readlines()
     
     # Remove lines with comments
-    allLines = [l for l in allLines if not l.startswith("*")]
+    allLines = [L for L in allLines if not L.startswith("*")]
     
     # Remove newlines
-    allLines = [l.rstrip("\n") for l in allLines]
+    allLines = [L.rstrip("\n") for L in allLines]
     
     # Remove empty lines
-    allLines = [l for l in allLines if l]
+    allLines = [L for L in allLines if L]
     
     # Merge any line ending in \n\ with the subsequent one
     allLines2 = []

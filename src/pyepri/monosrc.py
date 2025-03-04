@@ -976,10 +976,6 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
                                            backend=backend,
                                            rfft_mode=rfft_mode,
                                            notest=True)
-
-    # retrieve complex data type
-    dtype = backend.lib_to_str_dtypes[B.dtype]
-    cdtype = backend.mapping_to_complex_dtypes[dtype]
     
     # compute kernel (notice that the switch between x and y axis in
     # the nufft2d_adjoint function below is made on purpose for
@@ -990,8 +986,8 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
         g = backend.rfft(h1)
         g *= backend.rfft(h2).conj()
         c = backend.tile(g.reshape((1,-1)), (fgrad.shape[1], 1))
-        c[:,0] *= .5 # avoid counting two times the zero-frequency
-                     # coefficients when completing the sum below
+        c[:, 0] *= .5 # avoid counting two times the zero-frequency
+                      # coefficients when completing the sum below
         c = c.reshape((-1,))[nodes['indexes']]
         phi = backend.nufft2d_adjoint(y, x, c, n_modes=out_shape,
                                       eps=eps)        
@@ -2045,10 +2041,6 @@ def compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
                                            backend=backend,
                                            rfft_mode=rfft_mode,
                                            notest=True)
-
-    # retrieve complex data type
-    dtype = backend.lib_to_str_dtypes[B.dtype]
-    cdtype = backend.mapping_to_complex_dtypes[dtype]
     
     # compute kernel (notice that the switch between x and y axis in
     # the nufft3d_adjoint function below is made on purpose for
@@ -2309,7 +2301,7 @@ def _check_nd_inputs_(ndims, B, delta, fgrad, backend, u=None, h=None,
         )
     
     # nodes: many things to check
-    if not nodes is None:
+    if nodes is not None:
         if not isinstance(nodes, dict):
             raise RuntimeError("Input parameter `nodes` must be a dictionary (dict).")
         if ndims == 2:
