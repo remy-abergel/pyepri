@@ -1331,24 +1331,24 @@ class Displayer:
     
     + single 3D image : the input signal is a three-dimensional array
     
-    + multisources 2D images : the input signal is a sequence of \
+    + multisources 2D images : the input signal is a sequence of
       two-dimensional arrays (each array being called a `source`)
     
-    + multisources 3D images : the input signal is a sequence of \
+    + multisources 3D images : the input signal is a sequence of
       three-dimensional arrays (each array being called a `source`)
     
     
     Displaying rules 
     ----------------
     
-    + single 2D image : the image is displayed using \
+    + single 2D image : the image is displayed using
       `matplotlib.imshow`
     
-    + single 3D image : the three central slices (along each axis) of \
-      the image are drawn using `matplotlib.imshow` into a single row \ 
+    + single 3D image : the three central slices (along each axis) of
+      the image are drawn using `matplotlib.imshow` into a single row
       of subplots.
     
-    + multisources 2D images : the source images are drawn using \ 
+    + multisources 2D images : the source images are drawn using
       `matplotlib.imshow` into a single row of subplots.
     
     + multisources 3D images : each source image is represented using
@@ -1358,7 +1358,7 @@ class Displayer:
     In all situations described above, several display customization
     are proposed (axes labels, axes boundaries, colormap, aspect, ...)
     through the kwargs of the default constructor.
-
+    
     
     Class attributes
     ----------------
@@ -1372,23 +1372,23 @@ class Displayer:
         3D image) corresponding to the image instances of each
         produced subplot.
     
-    update_display : <class 'function'> 
+    update_display : <class 'function'>
         Function with prototype ``None = update_display(u, fg)`` that
         can be used to replace the image displayed in ``fg`` (the
         ouptut of the ``init_display`` attribute described above) by
         ``u``.
-
+    
     get_number : <class 'function'>
         Function with prototype ``fgnum = get_number(fg)`` that return
         the figure number from the output of the ``init_display``
         attribute described above.
     
-    title : <class 'function'> 
+    title : <class 'function'>
         Function with prototype ``None = title(str)`` that can be used
         to update the title (or suptitle when subplots are used) of
         the current figure.
-
-    notebook : bool 
+    
+    notebook : bool
         A bool that specified whether the detected environment is an
         interactive notebook environments (``notebook = True``) or not
         (``notebook = False``)
@@ -1403,7 +1403,7 @@ class Displayer:
         Function with prototype ``None = clear_output()`` used to
         clear the currently displayed image within an interactive
         notebook running environment.
-
+    
     """
     
     def __init__(self, nsrc, ndim, figsize=None, displayFcn=None,
