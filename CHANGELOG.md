@@ -2,6 +2,26 @@
 
 <!--next-version-placeholder-->
 
+## Future v1.0.4
+
+### Documentation
+
+- improved installation instructions and added videos (not pushed yet)
+
+### Code 
+
+- PyEPRI now require numpy >= 2.0.0, unified FFT functions for `numpy` and `cupy`
+  backends and fixed numpy deprecated warning ([#7](../../pull/7))
+
+- fixed ruff errors (all checks passed): remove unused variables and
+  fixed minor bugs ([#6](../../pull/6))
+
+- added welcome message in the [Discussions](../../discussions)
+  section ([#5](../../pull/5))
+  
+- added Github continuous integration workflow ([#2](../../pull/2))
+  and issue templates ([#3](../../pull/3), [#4](../../pull/4))
+
 ## v1.0.3 (February 5th, 2025)
 
 ### Packaging
@@ -9,26 +29,26 @@
 - split [torch] optional dependencies into [torch-cpu] (with finufft)
   and [torch-cuda] (cufinufft) in order to avoid pip install error on
   windows systems
-  
-### Documentation 
+
+### Documentation
 
 - updated installation instructions
 
 ## v1.0.2 (January 3rd, 2025)
 
-### Code 
+### Code
 
 - minor fix for `processing.eprfbp2d` and `processing.eprfbp3d`
   functions (`displayer=None` was not working as expected)
-  
+
 - changed normalization in `processing.eprfbp2d` and
   `processing.eprfbp3d` to get a consistent quadrature scheme
-  
-### Documentation 
+
+### Documentation
 
 - added the mathematical description of the filtered backrojection
   scheme implemented in the package
-  
+
 - fixed Gaussian derivative normalization factor for demo with
   simulated reference spectra
 
