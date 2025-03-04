@@ -6,17 +6,21 @@
 
 ### Documentation
 
-- improved installation instructions and added videos
+- improved installation instructions and added videos (not pushed yet)
 
 ### Code 
 
 - PyEPRI now require numpy >= 2.0.0, unified FFT functions for `numpy` and `cupy`
-  backends and fixed numpy deprecated warning ([#6](../../pull/6))
+  backends and fixed numpy deprecated warning ([#7](../../pull/7))
 
 - fixed ruff errors (all checks passed): remove unused variables and
-  fixed minor bugs ([#5](../../pull/5))
+  fixed minor bugs ([#6](../../pull/6))
+
+- added welcome message in the [Discussions](../../discussions)
+  section ([#5](../../pull/5))
   
-- added github ci workflow ([#2](../../pull/2)) and issue templates ([#3](../../pull/3), [#4](../../pull/4))
+- added Github continuous integration workflow ([#2](../../pull/2))
+  and issue templates ([#3](../../pull/3), [#4](../../pull/4))
 
 ## v1.0.3 (February 5th, 2025)
 
