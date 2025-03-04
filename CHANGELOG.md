@@ -10,8 +10,12 @@
 
 ### Code 
 
-- PyEPRI now require numpy >= 2.0.0, unified FFT functions for `numpy` and `cupy`
-  backends and fixed numpy deprecated warning ([#7](../../pull/7))
+- Removed escape character `\` to avoid SyntaxWarning
+  ([#8](../../pull/8))
+
+- PyEPRI now require numpy >= 2.0.0, unified FFT functions for `numpy`
+  and `cupy` backends and fixed numpy deprecated warning
+  ([#7](../../pull/7))
 
 - fixed ruff errors (all checks passed): remove unused variables and
   fixed minor bugs ([#6](../../pull/6))
