@@ -15,23 +15,16 @@ code, don't hesitate to open a
 
 ## Installation
 
-### System requirements 
-
 PyEPRI can be installed on all plateforms (Linux, MacOs or
 Windows). However, GPU support is currently only available for systems
 equipped with an NVIDIA graphics card and a working installation of
 the CUDA drivers (which excludes MAC systems).
 
-The following installation guidelines assume that you have the
-following libraries installed on your system: 
+Installation commands provided below are valid for Linux and Mac
+systems. More complete installation guidelines (including video
+tutorials) for Linux, Mac and Windows are available in the [online
+documentation](https://pyepri.math.cnrs.fr/installation.html).
 
-- **[mandatory]** python3 (the Python 3 programming language)
-- **[mandatory]** python3-pip (to install Python packages using the ``pip`` command)
-- **[mandatory]** python3-venv (for the creation of virtual environment)
-- **[recommended]** python3-tk (to avoid display issues on Linux systems)
-- **[optional]** git (if you want to install the PyEPRI package via the
-  [github repository](https://github.com/remy-abergel/pyepri/))
-  
 ### Install latest stable version using pip (recommended)
 
 Open a terminal and execute the following steps in order to create a

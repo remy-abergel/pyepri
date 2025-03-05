@@ -10,7 +10,9 @@
 
 ### Code 
 
-- Removed escape character `\` to avoid SyntaxWarning
+- Removed escape character `\` from class docstrings in
+  [backends.py](src/pyepri/backends.py) and
+  [displayers.py](src/pyepri/displayers.py) to avoid SyntaxWarning
   ([#8](../../pull/8))
 
 - PyEPRI now require numpy >= 2.0.0, unified FFT functions for `numpy`
@@ -19,6 +21,11 @@
 
 - fixed ruff errors (all checks passed): remove unused variables and
   fixed minor bugs ([#6](../../pull/6))
+
+### Repository 
+
+- shorten installation instructions and refer to the online
+  documentation ([#9](../../pull/9))
 
 - added welcome message in the [Discussions](../../discussions)
   section ([#5](../../pull/5))
