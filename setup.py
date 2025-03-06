@@ -6,5 +6,7 @@ setuptools.setup(
         'pyepri': 'src/pyepri',
         'pyepri.datasets': 'datasets',
     },
+   package_data={'datasets': ['*.npy']},
+   include_package_data=True,
 )
 
