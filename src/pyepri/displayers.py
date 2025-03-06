@@ -24,6 +24,8 @@ def is_notebook() -> bool:
             return True  # Jupyter notebook or qtconsole
         elif shell == 'TerminalInteractiveShell':
             return False # Terminal running IPython
+        elif 'google.colab' in str(get_ipython()): # running on Google Colab
+            return True
         else:
             return False # Other type (?)
     except NameError:
