@@ -2,11 +2,11 @@
 
 <!--next-version-placeholder-->
 
-## Future v1.0.4
+## v1.0.4 (March 7th, 2025)
 
 ### Documentation
 
-- improved installation instructions and added videos (not pushed yet)
+- improved installation instructions and added videos
 
 ### Code 
 
@@ -32,6 +32,11 @@
   
 - added Github continuous integration workflow ([#2](../../pull/2))
   and issue templates ([#3](../../pull/3), [#4](../../pull/4))
+
+### Python Packaging
+
+- Fix datasets packaging for pip+git installation
+  ([#11](../../pull/11))
 
 ## v1.0.3 (February 5th, 2025)
 
