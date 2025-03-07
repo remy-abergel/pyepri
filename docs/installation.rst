@@ -120,6 +120,14 @@ Install latest stable version using pip (recommended)
 	 
    .. group-tab:: Mac OSX
 
+      **Package installation and quick test in video**
+      
+      .. video:: _static/pyepri_installation_macos.mp4
+	 :width: 100%
+	 :align: center
+	 :caption: (many thanks to Camille Pouchol for sharing their
+                   Macbook)
+
       **Installation instructions in command lines**
       
       Open a terminal and execute the following steps in order to
