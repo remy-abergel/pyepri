@@ -513,6 +513,7 @@ class Backend:
         self.abs = lib.abs
         self.tile = lib.tile
         self.moveaxis = lib.moveaxis
+        self.unique = lib.unique
         self.meshgrid = lambda *xi, indexing='xy' : lib.meshgrid(*xi, indexing=indexing)
         self.exp = lambda arr, out=None : lib.exp(arr, out=out)
 
@@ -560,6 +561,7 @@ class Backend:
             
             # remap lib-dependant methods using lambda functions
             self.zeros = lambda *size, dtype=None : lib.zeros(*size, dtype=lib.dtype(dtype))
+            self.ones = lambda *size, dtype=None : lib.ones(*size, dtype=lib.dtype(dtype))
             self.fftshift = lambda u, dim=None : lib.fft.fftshift(u, axes=dim)
             self.ifftshift = lambda u, dim=None : lib.fft.ifftshift(u, axes=dim)
             self.arange = lambda *args, dtype=None : functools.partial(lib.arange, dtype=dtype)(*args)
@@ -586,6 +588,7 @@ class Backend:
 
             # set minimal doc for the above defined lambda functions
             self.zeros.__doc__ = "return " + lib.__name__ + ".zeros(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
+            self.ones.__doc__ = "return " + lib.__name__ + ".ones(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
             self.fftshift.__doc__ = "return " + lib.__name__ + ".fft.fftshift(u, axes=dim)"
             self.ifftshift.__doc__ = "return " + lib.__name__ + ".fft.ifftshift(u, axes=dim)"
             self.arange.__doc__ = "return functools.partial(" + lib.__name__ + ".arange, dtype=dtype)(*args)"
@@ -670,17 +673,24 @@ class Backend:
                 self.nufft3d = assign_finufft_nthreads(finufft.nufft3d2)
                 self.nufft2d_adjoint = assign_finufft_nthreads(finufft.nufft2d1)
                 self.nufft3d_adjoint = assign_finufft_nthreads(finufft.nufft3d1)
+                self.nufft_plan = finufft.Plan
+                self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
+                self.nufft_execute = lambda plan, arr : plan.execute(arr)
             else:
                 import cufinufft
                 self.nufft2d = cufinufft.nufft2d2
                 self.nufft3d = cufinufft.nufft3d2
                 self.nufft2d_adjoint = cufinufft.nufft2d1
                 self.nufft3d_adjoint = cufinufft.nufft3d1
+                self.nufft_plan = cufinufft.Plan
+                self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
+                self.nufft_execute = lambda plan, arr : plan.execute(arr)
                         
         else: # lib == torch
             
             # remap some lib-dependant methods using lambda functions
             self.zeros = lambda *size, dtype=None : lib.zeros(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
+            self.ones = lambda *size, dtype=None : lib.ones(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
             self.arange = lambda *args, dtype=None : functools.partial(lib.arange, dtype=self.str_to_lib_dtypes[dtype], device=device)(*args)
             self.linspace = lambda *args, dtype=None : functools.partial(lib.linspace, dtype=self.str_to_lib_dtypes[dtype], device=device)(*args)
             self.rand = lambda *dims, dtype='float32' : lib.rand(*dims, dtype=self.str_to_lib_dtypes[dtype], device=device)
@@ -720,6 +730,11 @@ class Backend:
             # set minimal doc for the above defined lambda functions
             self.zeros.__doc__ = (
                 "return torch.zeros(*size, dtype=self.str_to_lib_dtypes[dtype], device='" + self.device + "')\n"
+                "where `self` denotes the backends.Backend class instance from wich this lambda\n"
+                "function belongs to."
+            )
+            self.ones.__doc__ = (
+                "return torch.ones(*size, dtype=self.str_to_lib_dtypes[dtype], device='" + self.device + "')\n"
                 "where `self` denotes the backends.Backend class instance from wich this lambda\n"
                 "function belongs to."
             )
@@ -777,7 +792,7 @@ class Backend:
             # for GPU device)
             if device == "cpu" :
                 import finufft
-
+                
                 # define decorator for finufft functions (those
                 # function do not natively accept torch.Tensor input
                 # arrays, such input need to be cast into
@@ -793,13 +808,17 @@ class Backend:
                         kwargs2 = {key: val.numpy() if isinstance(val, lib.Tensor) else val for key, val in kwargs.items()}
                         return lib.from_numpy(func(*args2, **kwargs2))
                     return numpyfied_func
-
+                
                 # decorate finufft functions 
                 self.nufft2d = numpyfy(assign_finufft_nthreads(finufft.nufft2d2))
                 self.nufft3d = numpyfy(assign_finufft_nthreads(finufft.nufft3d2))
                 self.nufft2d_adjoint = numpyfy(assign_finufft_nthreads(finufft.nufft2d1))
                 self.nufft3d_adjoint = numpyfy(assign_finufft_nthreads(finufft.nufft3d1))
-
+                self.nufft_plan = finufft.Plan
+                self.nufft_setpts = lambda plan, *pts : plan.setpts(*[point.numpy() for point in pts])
+                self.nufft_execute = lambda plan, arr : lib.from_numpy(plan.execute(arr.numpy()))
+                #self.nufft_execute = lambda plan, arr : numpyfy(plan.execute)(arr)
+                
                 # add short documentation
                 self.nufft2d.__doc__ = (
                     "same as finufft.nufft2d2 but torch.Tensor inputs are cast into numpy.ndarray\n"                    
@@ -828,4 +847,6 @@ class Backend:
                 self.nufft3d = cufinufft.nufft3d2
                 self.nufft2d_adjoint = cufinufft.nufft2d1
                 self.nufft3d_adjoint = cufinufft.nufft3d1
-            
+                self.nufft_plan = cufinufft.Plan                
+                self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
+                self.nufft_execute = lambda plan, arr : plan.execute(arr)
