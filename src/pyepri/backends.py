@@ -562,6 +562,7 @@ class Backend:
             # remap lib-dependant methods using lambda functions
             self.zeros = lambda *size, dtype=None : lib.zeros(*size, dtype=lib.dtype(dtype))
             self.ones = lambda *size, dtype=None : lib.ones(*size, dtype=lib.dtype(dtype))
+            self.empty = lambda *size, dtype=None : lib.empty(*size, dtype=lib.dtype(dtype))
             self.fftshift = lambda u, dim=None : lib.fft.fftshift(u, axes=dim)
             self.ifftshift = lambda u, dim=None : lib.fft.ifftshift(u, axes=dim)
             self.arange = lambda *args, dtype=None : functools.partial(lib.arange, dtype=dtype)(*args)
@@ -589,6 +590,7 @@ class Backend:
             # set minimal doc for the above defined lambda functions
             self.zeros.__doc__ = "return " + lib.__name__ + ".zeros(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
             self.ones.__doc__ = "return " + lib.__name__ + ".ones(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
+            self.empty.__doc__ = "return " + lib.__name__ + ".empty(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
             self.fftshift.__doc__ = "return " + lib.__name__ + ".fft.fftshift(u, axes=dim)"
             self.ifftshift.__doc__ = "return " + lib.__name__ + ".fft.ifftshift(u, axes=dim)"
             self.arange.__doc__ = "return functools.partial(" + lib.__name__ + ".arange, dtype=dtype)(*args)"
@@ -691,6 +693,7 @@ class Backend:
             # remap some lib-dependant methods using lambda functions
             self.zeros = lambda *size, dtype=None : lib.zeros(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
             self.ones = lambda *size, dtype=None : lib.ones(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
+            self.empty = lambda *size, dtype=None : lib.empty(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
             self.arange = lambda *args, dtype=None : functools.partial(lib.arange, dtype=self.str_to_lib_dtypes[dtype], device=device)(*args)
             self.linspace = lambda *args, dtype=None : functools.partial(lib.linspace, dtype=self.str_to_lib_dtypes[dtype], device=device)(*args)
             self.rand = lambda *dims, dtype='float32' : lib.rand(*dims, dtype=self.str_to_lib_dtypes[dtype], device=device)
@@ -735,6 +738,11 @@ class Backend:
             )
             self.ones.__doc__ = (
                 "return torch.ones(*size, dtype=self.str_to_lib_dtypes[dtype], device='" + self.device + "')\n"
+                "where `self` denotes the backends.Backend class instance from wich this lambda\n"
+                "function belongs to."
+            )
+            self.empty.__doc__ = (
+                "return torch.empty(*size, dtype=self.str_to_lib_dtypes[dtype], device='" + self.device + "')\n"
                 "where `self` denotes the backends.Backend class instance from wich this lambda\n"
                 "function belongs to."
             )
