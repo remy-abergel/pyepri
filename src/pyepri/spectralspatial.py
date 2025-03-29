@@ -54,7 +54,7 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
     # backend inference (if necessary)
     if backend is None:
         backend = checks._backend_inference_(u=u, B=B, fgrad=fgrad)
-        
+    
     # consistency checks
     #if not notest:
     #    _check_nd_inputs_(2, B, delta, fgrad, backend, u=u, h=h,
@@ -96,7 +96,7 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
     Nb = len(B) # number of points per projection
     Nproj = fgrad.shape[1] # number of projections
     _, Ny, Nx, Nz = u.shape # spatial dimensions
-
+    
     # retrieve complex data type in str format and cast u to this
     # complex datatype
     dtype = backend.lib_to_str_dtypes[u.dtype]
@@ -161,7 +161,7 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
     Nb = len(B) # number of points per projection
     Nproj = fgrad.shape[1] # number of projections
     _, Ny, Nx, Nz = u.shape # spatial dimensions
-
+    
     # retrieve complex data type in str format and cast u to this
     # complex datatype
     dtype = backend.lib_to_str_dtypes[u.dtype]
@@ -281,9 +281,9 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     # retrieve frequency nodes
     x, y, z, indexes = nodes['x'], nodes['y'], nodes['z'], nodes['indexes']
     t, idt, lt = nodes['t'], nodes['idt'], nodes['lt']
-
+    
     # compute adjoint nufft
-    if memory_usage in (0, 1):
+    if 0 == memory_usage:
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         if weights is None:
@@ -292,6 +292,18 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
         else:
             w = weights
         out = backend.nufft_execute(plan, w * fft_proj.reshape((-1,))[indexes]).real
+    if 1 == memory_usage:
+        plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
+        backend.nufft_setpts(plan, y, x, z)
+        phat = backend.empty((Nb, len(indexes)), dtype=cdtype)
+        alf = backend.ifftshift(-(Nb//2) + backend.arange(Nb, dtype=dtype))
+        xi = (2. * math.pi / float(Nb)) * alf
+        nrm = delta**3 / float(Nb)
+        for l in range(Nb):
+            xil = xi * l
+            w = nrm * (backend.cos(xil) + 1j * backend.sin(xil)).reshape((-1,))
+            phat[l, :] = (fft_proj * w).reshape((-1,))[indexes]
+        out = backend.nufft_execute(plan, phat).real
     else:
         out = backend.zeros(out_shape, dtype=dtype)
         nrm = delta**3 / float(Nb)
@@ -348,7 +360,7 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
     rfft_proj[:, 1::] *= 2.
     
     # compute adjoint nufft
-    if memory_usage in (0, 1):
+    if 0 == memory_usage:
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         if weights is None:
@@ -357,6 +369,17 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
         else:
             w = weights
         out = backend.nufft_execute(plan, w * rfft_proj.reshape((-1,))[indexes]).real
+    if 1 == memory_usage:
+        plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
+        backend.nufft_setpts(plan, y, x, z)
+        phat = backend.empty((Nb, len(indexes)), dtype=cdtype)
+        xi = (2. * math.pi / float(Nb)) * backend.arange(1 + Nb//2, dtype=dtype)
+        nrm = delta**3 / float(Nb)
+        for l in range(Nb):
+            xil = xi * l
+            w = nrm * (backend.cos(xil) + 1j * backend.sin(xil)).reshape((-1,))
+            phat[l, :] = (rfft_proj * w).reshape((-1,))[indexes]
+        out = backend.nufft_execute(plan, phat).real
     else:
         out = backend.zeros(out_shape, dtype=dtype)
         nrm = delta**3 / float(Nb)
@@ -408,7 +431,7 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
     # retrieve frequency nodes
     x, y, z, indexes = nodes['x'], nodes['y'], nodes['z'], nodes['indexes']
     t, idt = nodes['t'], nodes['idt']
-
+    
     # compute kernel
     lt2 = backend.arange(2 * Nb, dtype=dtype).reshape((-1, 1)) * t.reshape((1, -1))
     cof = (delta**6 / float(Nb)) * (backend.cos(lt2) + 1j * backend.sin(lt2))
