@@ -639,28 +639,28 @@ class Backend:
             self.fft2.__doc__ = "return " + lib.__name__ + ".fft.fft2(u, n=n, axes=dim, norm=norm)"
             self.ifft2.__doc__ = "return " + lib.__name__ + ".fft.ifft2(u, n=n, axes=dim, norm=norm)"
             self.rfftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.rfftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "return " + lib.__name__ + ".fft.rfftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
             )
             self.irfftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.irfftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "return " + lib.__name__ + ".fft.irfftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
             )
             self.fftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.fftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "return " + lib.__name__ + ".fft.fftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
             )
             self.ifftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.ifftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "return " + lib.__name__ + ".fft.ifftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
