@@ -1089,7 +1089,7 @@ def compute_3d_frequency_nodes(B, delta, fgrad, backend=None,
         ...).
     
     fgrad : array_like (with type `backend.cls`)
-        Three dimensional array with shape ``(3, fgrad.shape[1])``
+        Two-dimensional array with shape ``(3, fgrad.shape[1])``
         such that ``fgrad[:,k]`` corresponds to the (X,Y,Z)
         coordinates of the field gradient vector associated to the
         k-th EPR projection to be computed.
@@ -1857,7 +1857,7 @@ def backproj3d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
         When backend is None, a default backend is inferred from the
         input arrays ``(rfft_proj, B, rfft_h_conj, fgrad)``.
     
-    out_shape : integer or integer tuple of length 2, optional 
+    out_shape : integer or integer tuple of length 3, optional 
         Shape of the output image `out_shape = out.shape = (N1, N2,
         N3)` (or `out_shape = N` when N1 = N2 = N3 = N). This optional
         input is in fact mandatory when no preallocated array is given
@@ -1888,7 +1888,7 @@ def backproj3d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
     out : complex array_like (with type `backend.cls`)
         Backprojected 3D image in complex format (imaginary part
         should be close to zero and can be thrown away).
-
+    
     
     See also
     --------
@@ -2023,7 +2023,7 @@ def compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
     phi : array_like (with type `backend.cls`)
         Computed Toeplitz kernel (or its three-dimensional real input
         FFT when ``return_rfft3 is True``).
-
+    
     
     See also
     --------
@@ -2104,14 +2104,14 @@ def apply_3d_toeplitz_kernel(u, rfft3_phi, backend=None, notest=False):
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-
+    
     
     Return 
     ------
     
     out : array_like (with type `backend.cls`) 
         output projected-backprojected image.
-
+    
     
     See also
     --------
