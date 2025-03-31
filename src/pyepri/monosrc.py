@@ -53,6 +53,7 @@ def compute_2d_frequency_nodes(B, delta, fgrad, backend=None,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return
     ------
@@ -76,6 +77,7 @@ def compute_2d_frequency_nodes(B, delta, fgrad, backend=None,
         + ``rfft_mode`` a bool specifying whether the frequency nodes
           cover half of the frequency domain (``rfft_mode=True``) or the
           full frequency domain (``rfft_mode=False``).
+
     
     See also
     --------
@@ -195,6 +197,7 @@ def proj2d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return
     ------
@@ -222,7 +225,7 @@ def proj2d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
     if not notest:
         _check_nd_inputs_(2, B, delta, fgrad, backend, u=u, h=h,
                           eps=eps, nodes=nodes, rfft_mode=rfft_mode)
-
+    
     # compute EPR projections in Fourier domain and apply inverse DFT
     # to get the projections in B-domain
     if rfft_mode:
@@ -305,6 +308,7 @@ def proj2d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return
     ------
@@ -315,7 +319,8 @@ def proj2d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
         projections) such that ``out[k,:]`` contains the discrete
         Fourier coefficients of the EPR projection of `u` with field
         gradient ``fgrad[:,k]``.
-        
+
+    
     See also
     --------
     
@@ -407,7 +412,7 @@ def proj2d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
@@ -430,7 +435,8 @@ def proj2d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-        
+
+    
     Return
     ------
     
@@ -440,13 +446,14 @@ def proj2d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
         computed projections) such that ``out[k,:]`` corresponds to
         half of the discrete Fourier coefficients of the EPR
         projection of `u` with field gradient ``fgrad[:,k]``.
-        
+
+    
     See also
     --------
     
     compute_2d_frequency_nodes
     proj2d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -559,6 +566,7 @@ def backproj2d(proj, delta, B, h, fgrad, out_shape, backend=None,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return 
     ------
@@ -566,13 +574,14 @@ def backproj2d(proj, delta, B, h, fgrad, out_shape, backend=None,
     out : array_like (with type `backend.cls`)
         A two-dimensional array with specified shape corresponding to
         the backprojected image.
+
     
     See also
     --------
     
     compute_2d_frequency_nodes
     proj2d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -616,7 +625,7 @@ def backproj2d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
         Two-dimensional array with shape ``(Nproj, len(B))`` (where
         ``Nproj = fgrad.shape[1]``) containing the EPR projections in
         Fourier domain.
-
+        
         More precisely, ``fft_proj[k,:]`` corresponds to the FFT of
         the k-th EPR projection (acquired with field gradient
         ``fgrad[:,k]`` and sampled over the grid `B`).
@@ -677,6 +686,7 @@ def backproj2d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.    
+
     
     Return
     ------
@@ -684,6 +694,7 @@ def backproj2d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
     out : complex array_like (with type `backend.cls`)
         Backprojected image in complex format (imaginary part should
         be close to zero and can be thrown away).
+
     
     See also
     --------
@@ -801,6 +812,7 @@ def backproj2d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.    
+
     
     Return
     ------
@@ -808,6 +820,7 @@ def backproj2d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
     out : complex array_like (with type `backend.cls`)
         Backprojected image in complex format (imaginary part should
         be close to zero and can be thrown away).
+
     
     See also
     --------
@@ -874,7 +887,7 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
         One dimensional array with same length as `B` corresponding to
         the reference spectrum involved in the forward (proj2d)
         operation (and sampled over the grid `B`).
-
+    
     h2 : array_like (with type `backend.cls`)
         One dimensional array with same length as `B` corresponding to
         the reference spectrum involved in the backward (backproj2d)
@@ -932,6 +945,7 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.    
+
     
     Return
     ------
@@ -939,6 +953,7 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
     phi : array_like (with type `backend.cls`)
         Computed Toeplitz kernel (or its two-dimensional real input
         FFT when ``return_rfft2 is True``).
+
     
     See also
     --------
@@ -1018,13 +1033,15 @@ def apply_2d_toeplitz_kernel(u, rfft2_phi, backend=None, notest=False):
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return 
     ------
     
     out : array_like (with type `backend.cls`) 
         output projected-backprojected image.
-        
+
+    
     See also
     --------
     
@@ -1097,6 +1114,7 @@ def compute_3d_frequency_nodes(B, delta, fgrad, backend=None,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return
     ------
@@ -1111,7 +1129,7 @@ def compute_3d_frequency_nodes(B, delta, fgrad, backend=None,
     
         + ``y`` is a one dimensional array, with same length as ``x``,
           containing the frequency nodes along the Y-axis;
-
+    
         + ``z`` is a one dimensional array, with same length as ``x``,
           containing the frequency nodes along the Z-axis;
     
@@ -1123,6 +1141,7 @@ def compute_3d_frequency_nodes(B, delta, fgrad, backend=None,
         + ``rfft_mode`` a bool specifying whether the frequency nodes
           cover half of the frequency domain (``rfft_mode=True``) or the
           full frequency domain (``rfft_mode=False``).
+    
     
     See also
     --------
@@ -1243,6 +1262,7 @@ def proj3d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return
     ------
@@ -1253,6 +1273,7 @@ def proj3d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
         projections) such that ``out[k,:]`` corresponds the EPR
         projection of u with field gradient ``fgrad[:,k]`` sampled
         over the grid `B`.
+
     
     See also
     --------
@@ -1353,6 +1374,7 @@ def proj3d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.    
+
     
     Return
     ------
@@ -1363,6 +1385,7 @@ def proj3d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
         projections) such that ``out[k,:]`` contains the discrete
         Fourier coefficients of the EPR projection of `u` with field
         gradient ``fgrad[:,k]``.    
+
     
     See also
     --------
@@ -1479,6 +1502,7 @@ def proj3d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return
     ------
@@ -1489,6 +1513,7 @@ def proj3d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
         computed projections) such that ``out[k,:]`` corresponds to
         half of the discrete Fourier coefficients of the EPR
         projection of `u` with field gradient ``fgrad[:,k]``.
+
     
     See also
     --------
@@ -1609,6 +1634,7 @@ def backproj3d(proj, delta, B, h, fgrad, out_shape, backend=None,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return 
     ------
@@ -1616,13 +1642,14 @@ def backproj3d(proj, delta, B, h, fgrad, out_shape, backend=None,
     out : array_like (with type `backend.cls`)
         A three-dimensional array with specified shape corresponding
         to the backprojected image.
+
     
     See also
     --------
     
     compute_3d_frequency_nodes
     proj3d
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1696,7 +1723,7 @@ def backproj3d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
@@ -1735,6 +1762,7 @@ def backproj3d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
     out : complex array_like (with type `backend.cls`)
         Backprojected 3D image in complex format (imaginary part
         should be close to zero and can be thrown away).
+
     
     See also
     --------
@@ -1852,13 +1880,15 @@ def backproj3d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-        
+    
+    
     Return
     ------
     
     out : complex array_like (with type `backend.cls`)
         Backprojected 3D image in complex format (imaginary part
         should be close to zero and can be thrown away).
+
     
     See also
     --------
@@ -1985,6 +2015,7 @@ def compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.    
+
     
     Return
     ------
@@ -1992,7 +2023,8 @@ def compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
     phi : array_like (with type `backend.cls`)
         Computed Toeplitz kernel (or its three-dimensional real input
         FFT when ``return_rfft3 is True``).
-        
+
+    
     See also
     --------
     
@@ -2072,12 +2104,14 @@ def apply_3d_toeplitz_kernel(u, rfft3_phi, backend=None, notest=False):
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return 
     ------
     
     out : array_like (with type `backend.cls`) 
         output projected-backprojected image.
+
     
     See also
     --------
