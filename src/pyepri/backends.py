@@ -677,7 +677,7 @@ class Backend:
                 self.nufft3d_adjoint = assign_finufft_nthreads(finufft.nufft3d1)
                 self.nufft_plan = finufft.Plan
                 self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
-                self.nufft_execute = lambda plan, arr : plan.execute(arr)
+                self.nufft_execute = lambda plan, arr, out=None : plan.execute(arr, out=out)
             else:
                 import cufinufft
                 self.nufft2d = cufinufft.nufft2d2
@@ -686,7 +686,7 @@ class Backend:
                 self.nufft3d_adjoint = cufinufft.nufft3d1
                 self.nufft_plan = cufinufft.Plan
                 self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
-                self.nufft_execute = lambda plan, arr : plan.execute(arr)
+                self.nufft_execute = lambda plan, arr, out=None : plan.execute(arr, out=out)
                         
         else: # lib == torch
             
@@ -824,7 +824,7 @@ class Backend:
                 self.nufft3d_adjoint = numpyfy(assign_finufft_nthreads(finufft.nufft3d1))
                 self.nufft_plan = finufft.Plan
                 self.nufft_setpts = lambda plan, *pts : plan.setpts(*[point.numpy() for point in pts])
-                self.nufft_execute = lambda plan, arr : lib.from_numpy(plan.execute(arr.numpy()))
+                self.nufft_execute = lambda plan, arr, out=None : lib.from_numpy(plan.execute(arr.numpy(), out=out.numpy()))
                 #self.nufft_execute = lambda plan, arr : numpyfy(plan.execute)(arr)
                 
                 # add short documentation
@@ -857,4 +857,4 @@ class Backend:
                 self.nufft3d_adjoint = cufinufft.nufft3d1
                 self.nufft_plan = cufinufft.Plan                
                 self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
-                self.nufft_execute = lambda plan, arr : plan.execute(arr)
+                self.nufft_execute = lambda plan, arr, out=None : plan.execute(arr, out=out)
