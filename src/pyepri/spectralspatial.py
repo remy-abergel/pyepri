@@ -815,7 +815,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
         else:
             w = weights
         out = backend.nufft_execute(plan, w * fft_proj.reshape((-1,))[indexes], out=out)
-    if 1 == memory_usage:
+    elif 1 == memory_usage:
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         phat = backend.empty((Nb, len(indexes)), dtype=cdtype)
@@ -829,7 +829,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
             phat[l, :] = (fft_proj * w).reshape((-1,))[indexes]
         out = backend.nufft_execute(plan, phat, out=out)
     else:
-        out = backend.zeros(out_shape, dtype=dtype)
+        out = backend.zeros(out_shape, dtype=cdtype)
         nrm = delta**3 / float(Nb)
         for l in range(Nb):
             #w = nrm * backend.exp(-1j * l * t[idt]) # slow and memory consuming
@@ -982,7 +982,7 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
         else:
             w = weights
         out = backend.nufft_execute(plan, w * rfft_proj.reshape((-1,))[indexes], out=out)
-    if 1 == memory_usage:
+    elif 1 == memory_usage:
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         phat = backend.empty((Nb, len(indexes)), dtype=cdtype)
@@ -995,7 +995,7 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
             phat[l, :] = (rfft_proj * w).reshape((-1,))[indexes]
         out = backend.nufft_execute(plan, phat, out=out)
     else:
-        out = backend.zeros(out_shape, dtype=dtype)
+        out = backend.zeros(out_shape, dtype=cdtype)
         nrm = delta**3 / float(Nb)
         for l in range(Nb):
             #w = nrm * backend.exp(-1j * l * t[idt]) # slow and memory consuming
