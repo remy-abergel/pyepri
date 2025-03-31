@@ -70,9 +70,9 @@ def compute_2d_frequency_nodes(B, delta, fgrad, backend=None,
           containing the frequency nodes along the vertical axis;
     
         + ``indexes`` is a one dimensional array, with same length as
-          ``x``, corresponding to the indexes where should be dispatched
-          the computed Fourier coefficients in the rfft of the 2D
-          projections.
+          ``x``, corresponding to the indexes where should be
+          dispatched the computed Fourier coefficients in the (r)fft
+          of the 2D projections.
     
         + ``rfft_mode`` a bool specifying whether the frequency nodes
           cover half of the frequency domain (``rfft_mode=True``) or the
@@ -1128,9 +1128,9 @@ def compute_3d_frequency_nodes(B, delta, fgrad, backend=None,
           containing the frequency nodes along the Z-axis;
     
         + ``indexes`` is a one dimensional array, with same length as
-          ``x``, corresponding to the indexes where should be dispatched
-          the computed Fourier coefficients in the rfft of the 3D
-          projections.
+          ``x``, corresponding to the indexes where should be
+          dispatched the computed Fourier coefficients in the (r)fft
+          of the 3D projections.
     
         + ``rfft_mode`` a bool specifying whether the frequency nodes
           cover half of the frequency domain (``rfft_mode=True``) or the
