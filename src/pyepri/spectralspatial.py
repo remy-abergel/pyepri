@@ -1,10 +1,14 @@
-"""TODO header"""
+"""This module contains low-level operators related to **spectral-spatial
+EPR imaging** (projection, backprojection, projection-backprojection
+using Toeplitz kernels). Detailed mathematical definitions of the
+operators are provided in the :ref:`mathematical_definitions` section
+of the PyEPRI documentation.
+
+"""
 
 import math
 import pyepri.checks as checks
 from pyepri.monosrc import compute_3d_frequency_nodes
-
-# TODO deal with out optional argument for backproj functions
 
 def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
                                rfft_mode=True, notest=False):
@@ -56,7 +60,7 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     ------
     
     nodes : dict 
-    
+        
         A dictionary with content ``{'x': x, 'y': y, 'z': z, 'xi': xi,
         't', t, 'lt': lt 'indexes': indexes, 'idt': idt, 'rfft_mode':
         rfft_mode}`` where
@@ -84,7 +88,7 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
         + ``lt`` is a 2D array such that ``lt[l,k] = l * t[k]`` (those
           values are involved in the computation of weights for 4D
           projection and backprojection functions).
-
+    
     
     See also
     --------
@@ -92,7 +96,7 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     pyepri.monosrc.compute_3d_frequency_nodes
     proj4d
     backproj4d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -131,6 +135,92 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     
     return nodes
 
+
+def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
+                       make_contiguous=True, notest=False):
+    """Precompute weights to accelerate further proj4d & backproj4d calls.
+    
+    Precomputing the weights is useful to save computation time when
+    multiple evaluations of :py:func:`proj4d` or :py:func:`backproj4d`
+    with option ``memory_usage=0`` are needed.
+    
+    Parameters
+    ----------
+    
+    nodes : dict, optional 
+        Frequency nodes computed using
+        :py:func:`compute_4d_frequency_nodes`.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input arrays stored into ``nodes``.
+        
+    nrm : complex, optional
+        Normalization parameter involved in the weights definition
+        (see below).
+    
+    isign : float, optional
+        Must be equal to +1 or -1, used as sign in the complex
+        exponential defining the weights (see below). The user must
+        use ``isign = 1`` to compute the weigths involved in
+        :py:func:`proj4d` (also :py:func:`proj4d_fft` and
+        :py:func:`proj4d_rfft`) and ``isign = -1`` to compute those
+        involved in :py:func:`backproj4d` (also
+        :py:func:`backproj4d_fft` and :py:func:`backproj4d_rfft`).
+    
+    make_contiguous : bool, optional
+        Set ``make_contiguous = True`` to make the output array
+        contiguous and ordered in row-major order using ``weights =
+        weigths.ravel().reshape(weights.shape)``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    weights : complex array_like (with type `backend.cls`)
+        A two-dimensional array equal to ``w = (nrm *
+        (backend.exp(isign * 1j * nodes[`lt`]))[:, nodes['idt']]``.
+    
+    See also
+    --------
+    
+    proj4d
+    proj4d_fft
+    proj4d_rfft
+    backproj4d
+    backproj4d_fft
+    backproj4d_rfft
+
+    """
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(lt=nodes['lt'], idt=nodes['idt'])
+    
+    # consistency checks    
+    #if not notest:
+    #    _check_nd_inputs_(TODO)
+    
+    # retrieve real & complex datatypes
+    lt, idt = nodes['lt'], nodes['idt']
+    dtype = backend.lib_to_str_dtypes[lt.dtype]
+    cdtype = backend.mapping_to_complex_dtypes[dtype]
+    
+    # compute weights (the use of backend.cos and backend.sin is
+    # faster and less memory demanding than the use of backend.exp,
+    # because lt input is real valued)
+    w = nrm * (backend.cos(lt) + isign * 1j * backend.sin(lt))
+    if make_contiguous:
+        w = w[:, idt].ravel().reshape((w.shape[0], len(idt)))
+    else:
+        w = w[:, idt]
+    
+    return w
 
 def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
            rfft_mode=True, nodes=None, memory_usage=1, notest=False):
@@ -179,8 +269,12 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
         When backend is None, a default backend is inferred from the
         input arrays ``(u, B, fgrad)``.
     
-    weights : array_like (with type `backend.cls`), optional
-        ...TODO...
+    weights : complex array_like (with type `backend.cls`), optional
+        A two dimensional array with shape ``(len(B),
+        len(nodes['idt']))`` of weights precomputed using
+        :py:mod:`compute_4D_weights` (with option ``isign=1``).
+        
+        Note that those weights are only used when ``memory_usage=0``.
     
     eps : float, optional
         Precision requested (>1e-16).
@@ -201,7 +295,16 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
         :py:func:`compute_4d_frequency_nodes`.
     
     memory_usage : int, optional
-        ...TODO...
+        Specify the computation strategy (depending on your available
+        memory budget).
+
+        + ``memory_usage = 0``: fast computation but memory demanding
+    
+        + ``memory_usage = 1``: (recommended) pretty good tradeoff
+          between speed and reduced memory usage
+        
+        + ``memory_usage = 2``: slow computation but very light memory
+          usage
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
@@ -222,8 +325,9 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
     --------
     
     compute_4d_frequency_nodes
+    compute_4d_weights
     backproj4d
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -298,8 +402,12 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
         When backend is None, a default backend is inferred from the
         input arrays ``(u, B, fgrad)``.
     
-    weights : array_like (with type `backend.cls`), optional
-        ...TODO...
+    weights : complex array_like (with type `backend.cls`), optional
+        A two dimensional array with shape ``(len(B),
+        len(nodes['idt']))`` of weights precomputed using
+        :py:mod:`compute_4D_weights` (with option ``isign=1``).
+    
+        Note that those weights are only used when ``memory_usage=0``.
     
     eps : float, optional
         Precision requested (>1e-16).
@@ -315,8 +423,17 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
         :py:func:`compute_4d_frequency_nodes`.
     
     memory_usage : int, optional
-        ...TODO...
+        Specify the computation strategy (depending on your available
+        memory budget).
+
+        + ``memory_usage = 0``: fast computation but memory demanding
     
+        + ``memory_usage = 1``: (recommended) pretty good tradeoff
+          between speed and reduced memory usage
+        
+        + ``memory_usage = 2``: slow computation but very light memory
+          usage
+        
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
 
@@ -336,8 +453,9 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
     --------
     
     compute_4d_frequency_nodes
+    compute_4d_weights
     proj4d
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -380,11 +498,11 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
         plan = backend.nufft_plan(2, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         if weights is None:
-            #w = (delta**3 * backend.exp(1j * lt))[:, idt] # slow & memory consuming
-            w = delta**3 * (backend.cos(lt) + 1j * backend.sin(lt))[:, idt]
-            out.reshape((-1,))[indexes] = (backend.nufft_execute(plan, u_cplx) * w).sum(0)
-        else:
-            out.reshape((-1,))[indexes] = (backend.nufft_execute(plan, u_cplx) * weights).sum(0)
+            nrm = complex(delta**3)
+            weights = compute_4d_weights(nodes, backend=backend,
+                                         nrm=nrm, conj=False,
+                                         notest=True)
+        out.reshape((-1,))[indexes] = (backend.nufft_execute(plan, u_cplx) * weights).sum(0)
     elif 1 == memory_usage:
         plan = backend.nufft_plan(2, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
@@ -450,8 +568,12 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
         When backend is None, a default backend is inferred from the
         input arrays ``(u, B, fgrad)``.
         
-    weights : array_like (with type `backend.cls`), optional
-        ...TODO...
+    weights : complex array_like (with type `backend.cls`), optional
+        A two dimensional array with shape ``(len(B),
+        len(nodes['idt']))`` of weights precomputed using
+        :py:mod:`compute_4D_weights` (with option ``isign=1``).
+        
+        Note that those weights are only used when ``memory_usage=0``.
     
     eps : float, optional
         Precision requested (>1e-16).
@@ -467,7 +589,16 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
         :py:func:`compute_4d_frequency_nodes`.
     
     memory_usage : int, optional
-        ...TODO...
+        Specify the computation strategy (depending on your available
+        memory budget).
+
+        + ``memory_usage = 0``: fast computation but memory demanding
+    
+        + ``memory_usage = 1``: (recommended) pretty good tradeoff
+          between speed and reduced memory usage
+        
+        + ``memory_usage = 2``: slow computation but very light memory
+          usage
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
@@ -488,8 +619,9 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
     --------
     
     compute_4d_frequency_nodes
+    compute_4d_weights
     proj4d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -532,11 +664,11 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
         plan = backend.nufft_plan(2, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         if weights is None:
-            #w = (delta**3 * backend.exp(1j * lt))[:, idt] # slow and memory consuming
-            w = delta**3 * (backend.cos(lt) + 1j * backend.sin(lt))[:, idt]
-            out.reshape((-1,))[indexes] = (backend.nufft_execute(plan, u_cplx) * w).sum(0)
-        else:
-            out.reshape((-1,))[indexes] = (backend.nufft_execute(plan, u_cplx) * weights).sum(0)
+            nrm = complex(delta**3)
+            weights = compute_4d_weights(nodes, backend=backend,
+                                         nrm=nrm, conj=False,
+                                         notest=True)
+        out.reshape((-1,))[indexes] = (backend.nufft_execute(plan, u_cplx) * weights).sum(0)
     elif 1 == memory_usage:
         plan = backend.nufft_plan(2, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
@@ -597,8 +729,12 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
         
         Note: `N0` should be equal to `len(B)`.
     
-    weights : array_like (with type `backend.cls`), optional
-        ...TODO...
+    weights : complex array_like (with type `backend.cls`), optional
+        A two dimensional array with shape ``(len(B),
+        len(nodes['idt']))`` of weights precomputed using
+        :py:mod:`compute_4D_weights` (with option ``isign=-1``).
+        
+        Note that those weights are only used when ``memory_usage=0``.
     
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
@@ -626,7 +762,16 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
         :py:func:`compute_4d_frequency_nodes`.
     
     memory_usage : int, optional
-        ...TODO...
+        Specify the computation strategy (depending on your available
+        memory budget).
+
+        + ``memory_usage = 0``: fast computation but memory demanding
+    
+        + ``memory_usage = 1``: (recommended) pretty good tradeoff
+          between speed and reduced memory usage
+        
+        + ``memory_usage = 2``: slow computation but very light memory
+          usage
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
@@ -644,8 +789,9 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
     --------
     
     compute_4d_frequency_nodes
+    compute_4d_weights
     proj4d
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -716,8 +862,12 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
     
-    weights : array_like (with type `backend.cls`), optional
-        ...TODO...
+    weights : complex array_like (with type `backend.cls`), optional
+        A two dimensional array with shape ``(len(B),
+        len(nodes['idt']))`` of weights precomputed using
+        :py:mod:`compute_4D_weights` (with option ``isign=-1``).
+        
+        Note that those weights are only used when ``memory_usage=0``.
     
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
@@ -749,8 +899,17 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
         :py:func:`compute_4d_frequency_nodes`.
     
     memory_usage : int, optional
-        ...TODO...
+        Specify the computation strategy (depending on your available
+        memory budget).
+
+        + ``memory_usage = 0``: fast computation but memory demanding
+    
+        + ``memory_usage = 1``: (recommended) pretty good tradeoff
+          between speed and reduced memory usage
         
+        + ``memory_usage = 2``: slow computation but very light memory
+          usage
+    
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
     
@@ -767,6 +926,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     --------
     
     compute_4d_frequency_nodes
+    compute_4d_weights
     backproj4d
     
     """    
@@ -809,12 +969,11 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
         backend.nufft_setpts(plan, y, x, z)
         nrm = delta**3 / float(Nb)
         if weights is None:
-            #w = nrm * backend.exp(-1j * lt) # slow and memory consuming
-            w = (delta**3 / float(Nb)) * (backend.cos(lt) - 1j * backend.sin(lt))
-            w = w[:, idt].ravel().reshape((w.shape[0], len(idt)))
-        else:
-            w = weights
-        out = backend.nufft_execute(plan, w * fft_proj.reshape((-1,))[indexes], out=out)
+            nrm = complex(delta**3 / float(Nb))
+            weights = compute_4d_weights(nodes, backend=backend,
+                                         nrm=nrm, conj=True,
+                                         notest=True)
+        out = backend.nufft_execute(plan, weights * fft_proj.reshape((-1,))[indexes], out=out)
     elif 1 == memory_usage:
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
@@ -879,8 +1038,12 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
     
-    weights : array_like (with type `backend.cls`), optional
-        ...TODO...
+    weights : complex array_like (with type `backend.cls`), optional
+        A two dimensional array with shape ``(len(B),
+        len(nodes['idt']))`` of weights precomputed using
+        :py:mod:`compute_4D_weights` (with option ``isign=-1``).
+        
+        Note that those weights are only used when ``memory_usage=0``.
         
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
@@ -912,7 +1075,16 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
         :py:func:`compute_4d_frequency_nodes`.
     
     memory_usage : int, optional
-        ...TODO...
+        Specify the computation strategy (depending on your available
+        memory budget).
+
+        + ``memory_usage = 0``: fast computation but memory demanding
+    
+        + ``memory_usage = 1``: (recommended) pretty good tradeoff
+          between speed and reduced memory usage
+        
+        + ``memory_usage = 2``: slow computation but very light memory
+          usage
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
@@ -930,6 +1102,7 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
     --------
     
     compute_4d_frequency_nodes
+    compute_4d_weights
     backproj4d
     
     """    
@@ -976,12 +1149,11 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         if weights is None:
-            #w = (delta**3 / float(Nb)) * backend.exp(-1j * lt) # slow and memory consuming
-            w = (delta**3 / float(Nb)) * (backend.cos(lt) - 1j * backend.sin(lt))
-            w = w[:, idt].ravel().reshape((w.shape[0], len(idt)))
-        else:
-            w = weights
-        out = backend.nufft_execute(plan, w * rfft_proj.reshape((-1,))[indexes], out=out)
+            nrm = complex(delta**3 / float(Nb))
+            weights = compute_4d_weights(nodes, backend=backend,
+                                         nrm=nrm, conj=True,
+                                         notest=True)
+        out = backend.nufft_execute(plan, weights * rfft_proj.reshape((-1,))[indexes], out=out)
     elif 1 == memory_usage:
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
@@ -1077,7 +1249,16 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
         itself).
     
     memory_usage : int, optional
-        ...TODO...
+        Specify the computation strategy (depending on your available
+        memory budget).
+
+        + ``memory_usage = 0``: fast computation but memory demanding
+    
+        + ``memory_usage = 1``: (recommended) pretty good tradeoff
+          between speed and reduced memory usage
+        
+        + ``memory_usage = 2``: slow computation but very light memory
+          usage
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.    
