@@ -500,22 +500,24 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
         if weights is None:
             nrm = complex(delta**3)
             weights = compute_4d_weights(nodes, backend=backend,
-                                         nrm=nrm, conj=False,
+                                         nrm=nrm, isign=1,
+                                         make_contiguous=False,
                                          notest=True)
         out.reshape((-1,))[indexes] = (backend.nufft_execute(plan, u_cplx) * weights).sum(0)
     elif 1 == memory_usage:
         plan = backend.nufft_plan(2, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         uhat = backend.nufft_execute(plan, u_cplx)
-        nrm = delta**3
+        nrm = complex(delta**3)
         for l in range(Nb):
             #w = nrm * backend.exp(1j * l * t) # slow and memory consuming
-            w = delta**3 * (backend.cos(t * l) + 1j * backend.sin(t * l)) 
+            w = nrm * (backend.cos(t * l) + 1j * backend.sin(t * l)) 
             out.reshape((-1,))[indexes] += uhat[l, :] * w[idt]
     else:
+        nrm = complex(delta**3)
         for l in range(Nb):
             #w = delta**3 * backend.exp(1j * l * t) # slow and memory consuming
-            w = delta**3 * (backend.cos(t * l) + 1j * backend.sin(t * l))
+            w = nrm * (backend.cos(t * l) + 1j * backend.sin(t * l))
             out.reshape((-1,))[indexes] += backend.nufft3d(y, x, z, u_cplx[l, :, :, :], eps=eps) * w[idt]
     
     return out
@@ -666,23 +668,24 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
         if weights is None:
             nrm = complex(delta**3)
             weights = compute_4d_weights(nodes, backend=backend,
-                                         nrm=nrm, conj=False,
+                                         nrm=nrm, isign=1,
+                                         make_contiguous=False,
                                          notest=True)
         out.reshape((-1,))[indexes] = (backend.nufft_execute(plan, u_cplx) * weights).sum(0)
     elif 1 == memory_usage:
         plan = backend.nufft_plan(2, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         uhat = backend.nufft_execute(plan, u_cplx)
-        nrm = delta**3
+        nrm = complex(delta**3)
         for l in range(Nb):
             #w = nrm * backend.exp(1j * l * t) # slow & memory consuming
             w = nrm * (backend.cos(t * l) + 1j * backend.sin(t * l))
             out.reshape((-1,))[indexes] += uhat[l, :] * w[idt]
     else:
-        nrm = delta**3
+        nrm = complex(delta**3)
         for l in range(Nb):
             #w = nrm * backend.exp(1j * l * t) # slow and memory consuming
-            w = delta**3 * (backend.cos(t * l) + 1j * backend.sin(t * l))
+            w = nrm * (backend.cos(t * l) + 1j * backend.sin(t * l))
             out.reshape((-1,))[indexes] += backend.nufft3d(y, x, z, u_cplx[l, :, :, :], eps=eps) * w[idt]
     
     return out
@@ -810,8 +813,8 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
         out = backproj4d_rfft(rfft_proj, delta, B, fgrad,
                               backend=backend, weights=weights,
                               eps=eps, out_shape=out_shape,
-                              nodes=nodes, preserve_input=False,
-                              memory_usage=memory_usage, notest=True).real
+                              nodes=nodes, memory_usage=memory_usage,
+                              notest=True).real
     else:
         fft_proj = backend.fft(proj)
         out = backproj4d_fft(fft_proj, delta, B, fgrad,
@@ -825,8 +828,7 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
 
 def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
                    out_shape=None, out=None, weights=None, eps=1e-06,
-                   nodes=None, preserve_input=False, memory_usage=1,
-                   notest=False):
+                   nodes=None, memory_usage=1, notest=False):
     """Perform EPR backprojection from 4D EPR projections provided in Fourier domain.
     
     Parameters
@@ -967,11 +969,11 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     if 0 == memory_usage:
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
-        nrm = delta**3 / float(Nb)
         if weights is None:
             nrm = complex(delta**3 / float(Nb))
             weights = compute_4d_weights(nodes, backend=backend,
-                                         nrm=nrm, conj=True,
+                                         nrm=nrm, isign=-1,
+                                         make_contiguous=True,
                                          notest=True)
         out = backend.nufft_execute(plan, weights * fft_proj.reshape((-1,))[indexes], out=out)
     elif 1 == memory_usage:
@@ -980,7 +982,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
         phat = backend.empty((Nb, len(indexes)), dtype=cdtype)
         alf = backend.ifftshift(-(Nb//2) + backend.arange(Nb, dtype=dtype))
         xi = nodes['xi'] #(2. * math.pi / float(Nb)) * alf
-        nrm = delta**3 / float(Nb)
+        nrm = complex(delta**3 / float(Nb))
         for l in range(Nb):
             #w = nrm * backend.exp(1j * l * xi) # slow and memory consuming
             xil = xi * l
@@ -989,7 +991,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
         out = backend.nufft_execute(plan, phat, out=out)
     else:
         out = backend.zeros(out_shape, dtype=cdtype)
-        nrm = delta**3 / float(Nb)
+        nrm = complex(delta**3 / float(Nb))
         for l in range(Nb):
             #w = nrm * backend.exp(-1j * l * t[idt]) # slow and memory consuming
             tl = t[idt] * l
@@ -1151,7 +1153,8 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
         if weights is None:
             nrm = complex(delta**3 / float(Nb))
             weights = compute_4d_weights(nodes, backend=backend,
-                                         nrm=nrm, conj=True,
+                                         nrm=nrm, isign=-1,
+                                         make_contiguous=True,
                                          notest=True)
         out = backend.nufft_execute(plan, weights * rfft_proj.reshape((-1,))[indexes], out=out)
     elif 1 == memory_usage:
