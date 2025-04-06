@@ -5,9 +5,14 @@ functionnalities of this modules are compatible with console and
 interactive Python (IPython notebook) environments.
 
 """
+import math
 import numpy as np
 import functools
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.gridspec import GridSpec
+from matplotlib.widgets import Slider
+from matplotlib import rcParams
 import pylab as pl
 from IPython import display, get_ipython
 import time
@@ -30,6 +35,468 @@ def is_notebook() -> bool:
             return False # Other type (?)
     except NameError:
         return False     # Probably standard Python interpreter
+
+    
+def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
+             spatial_unit='', B_unit='', figsize=None, valfmt='%0.3g',
+             colorbar=True, show_legend=True, legend_loc='upper right'):
+    """Interactive displayer for 4D spectral-spatial images.
+    
+    Parameters
+    ----------
+    
+    u : 
+    xgrid :
+    ygrid :
+    zgrid :
+    Brid :
+    spatial_unit :
+    figsize :
+    valfmt :
+    colorbar :
+    legend :
+    legend_loc :
+    
+    Return
+    ------
+    
+    params : dict
+        A dictionary containing all graphical objects and state
+        parameters.
+    
+    """
+    
+    # def local functions (callbacks)
+    def slider_update(params, dim, id):
+        
+        # retrieve slider, grid & unit
+        slider = params['s' + dim]
+        if slider.is_updating:
+            return
+        slider.is_updating = True
+        strunit = params[dim + 'unit']
+        
+        # update label
+        val = params[dim + 'grid'][id]
+        str = slider.valfmt + ' %s'
+        slider.valtext.set_text(str % (val, strunit))
+        
+        # update displayed slice
+        u = params["u"]
+        if slider == params['sx']:
+            im = params["im_uyz"]
+            im.set_data(u[params["sb"].val, :, slider.val, :])
+        elif slider == params['sy']:
+            im = params["im_uxz"]
+            im.set_data(u[params["sb"].val, slider.val, :, :])
+        elif slider == params['sz']:
+            im = params["im_uyx"]
+            im.set_data(u[params["sb"].val, :, :, slider.val])
+        else: # slider == param['sb']
+            im_uyz = params["im_uyz"]
+            im_uxz = params["im_uxz"]
+            im_uyx = params["im_uyx"]
+            im_uyz.set_data(u[slider.val, :, params["sx"].val, :])
+            im_uxz.set_data(u[slider.val, params["sy"].val, :, :])
+            im_uyx.set_data(u[slider.val, :, :, params["sz"].val])
+        params['fig'].canvas.draw_idle()
+        slider.is_updating = False
+
+    def update_legend(params):
+        b = params['ax_h'].get_legend().get_visible()
+        params['ax_h'].legend(loc=params['legend_loc'])
+        params['ax_h'].get_legend().set_visible(b)
+        
+    def keypressed(params, event):
+        redisplay_spectrum = False
+        
+        # deal with key events
+        if event.key in ('x', 'y', 'z', 'b'): # toogle selected slider
+            dim = params['active_dim']
+            r = params['r' + event.key]
+            s = params['s' + event.key]
+            params['r' + dim].set_visible(False)
+            r.set_visible(True)
+            params['active_dim'] = event.key
+            plt.draw()
+            params['fig'].canvas.draw_idle()
+        elif event.key == 'left': # 1 step decrease for the active slider
+            dim = params['active_dim']
+            s = params['s' + dim]
+            newval = s.val - 1
+            if newval >= 0:
+                s.set_val(newval)
+                slider_update(params, dim, s.val)
+                redisplay_spectrum = s is not params['sb']
+        elif event.key == 'right': # 1 step increase for the active slider
+            dim = params['active_dim']
+            s = params['s' + dim]
+            newval = s.val + 1
+            if newval < s.nval:
+                s.set_val(newval)
+                slider_update(params, dim, s.val)
+                redisplay_spectrum = s is not params['sb']
+        elif event.key in ('ctrl+right', 'shift+right'): # 10% or 5% increase for the active slider
+            dim = params['active_dim']
+            s = params['s' + dim]
+            val = s.val
+            step = s.nval//(10 if event.key == 'ctrl+right' else 20)
+            newval = min(s.nval -1, s.val + step)
+            if newval != val:
+                s.set_val(newval)
+                slider_update(params, dim, s.val)
+                redisplay_spectrum = s is not params['sb']
+        elif event.key in ('ctrl+left', 'shift+left'): # 10% or 5% decrease for the active slider
+            dim = params['active_dim']
+            s = params['s' + dim]
+            val = s.val
+            step = s.nval//(10 if event.key == 'ctrl+left' else 20)
+            newval = max(0, s.val - step)
+            if newval != val:
+                s.set_val(newval)
+                slider_update(params, dim, s.val)
+                redisplay_spectrum = s is not params['sb']
+        elif event.key == 'up': # forward cycling for the selected slider
+            dim = params['active_dim']
+            params['r' + dim].set_visible(False)
+            dim = params['next_dim'][dim]
+            params['r' + dim].set_visible(True)
+            params['active_dim'] = dim
+            plt.draw()
+            params['fig'].canvas.draw_idle()
+        elif event.key == 'down': # backward cycling for the selected slider
+            dim = params['active_dim']
+            params['r' + dim].set_visible(False)
+            dim = params['prev_dim'][dim]
+            params['r' + dim].set_visible(True)
+            params['active_dim'] = dim
+            plt.draw()
+            params['fig'].canvas.draw_idle()
+        elif event.key == 'c': # maximize contrast among the displayed slices
+            u = params['u']
+            u_yz = u[params["sb"].val, :, params['sx'].val, :]
+            u_xz = u[params["sb"].val, params['sy'].val, :, :]
+            u_yx = u[params["sb"].val, :, :, params['sz'].val]
+            cmin = min((u_yz.min(), u_xz.min(), u_yx.min()))
+            cmax = max((u_yz.max(), u_xz.max(), u_yx.max()))
+            params['im_uyz'].set_clim(cmin, cmax)
+            params['im_uxz'].set_clim(cmin, cmax)
+            params['im_uyx'].set_clim(cmin, cmax)
+        elif event.key == 'r': # rescale yaxis to maximize the dynamic of the currently followed spectrum
+            ymin = params['lines'][-1].get_ydata().min()
+            ymax = params['lines'][-1].get_ydata().max()
+            sgmin = -1 if ymin < 0 else 1
+            sgmax = -1 if ymax < 0 else 1
+            ymin = sgmin * (sgmin * ymin * 1.05)
+            ymax = sgmax * (sgmax * ymax * 1.05)
+            params['ax_h'].set_ylim((ymin, ymax))
+        elif event.key == 'R': # rescale yaxis to maximize the dynamic of all displayed spectra
+            if len(params['lines']) >= 1:
+                cmin, cmax = math.inf, -math.inf
+                for l in params['lines']:
+                    ymin = l.get_ydata().min()
+                    ymax = l.get_ydata().max()
+                    sgmin = -1 if ymin < 0 else 1
+                    sgmax = -1 if ymax < 0 else 1
+                    ymin = sgmin * (sgmin * ymin * 1.05)
+                    ymax = sgmax * (sgmax * ymax * 1.05)
+                    cmin = min(cmin, ymin)
+                    cmax = max(cmax, ymax)
+                params['ax_h'].set_ylim((cmin, cmax))
+        elif event.key == ' ': # same as left click (draw spectrum)
+            on_click(params, event)
+        elif event.key == 'd': # delete last plot
+            lines = params['lines']
+            n = len(lines)
+            if n >= 2:
+                l = lines[-2]
+                col = l.get_color()
+                lines.remove(l)
+                l.remove()
+                lines[-1].set_color(col)
+                colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+                id = (n % len(colors)) - 1
+                rotated = colors[id:] + colors[:id]
+                params['ax_h'].set_prop_cycle(color=rotated)
+                update_legend(params)
+        elif event.key == 'D': # delete all plots
+            lines = params['lines']
+            for l in lines[:(len(lines)-1)]:
+                lines.remove(l)
+                l.remove()
+            lines[-1].set_color(params['default_color'])
+            colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+            rotated = colors[1:] + colors[:1]
+            params['ax_h'].set_prop_cycle(color=rotated)
+            update_legend(params)
+        elif event.key == 'S': # show/hide legend
+            b = params['ax_h'].get_legend().get_visible()
+            params['ax_h'].get_legend().set_visible(not b)
+            params['fig'].canvas.draw_idle()
+        elif event.key == 'h': # print interactive help
+            print("")
+            print("Interactive controls (spectral-spatial 4D image displayer)")
+            print("==========================================================\n")
+            print("Mouse")
+            print("-----\n")
+            print("  + single left click : keep the display for the spectrum under the mouse cursor")
+            print("")
+            print("Keyboard")
+            print("--------\n")
+            print("  + x : select the X-slice slider")
+            print("  + y : select the Y-slice slider")
+            print("  + z : select the Z-slice slider")
+            print("  + b : select the B-value slider")
+            print("  + left : move the active slider back by one step")
+            print("  + right : move the active slider forward by one step")
+            print("  + ctrl + left : move the active slider back by 10% of its range")
+            print("  + ctrl + right : move the active slider forward by 10% of its range")
+            print("  + shift + left : move the active slider back by 5% of its range")
+            print("  + shift + right : move the active slider forward by 5% of its range")
+            print("  + up : toogle forward the slider selection (B -> X -> Y -> Z)")
+            print("  + down : toogle back the slider selection (Z -> Y -> X -> B)")
+            print("  + space : keep the display for spectrum under the mouse cursor")
+            print("  + r : maximize the dynamic range of the last displayed spectrum")
+            print("  + R : maximize the dynamic range of for all currently displayed spectra")
+            print("  + c : maximize the contrast among the three displayed slices")
+            print("  + d : remove the last displayed spectrum")
+            print("  + D : remove all currently displayed spectra")
+            print("  + S : show/hide legend")
+            print("  + h : display help")
+            print("")
+        
+        # if needed, redisplay spectrum
+        if redisplay_spectrum:
+            on_mouse_move(params, event)
+    
+    def get_k(params, event):
+        
+        # if the mouse pointer lies within a displayed slice, retrieve
+        # the corresponding voxel indexes
+        kx = ky = kz = -1
+        ax = event.inaxes
+        if ax == params['ax_uyz']:
+            z = params['zgrid']
+            y = params['ygrid']
+            dz = params['dz']
+            dy = params['dy']
+            kz = math.floor(.5 + (event.xdata - z[0]) / dz)
+            ky = math.floor(.5 + (event.ydata - y[0]) / dy)
+            kx = params['sx'].val
+        elif ax == params['ax_uxz']:
+            z = params['zgrid']
+            x = params['xgrid']
+            dz = params['dz']
+            dx = params['dx']
+            kz = math.floor(.5 + (event.xdata - z[0]) / dz)
+            kx = math.floor(.5 + (event.ydata - x[0]) / dx)
+            ky = params['sy'].val
+        elif ax == params['ax_uyx']:
+            y = params['ygrid']
+            x = params['xgrid']
+            dy = params['dy']
+            dx = params['dx']
+            kx = math.floor(.5 + (event.xdata - x[0]) / dx)
+            ky = math.floor(.5 + (event.ydata - y[0]) / dy)
+            kz = params['sz'].val
+        
+        # check whether the indexes are within the image domain or not
+        valid_x = (0 <= kx < params['xgrid'].size)
+        valid_y = (0 <= ky < params['ygrid'].size)
+        valid_z = (0 <= kz < params['zgrid'].size)
+        valid = all([valid_x, valid_y, valid_z])
+        
+        return kx, ky, kz, valid
+    
+    def on_mouse_move(params, event):
+        
+        # retrieve integer voxel indexes (if the pointer lies within a
+        # displayed slice)
+        kx, ky, kz, valid = get_k(params, event)
+        l = params['lines'][-1]
+        params['ready_to_follow'] = params['ready_to_follow'] or valid
+        if params['ready_to_follow'] and params['ax_h'].get_legend().get_visible():
+            l.set_visible(valid)
+        
+        # if the pointer lies within a displayed slice, update the
+        # displayed spectrum
+        if valid:
+            h = params['u'][:, ky, kx, kz]
+            l.set_ydata(h)
+            label = 'u[:, %d, %d, %d]' % (ky, kx, kz)
+            l.set_label(label)
+            update_legend(params)
+            params['fig'].canvas.draw_idle()
+        elif params['ready_to_follow'] and params['ax_h'].get_legend().get_visible(): 
+            l.set_label('')
+            params['ax_h'].legend(loc=params['legend_loc'])
+    
+    def on_click(params, event):
+        
+        # retrieve integer voxel indexes (if the pointer lies within a
+        # displayed slice)
+        kx, ky, kz, valid = get_k(params, event)
+        
+        # if the pointer lies within a displayed slice, plot the
+        # corresponding spectrum
+        if valid:
+            h = params['u'][:, ky, kx, kz]
+            l, = params['ax_h'].plot(params['bgrid'], h)
+            label = 'u[:, %d, %d, %d]' % (ky, kx, kz)
+            l.set_label(label)
+            update_legend(params)
+            params['lines'].append(l)            
+            params['fig'].canvas.draw_idle()
+    
+    # retrieve image dimensions
+    Nb, Ny, Nx, Nz = u.shape
+    
+    # create discrete indexes
+    idx = np.arange(Nx, dtype='int32')
+    idy = np.arange(Ny, dtype='int32')
+    idz = np.arange(Nz, dtype='int32')
+    idB = np.arange(Nb, dtype='int32')
+    
+    # set default grids (if not provided)
+    if xgrid is None:
+        xgrid = idx
+    if ygrid is None:
+        ygrid = idy
+    if zgrid is None:
+        zgrid = idz
+    if Bgrid is None:
+        Bgrid = idB
+    
+    # get central slices
+    x0, y0, z0, B0 = Nx//2, Ny//2, Nz//2, Nb//2
+    u_yz = u[B0, :, x0, :] #02
+    u_xz = u[B0, y0, :, :] #12
+    u_yx = u[B0, :, :, z0] #01
+    extent_yx = (xgrid[0], xgrid[-1], ygrid[0], ygrid[-1])
+    extent_yz = (zgrid[0], zgrid[-1], ygrid[0], ygrid[-1])
+    extent_xz = (zgrid[0], zgrid[-1], xgrid[0], xgrid[-1])
+    
+    # prepare figure & axes
+    fig = plt.figure(figsize=figsize)
+    gs = GridSpec(6, 3, width_ratios=[1, 1, 1], height_ratios=[1, 5, 2/3, 1, 1/3, 5], hspace=0)
+    ax_sx = fig.add_subplot(gs[0, 0])
+    ax_sy = fig.add_subplot(gs[0, 1])
+    ax_sz = fig.add_subplot(gs[0, 2])
+    ax_uyz = fig.add_subplot(gs[1, 0])
+    ax_uxz = fig.add_subplot(gs[1, 1])
+    ax_uyx = fig.add_subplot(gs[1, 2])
+    ax_sb = fig.add_subplot(gs[3, :])
+    ax_h = fig.add_subplot(gs[5, :])
+    
+    # display images
+    im_uyz = ax_uyz.imshow(u_yz, extent=extent_yz, origin='lower', aspect='equal')
+    ax_uyz.set_xlabel("Z")
+    ax_uyz.set_ylabel("Y")
+    im_uxz = ax_uxz.imshow(u_xz, extent=extent_xz, origin='lower', aspect='equal')
+    ax_uxz.set_xlabel("Z")
+    ax_uxz.set_ylabel("X")
+    im_uyx = ax_uyx.imshow(u_yx, extent=extent_yx, origin='lower', aspect='equal')
+    ax_uyx.set_xlabel("X")
+    ax_uyx.set_ylabel("Y")
+    label = 'u[:, %d, %d, %d]' % (y0, x0, z0)
+    l0, = ax_h.plot(Bgrid, u[:, y0, x0, z0], label=label)
+    ax_h.set_xlabel("B")
+    ax_h.set_ylabel("local spectrum")
+    ax_h.set_xlim((Bgrid[0], Bgrid[-1]))
+    leg = ax_h.legend(loc=legend_loc)
+    leg.set_visible(show_legend)
+    if colorbar:
+        plt.colorbar(im_uyz, ax=ax_uyz)
+        plt.colorbar(im_uxz, ax=ax_uxz)
+        plt.colorbar(im_uyx, ax=ax_uyx)
+    plt.subplots_adjust(top=.95, bottom=0.05, left=0.07, right=0.93)
+    
+    # add sliders
+    sx = Slider(ax_sx, "X", idx[0], idx[-1], valinit=idx[x0], valstep=idx, valfmt=valfmt)
+    sy = Slider(ax_sy, "Y", idy[0], idy[-1], valinit=idy[y0], valstep=idy, valfmt=valfmt)
+    sz = Slider(ax_sz, "Z", idz[0], idz[-1], valinit=idz[z0], valstep=idz, valfmt=valfmt)
+    sb = Slider(ax_sb, "B", idB[0], idB[-1], valinit=idB[B0], valstep=idB, color='m', valfmt=valfmt)    
+    sx.nval = Nx
+    sy.nval = Ny
+    sz.nval = Nz
+    sb.nval = Nb
+    sx.is_updating = sy.is_updating = sz.is_updating = sb.is_updating = False
+    sx.valtext.set_text((valfmt + ' %s') % (xgrid[x0], spatial_unit))
+    sy.valtext.set_text((valfmt + ' %s') % (xgrid[y0], spatial_unit))
+    sz.valtext.set_text((valfmt + ' %s') % (xgrid[z0], spatial_unit))
+    sb.valtext.set_text((valfmt + ' %s') % (Bgrid[B0], B_unit))
+    ax_sx.set_title('X-slice')
+    ax_sy.set_title('Y-slice')
+    ax_sz.set_title('Z-slice')
+    
+    # add slider rectangles
+    r = []
+    for ax in [ax_sx, ax_sy, ax_sz, ax_sb]:
+        x, y, ww, hh = ax.get_position().bounds
+        cof = .5
+        rect = patches.Rectangle((x, y + hh * (1 - cof) / 2),
+                                 width=ww, height=hh*cof, linewidth=2,
+                                 edgecolor='black', facecolor='none',
+                                 visible=False)
+        fig.add_artist(rect)
+        r.append(rect)    
+    rx, ry, rz, rb = r
+    rb.set_visible(True)
+    plt.draw()
+    
+    # gather parameters
+    params = {'fig': fig,
+              'ax_sx': ax_sx,
+              'ax_sy': ax_sy,
+              'ax_sz': ax_sz,
+              'ax_uyz': ax_uyz,
+              'ax_uxz': ax_uxz,
+              'ax_uyx': ax_uyx,
+              'ax_sb': ax_sb,
+              'ax_h': ax_h,
+              'rx': rx,
+              'ry': ry,
+              'rz': rz,
+              'rb': rb,
+              'im_uyz': im_uyz,
+              'im_uxz': im_uxz,
+              'im_uyx': im_uyx,
+              'lines': [l0],
+              'sx': sx,
+              'sy': sy,
+              'sz': sz,
+              'sb': sb,
+              'u': u,
+              'xgrid': xgrid,
+              'ygrid': ygrid,
+              'zgrid': zgrid,
+              'bgrid': Bgrid,
+              'active_dim': 'b',
+              'xunit': spatial_unit,
+              'yunit': spatial_unit,
+              'zunit': spatial_unit,
+              'bunit': B_unit,
+              'next_dim' : {'b': 'x', 'x': 'y', 'y': 'z', 'z': 'b'},
+              'prev_dim' : {'b': 'z', 'z': 'y', 'y': 'x', 'x': 'b'},
+              'dx': xgrid[1] - xgrid[0],
+              'dy': ygrid[1] - ygrid[0],
+              'dz': zgrid[1] - zgrid[0],
+              'legend_loc': legend_loc,
+              'ready_to_follow': False,
+              'default_color': l0.get_color(),
+              }
+    
+    # set callback functions
+    sx.on_changed(functools.partial(slider_update, params, 'x'))
+    sy.on_changed(functools.partial(slider_update, params, 'y'))
+    sz.on_changed(functools.partial(slider_update, params, 'z'))
+    sb.on_changed(functools.partial(slider_update, params, 'b'))
+    cid1 = fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, params))
+    cid2 = fig.canvas.mpl_connect('key_press_event', functools.partial(keypressed, params))
+    cid3 = fig.canvas.mpl_connect('motion_notify_event', functools.partial(on_mouse_move, params))
+    
+    return params
+
 
 def init_display_monosrc_2d(u, figsize=None, time_sleep=0.01,
                             units=None, display_labels=False,
