@@ -36,7 +36,7 @@ def is_notebook() -> bool:
     except NameError:
         return False     # Probably standard Python interpreter
 
-    
+
 def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
              spatial_unit='', B_unit='', figsize=None, valfmt='%0.3g',
              show_legend=True, legend_loc='upper right',
@@ -44,6 +44,11 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
              aspect='equal', boundaries='same',
              interpolation='nearest'):
     """Interactive displayer for 4D spectral-spatial images.
+
+    Display slices & spectra of a 4D spectral-sptatial image, and
+    explore its content through many interactive commands (once the
+    figure is displayed, press the `h` key of your keyboard to display
+    the list of interactive commands, also listed below).
     
     Parameters
     ----------
@@ -148,6 +153,36 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
         A dictionary containing all graphical objects and state
         parameters.
 
+
+    Mouse and keyboard Interactive commands
+    ---------------------------------------
+    
+    - single left click : keep the display for the spectrum under the
+      mouse cursor    
+    - x : select the X-slice slider
+    - y : select the Y-slice slider
+    - z : select the Z-slice slider
+    - b : select the B-value slider
+    - left : move the active slider back by one step
+    - right : move the active slider forward by one step
+    - ctrl + left : move the active slider back by 10% of its range
+    - ctrl + right : move the active slider forward by 10% of its
+      range
+    - shift + left : move the active slider back by 5% of its range
+    - shift + right : move the active slider forward by 5% of its
+      range
+    - up : toogle forward the slider selection (B -> X -> Y -> Z)
+    - down : toogle back the slider selection (Z -> Y -> X -> B)
+    - space : keep the display for spectrum under the mouse cursor
+    - r : maximize the dynamic range of the last displayed spectrum
+    - R : maximize the dynamic range of for all currently displayed
+      spectra
+    - c : maximize the contrast among the three displayed slices
+    - d : remove the last displayed spectrum
+    - D : remove all currently displayed spectra
+    - S : show/hide legend
+    - h : display help
+    
     """
     # def local functions (callbacks)
     def slider_update(params, dim, id):
@@ -347,7 +382,7 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
             print("  - S : show/hide legend")
             print("  - h : display help")
             print("")
-        
+         
         # if needed, redisplay spectrum
         if redisplay_spectrum:
             on_mouse_move(params, event)
