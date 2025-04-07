@@ -446,7 +446,7 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
             update_legend(params)
             params['fig'].canvas.draw_idle()
         elif params['ready_to_follow'] and params['ax_h'].get_legend().get_visible(): 
-            l.set_label('')
+            l.set_label(' ')
             params['ax_h'].legend(loc=params['legend_loc'])
     
     def on_click(params, event):
