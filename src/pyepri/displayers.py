@@ -39,23 +39,107 @@ def is_notebook() -> bool:
     
 def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
              spatial_unit='', B_unit='', figsize=None, valfmt='%0.3g',
-             colorbar=True, show_legend=True, legend_loc='upper right'):
+             show_legend=True, legend_loc='upper right',
+             show_colorbar=True, cmap=None, origin='lower',
+             aspect='equal', boundaries='same',
+             interpolation='nearest'):
     """Interactive displayer for 4D spectral-spatial images.
     
     Parameters
     ----------
     
-    u : 
-    xgrid :
-    ygrid :
-    zgrid :
-    Brid :
-    spatial_unit :
-    figsize :
-    valfmt :
-    colorbar :
-    legend :
-    legend_loc :
+    u : ndarray
+        Four dimensional array containing the values of the 4D
+        spectral-sptial image ordered as follows:
+        
+        + axis 0 = homogeneous magnetic field intensity axis (or B-axis);
+        + axis 1 = spatial vertical axis (or Y-axis);
+        + axis 2 = spatial horizontal axis (or X-axis);
+        + axis 3 = saptial depth axis (or Z-axis).
+    
+    xgrid : ndarray, optional
+        Monodimensional ndarray with length ``u.shape[2]`` containing
+        the sampling nodes associated to the X-axis (axis 2) of the
+        4D spectral-spatial image ``u``.
+    
+    ygrid : ndarray, optional
+        Monodimensional ndarray with length ``u.shape[1]`` containing
+        the sampling nodes associated to the Y-axis (axis 1) of the
+        4D spectral-spatial image ``u``.
+    
+    zgrid : ndarray, optional
+        Monodimensional ndarray with length ``u.shape[3]`` containing
+        the sampling nodes associated to the Z-axis (axis 3) of the
+        4D spectral-spatial image ``u``.
+    
+    Bgrid : ndarray, optional
+        Monodimensional ndarray with length ``u.shape[0]`` containing
+        the sampling nodes associated to the B-axis (axis 0) of the
+        4D spectral-spatial image ``u``.
+    
+    spatial_unit : str, optional
+        Units associated to the X, Y and Z axes (handling of different
+        axes units is not provided).
+    
+    B_unit : str, optional
+        Units associated to the homogeneous magnetic field intensity
+        (B) axis.
+    
+    figsize : (float, float), optional
+        When given, figsize must be a tuple with length two and such
+        taht ``figsize[0]`` and ``figsize[1]`` are the width and
+        height in inches of the figure to be displayed. When not
+        given, the default setting is that of `matplotlib` (see key
+        'figure.figsize' of the matplotlib configuration parameter
+        ``rcParams``).
+    
+    valfmt : str, optional
+        %-format string used to format the slider values.
+    
+    show_legend : bool, optional
+        Decide whether the legend in the spectrum display area should
+        be visible or not when the figure is drawn (note that once the
+        figure is drawn, you can always show or hide the legend by
+        pressing the 'S' key on your keyboard).
+    
+    legend_loc : str, optional
+        The location of the legend in the spectrum display area
+        (see ``matplotlib`` documentation for possible choices).
+    
+    show_colorbar : bool, optional
+        Specify whether a colorbar should be displayed next to each
+        slice image.
+    
+    cmap : str, optional
+        The registered colormap name used to map scalar data to colors
+        in `matplotlib.imshow`.
+    
+    origin : str in {'upper', 'lower'}, optional 
+        Place the [0, 0] index of the array in the upper left or lower
+        left corner of the Axes. When not given, the default setting
+        is that of `matplotlib` (see key 'image.origin' of the
+        matplotlib configuration parameter ``rcParams``).
+    
+    aspect : str in {'equal', 'auto'} or float or None, optional
+        The aspect ratio of the Axes. This parameter is particularly
+        relevant for images since it determines whether data pixels
+        are square (see `matplotlib.imshow` documentation).
+    
+        When not given, the default setting is that of `matplotlib`
+        (see key 'image.aspect' of the matplotlib configuration
+        parameter ``rcParams``).
+
+    boundaries : str in {'auto', 'same'}
+        Use ``boundaries = 'same'`` to give all subplots the same axes
+        boundaries (in particular, this ensures that all slice images
+        will be displayed on the screen using the same pixel
+        size). Otherwise, a tight extent is used for each displayed
+        slice image.
+    
+    interpolation : str, optional
+        The interpolation method used (see ``matplotlib``
+        documentation for the possible choices).
+    
     
     Return
     ------
@@ -63,9 +147,8 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     params : dict
         A dictionary containing all graphical objects and state
         parameters.
-    
+
     """
-    
     # def local functions (callbacks)
     def slider_update(params, dim, id):
         
@@ -101,7 +184,7 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
             im_uyx.set_data(u[slider.val, :, :, params["sz"].val])
         params['fig'].canvas.draw_idle()
         slider.is_updating = False
-
+    
     def update_legend(params):
         b = params['ax_h'].get_legend().get_visible()
         params['ax_h'].legend(loc=params['legend_loc'])
@@ -239,30 +322,30 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
             print("==========================================================\n")
             print("Mouse")
             print("-----\n")
-            print("  + single left click : keep the display for the spectrum under the mouse cursor")
+            print("  - single left click : keep the display for the spectrum under the mouse cursor")
             print("")
             print("Keyboard")
             print("--------\n")
-            print("  + x : select the X-slice slider")
-            print("  + y : select the Y-slice slider")
-            print("  + z : select the Z-slice slider")
-            print("  + b : select the B-value slider")
-            print("  + left : move the active slider back by one step")
-            print("  + right : move the active slider forward by one step")
-            print("  + ctrl + left : move the active slider back by 10% of its range")
-            print("  + ctrl + right : move the active slider forward by 10% of its range")
-            print("  + shift + left : move the active slider back by 5% of its range")
-            print("  + shift + right : move the active slider forward by 5% of its range")
-            print("  + up : toogle forward the slider selection (B -> X -> Y -> Z)")
-            print("  + down : toogle back the slider selection (Z -> Y -> X -> B)")
-            print("  + space : keep the display for spectrum under the mouse cursor")
-            print("  + r : maximize the dynamic range of the last displayed spectrum")
-            print("  + R : maximize the dynamic range of for all currently displayed spectra")
-            print("  + c : maximize the contrast among the three displayed slices")
-            print("  + d : remove the last displayed spectrum")
-            print("  + D : remove all currently displayed spectra")
-            print("  + S : show/hide legend")
-            print("  + h : display help")
+            print("  - x : select the X-slice slider")
+            print("  - y : select the Y-slice slider")
+            print("  - z : select the Z-slice slider")
+            print("  - b : select the B-value slider")
+            print("  - left : move the active slider back by one step")
+            print("  - right : move the active slider forward by one step")
+            print("  - ctrl + left : move the active slider back by 10% of its range")
+            print("  - ctrl + right : move the active slider forward by 10% of its range")
+            print("  - shift + left : move the active slider back by 5% of its range")
+            print("  - shift + right : move the active slider forward by 5% of its range")
+            print("  - up : toogle forward the slider selection (B -> X -> Y -> Z)")
+            print("  - down : toogle back the slider selection (Z -> Y -> X -> B)")
+            print("  - space : keep the display for spectrum under the mouse cursor")
+            print("  - r : maximize the dynamic range of the last displayed spectrum")
+            print("  - R : maximize the dynamic range of for all currently displayed spectra")
+            print("  - c : maximize the contrast among the three displayed slices")
+            print("  - d : remove the last displayed spectrum")
+            print("  - D : remove all currently displayed spectra")
+            print("  - S : show/hide legend")
+            print("  - h : display help")
             print("")
         
         # if needed, redisplay spectrum
@@ -279,7 +362,7 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
             z = params['zgrid']
             y = params['ygrid']
             dz = params['dz']
-            dy = params['dy']
+            dy = params['dy']            
             kz = math.floor(.5 + (event.xdata - z[0]) / dz)
             ky = math.floor(.5 + (event.ydata - y[0]) / dy)
             kx = params['sx'].val
@@ -367,14 +450,24 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     if Bgrid is None:
         Bgrid = idB
     
+    # retrieve sampling steps
+    dx = xgrid[1] - xgrid[0]
+    dy = ygrid[1] - ygrid[0]
+    dz = zgrid[1] - zgrid[0]
+    
     # get central slices
     x0, y0, z0, B0 = Nx//2, Ny//2, Nz//2, Nb//2
     u_yz = u[B0, :, x0, :] #02
     u_xz = u[B0, y0, :, :] #12
     u_yx = u[B0, :, :, z0] #01
-    extent_yx = (xgrid[0], xgrid[-1], ygrid[0], ygrid[-1])
-    extent_yz = (zgrid[0], zgrid[-1], ygrid[0], ygrid[-1])
-    extent_xz = (zgrid[0], zgrid[-1], xgrid[0], xgrid[-1])
+    if origin == 'lower':
+        extent_yx = (xgrid[0] - .5 * dx, xgrid[-1] + .5 * dx, ygrid[0] - .5 * dy, ygrid[-1] + .5 * dy)
+        extent_yz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, ygrid[0] - .5 * dy, ygrid[-1] + .5 * dy)
+        extent_xz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, xgrid[0] - .5 * dx, xgrid[-1] + .5 * dx)
+    else:
+        extent_yx = (xgrid[0] - .5 * dx, xgrid[-1] + .5 * dx, ygrid[-1] + .5 * dy, ygrid[0] - .5 * dy)
+        extent_yz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, ygrid[-1] + .5 * dy, ygrid[0] - .5 * dy)
+        extent_xz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, xgrid[-1] + .5 * dx, xgrid[0] - .5 * dx)
     
     # prepare figure & axes
     fig = plt.figure(figsize=figsize)
@@ -388,16 +481,28 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     ax_sb = fig.add_subplot(gs[3, :])
     ax_h = fig.add_subplot(gs[5, :])
     
-    # display images
-    im_uyz = ax_uyz.imshow(u_yz, extent=extent_yz, origin='lower', aspect='equal')
+    # display YZ-slice
+    im_uyz = ax_uyz.imshow(u_yz, extent=extent_yz, origin=origin,
+                           aspect=aspect, cmap=cmap,
+                           interpolation=interpolation)
     ax_uyz.set_xlabel("Z")
     ax_uyz.set_ylabel("Y")
-    im_uxz = ax_uxz.imshow(u_xz, extent=extent_xz, origin='lower', aspect='equal')
+    
+    # display XZ-slice    
+    im_uxz = ax_uxz.imshow(u_xz, extent=extent_xz, origin=origin,
+                           aspect=aspect, cmap=cmap,
+                           interpolation=interpolation)
     ax_uxz.set_xlabel("Z")
     ax_uxz.set_ylabel("X")
-    im_uyx = ax_uyx.imshow(u_yx, extent=extent_yx, origin='lower', aspect='equal')
+    
+    # display YX-slice
+    im_uyx = ax_uyx.imshow(u_yx, extent=extent_yx, origin=origin,
+                           aspect=aspect, cmap=cmap,
+                           interpolation=interpolation)
     ax_uyx.set_xlabel("X")
     ax_uyx.set_ylabel("Y")
+    
+    # display spectrum
     label = 'u[:, %d, %d, %d]' % (y0, x0, z0)
     l0, = ax_h.plot(Bgrid, u[:, y0, x0, z0], label=label)
     ax_h.set_xlabel("B")
@@ -405,13 +510,40 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     ax_h.set_xlim((Bgrid[0], Bgrid[-1]))
     leg = ax_h.legend(loc=legend_loc)
     leg.set_visible(show_legend)
-    if colorbar:
+    
+    # deal with colorbar display
+    if show_colorbar:
         plt.colorbar(im_uyz, ax=ax_uyz)
         plt.colorbar(im_uxz, ax=ax_uxz)
         plt.colorbar(im_uyx, ax=ax_uyx)
-    plt.subplots_adjust(top=.95, bottom=0.05, left=0.07, right=0.93)
+    
+    # deal with boundaries (if same pixel size is needed, give to all
+    # subplots the same axes boundaries)
+    if boundaries == 'same':
+        Dxlim = max(xgrid[-1] + .5 * dx, zgrid[-1] + .5 * dz) - min(xgrid[0] - .5 * dx, zgrid[0] - .5 * dx)
+        Dylim = max(xgrid[-1] + .5 * dx, ygrid[-1] + .5 * dy) - min(xgrid[0] - .5 * dx, ygrid[0] - .5 * dy)
+        Dx = xgrid[-1] - xgrid[0]
+        Dy = ygrid[-1] - ygrid[0]
+        Dz = zgrid[-1] - zgrid[0]
+        xlim_uyz = (zgrid[0] - .5 * (Dxlim - Dz), zgrid[-1] + .5 * (Dxlim - Dz))
+        ylim_uyz = (ygrid[0] - .5 * (Dylim - Dy), ygrid[-1] + .5 * (Dylim - Dy))
+        xlim_uxz = (zgrid[0] - .5 * (Dxlim - Dz), zgrid[-1] + .5 * (Dxlim - Dz))
+        ylim_uxz = (xgrid[0] - .5 * (Dylim - Dx), xgrid[-1] + .5 * (Dylim - Dx))
+        xlim_uyx = (xgrid[0] - .5 * (Dxlim - Dx), xgrid[-1] + .5 * (Dxlim - Dx))
+        ylim_uyx = (ygrid[0] - .5 * (Dylim - Dy), ygrid[-1] + .5 * (Dylim - Dy))
+        if origin != 'lower':
+            ylim_uyz = (ylim_uyz[-1], ylim_uyz[-2])
+            ylim_uxz = (ylim_uxz[-1], ylim_uxz[-2])
+            ylim_uyx = (ylim_uyx[-1], ylim_uyx[-2])
+        ax_uyz.set_xlim(xlim_uyz)
+        ax_uyz.set_ylim(ylim_uyz)
+        ax_uxz.set_xlim(xlim_uxz)
+        ax_uxz.set_ylim(ylim_uxz)
+        ax_uyx.set_xlim(xlim_uyx)
+        ax_uyx.set_ylim(ylim_uyx)
     
     # add sliders
+    plt.subplots_adjust(top=.95, bottom=0.05, left=0.07, right=0.93)
     sx = Slider(ax_sx, "X", idx[0], idx[-1], valinit=idx[x0], valstep=idx, valfmt=valfmt)
     sy = Slider(ax_sy, "Y", idy[0], idy[-1], valinit=idy[y0], valstep=idy, valfmt=valfmt)
     sz = Slider(ax_sz, "Z", idz[0], idz[-1], valinit=idz[z0], valstep=idz, valfmt=valfmt)
@@ -445,46 +577,47 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     plt.draw()
     
     # gather parameters
-    params = {'fig': fig,
-              'ax_sx': ax_sx,
-              'ax_sy': ax_sy,
-              'ax_sz': ax_sz,
-              'ax_uyz': ax_uyz,
-              'ax_uxz': ax_uxz,
-              'ax_uyx': ax_uyx,
-              'ax_sb': ax_sb,
-              'ax_h': ax_h,
-              'rx': rx,
-              'ry': ry,
-              'rz': rz,
-              'rb': rb,
-              'im_uyz': im_uyz,
-              'im_uxz': im_uxz,
-              'im_uyx': im_uyx,
-              'lines': [l0],
-              'sx': sx,
-              'sy': sy,
-              'sz': sz,
-              'sb': sb,
-              'u': u,
-              'xgrid': xgrid,
-              'ygrid': ygrid,
-              'zgrid': zgrid,
-              'bgrid': Bgrid,
-              'active_dim': 'b',
-              'xunit': spatial_unit,
-              'yunit': spatial_unit,
-              'zunit': spatial_unit,
-              'bunit': B_unit,
-              'next_dim' : {'b': 'x', 'x': 'y', 'y': 'z', 'z': 'b'},
-              'prev_dim' : {'b': 'z', 'z': 'y', 'y': 'x', 'x': 'b'},
-              'dx': xgrid[1] - xgrid[0],
-              'dy': ygrid[1] - ygrid[0],
-              'dz': zgrid[1] - zgrid[0],
-              'legend_loc': legend_loc,
-              'ready_to_follow': False,
-              'default_color': l0.get_color(),
-              }
+    params = {
+        'fig': fig,
+        'ax_sx': ax_sx,
+        'ax_sy': ax_sy,
+        'ax_sz': ax_sz,
+        'ax_uyz': ax_uyz,
+        'ax_uxz': ax_uxz,
+        'ax_uyx': ax_uyx,
+        'ax_sb': ax_sb,
+        'ax_h': ax_h,
+        'rx': rx,
+        'ry': ry,
+        'rz': rz,
+        'rb': rb,
+        'im_uyz': im_uyz,
+        'im_uxz': im_uxz,
+        'im_uyx': im_uyx,
+        'lines': [l0],
+        'sx': sx,
+        'sy': sy,
+        'sz': sz,
+        'sb': sb,
+        'u': u,
+        'xgrid': xgrid,
+        'ygrid': ygrid,
+        'zgrid': zgrid,
+        'bgrid': Bgrid,
+        'active_dim': 'b',
+        'xunit': spatial_unit,
+        'yunit': spatial_unit,
+        'zunit': spatial_unit,
+        'bunit': B_unit,
+        'next_dim' : {'b': 'x', 'x': 'y', 'y': 'z', 'z': 'b'},
+        'prev_dim' : {'b': 'z', 'z': 'y', 'y': 'x', 'x': 'b'},
+        'dx': dx,
+        'dy': dy,
+        'dz': dz,
+        'legend_loc': legend_loc,
+        'ready_to_follow': False,
+        'default_color': l0.get_color(),
+    }
     
     # set callback functions
     sx.on_changed(functools.partial(slider_update, params, 'x'))
@@ -866,7 +999,7 @@ def init_display_monosrc_3d(u, figsize=None, time_sleep=0.01,
     
     # if same pixel size is needed, give to all subplots the same axes
     # boundaries
-    if boundaries == 'same':
+    if boundaries == 'auto':
         if grids is not None:
             xlim = (min(xgrid[0], zgrid[0]), max(xgrid[-1], zgrid[-1])) 
             ylim = (min(xgrid[0], ygrid[0]), max(xgrid[-1], ygrid[-1]))
