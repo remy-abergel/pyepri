@@ -12,7 +12,8 @@ from pyepri.monosrc import compute_3d_frequency_nodes
 
 def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
                                rfft_mode=True, notest=False):
-    """Compute 4D irregular frequency nodes involved in 4D projection & backprojection operations.
+    """Compute 4D irregular frequency nodes involved in 4D \
+    projection & backprojection operations.
     
     Parameters
     ----------
@@ -96,7 +97,7 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     pyepri.monosrc.compute_3d_frequency_nodes
     proj4d
     backproj4d
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -138,7 +139,8 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
 
 def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
                        make_contiguous=True, notest=False):
-    """Precompute weights to accelerate further proj4d & backproj4d calls.
+    """Precompute weights to accelerate further proj4d & backproj4d \
+    calls.
     
     Precomputing the weights is useful to save computation time when
     multiple evaluations of :py:func:`proj4d` or :py:func:`backproj4d`
@@ -224,7 +226,8 @@ def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
 
 def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
            rfft_mode=True, nodes=None, memory_usage=1, notest=False):
-    """Compute EPR projections of a 4D image (adjoint of the backproj4d operation).
+    """Compute EPR projections of a 4D image (adjoint of the \
+    backproj4d operation).
     
     Parameters
     ----------
@@ -358,7 +361,8 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
 def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
                eps=1e-06, out=None, nodes=None, memory_usage=1,
                notest=False):
-    """Compute EPR projections of a 4D image (output in Fourier domain).
+    """Compute EPR projections of a 4D image (output in Fourier \
+    domain).
     
     Parameters
     ----------
@@ -526,7 +530,8 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
 def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
                 eps=1e-06, out=None, nodes=None, memory_usage=1,
                 notest=False):
-    """Compute EPR projections of a 4D image (output in Fourier domain, half of the full spectrum).
+    """Compute EPR projections of a 4D image (output in Fourier \
+    domain, half of the full spectrum).
     
     Parameters
     ----------
@@ -623,7 +628,7 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
     compute_4d_frequency_nodes
     compute_4d_weights
     proj4d
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -694,7 +699,8 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
 def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
                weights=None, eps=1e-06, rfft_mode=True, nodes=None,
                memory_usage=1, notest=False):
-    """Perform EPR backprojection from 4D EPR projections (adjoint of the proj4d operation).
+    """Perform EPR backprojection from 4D EPR projections (adjoint \
+    of the proj4d operation).
     
     Parameters
     ----------
@@ -829,7 +835,8 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
 def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
                    out_shape=None, out=None, weights=None, eps=1e-06,
                    nodes=None, memory_usage=1, notest=False):
-    """Perform EPR backprojection from 4D EPR projections provided in Fourier domain.
+    """Perform EPR backprojection from 4D EPR projections provided \
+    in Fourier domain.
     
     Parameters
     ----------
@@ -930,7 +937,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     compute_4d_frequency_nodes
     compute_4d_weights
     backproj4d
-    
+
     """    
     # backend inference (if necessary)
     if backend is None:
@@ -1005,7 +1012,8 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
                     out_shape=None, out=None, weights=None, eps=1e-06,
                     nodes=None, preserve_input=False, memory_usage=1,
                     notest=False):
-    """Perform EPR backprojection from 4D EPR projections provided in Fourier domain (half of the full spectrum).
+    """Perform EPR backprojection from 4D EPR projections provided \
+    in Fourier domain (half of the full spectrum).
     
     Parameters
     ----------
@@ -1106,7 +1114,7 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
     compute_4d_frequency_nodes
     compute_4d_weights
     backproj4d
-    
+
     """    
     # backend inference (if necessary)
     if backend is None:
@@ -1189,7 +1197,8 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
                                rfft_mode=True, nodes=None,
                                return_rfft4=False, notest=False,
                                memory_usage=1):
-    """Compute 4D Toeplitz kernel allowing fast computation of a ``proj4d`` followed by a ``backproj4d`` operation.
+    """Compute 4D Toeplitz kernel allowing fast computation of a \
+    ``proj4d`` followed by a ``backproj4d`` operation.
     
     Parameters
     ----------
@@ -1330,7 +1339,8 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
 
 
 def apply_4d_toeplitz_kernel(u, rfft4_phi, backend=None, notest=False):
-    """Perform a ``proj4d`` followed by a ``backproj4d`` operation using a precomputed Toeplitz kernel provided in Fourier domain.
+    """Perform a ``proj4d`` followed by a ``backproj4d`` operation \
+    using a precomputed Toeplitz kernel provided in Fourier domain.
     
     Parameters
     ----------
@@ -1367,7 +1377,7 @@ def apply_4d_toeplitz_kernel(u, rfft4_phi, backend=None, notest=False):
     compute_4d_toeplitz_kernel
     proj4d
     backproj4d
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1393,5 +1403,6 @@ def apply_4d_toeplitz_kernel(u, rfft4_phi, backend=None, notest=False):
 
 # TODO
 def _check_nd_inputs_():
-    """Factorized consistency checks for functions in the :py:mod:`pyepri.spectralspatial` submodule."""
+    """Factorized consistency checks for functions in the \
+    :py:mod:`pyepri.spectralspatial` submodule."""
     pass
