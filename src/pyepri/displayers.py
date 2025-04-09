@@ -13,6 +13,7 @@ import matplotlib.patches as patches
 from matplotlib.gridspec import GridSpec
 from matplotlib.widgets import Slider
 from matplotlib import rcParams
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pylab as pl
 from IPython import display, get_ipython
 import time
@@ -42,7 +43,9 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
              show_legend=True, legend_loc='upper right',
              show_colorbar=True, cmap=None, origin='lower',
              aspect='equal', boundaries='same',
-             interpolation='nearest'):
+             interpolation='nearest', sx_color=None, sy_color=None,
+             sz_color=None, sb_color='g', xlim=None, ylim=None,
+             zlim=None):
     """Interactive displayer for 4D spectral-spatial images.
 
     Display slices & spectra of a 4D spectral-sptatial image, and
@@ -145,6 +148,46 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
         The interpolation method used (see ``matplotlib``
         documentation for the possible choices).
     
+    sx_color : str or None, optional    
+        The name of a matplotlib color for the X-slice slider progress
+        bar (the default color is used when this optionnal input is
+        set to ``None``).
+    
+    sy_color : str or None, optional    
+        The name of a matplotlib color for the Y-slice slider progress
+        bar (the default color is used when this optionnal input is
+        set to ``None``).
+    
+    sz_color : str or None, optional    
+        The name of a matplotlib color for the Z-slice slider progress
+        bar (the default color is used when this optionnal input is
+        set to ``None``).
+    
+    sb_color : str or None, optional    
+        The name of a matplotlib color for the B slider progress
+        bar (the default color is used when this optionnal input is
+        set to ``None``).
+    
+    xlim : tuple of float, optional    
+        Limits for the x-axis as a tuple ``(xmin, xmax)``. If
+        provided, sets the visible range of the x-axis. If None, the
+        limits are determined automatically based on the data. Note
+        that the use of this option jointly with ``boudnaries='same'``
+        is discouraged and may lead to unexpected behavior.
+    
+    ylim : tuple of float, optional
+        Limits for the y-axis as a tuple ``(ymin, ymax)``. If
+        provided, sets the visible range of the y-axis. If None, the
+        limits are determined automatically based on the data. Note
+        that the use of this option jointly with ``boudnaries='same'``
+        is discouraged and may lead to unexpected behavior.
+    
+    zlim : tuple of float, optional
+        Limits for the z-axis as a tuple ``(zmin, zmax)``. If
+        provided, sets the visible range of the z-axis. If None, the
+        limits are determined automatically based on the data. Note
+        that the use of this option jointly with ``boudnaries='same'``
+        is discouraged and may lead to unexpected behavior.
     
     Return
     ------
@@ -182,7 +225,7 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     - D : remove all currently displayed spectra
     - S : show/hide legend
     - h : display help
-    
+
     """
     # def local functions (callbacks)
     def slider_update(params, dim, id):
@@ -546,12 +589,6 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     leg = ax_h.legend(loc=legend_loc)
     leg.set_visible(show_legend)
     
-    # deal with colorbar display
-    if show_colorbar:
-        plt.colorbar(im_uyz, ax=ax_uyz)
-        plt.colorbar(im_uxz, ax=ax_uxz)
-        plt.colorbar(im_uyx, ax=ax_uyx)
-    
     # deal with boundaries (if same pixel size is needed, give to all
     # subplots the same axes boundaries)
     if boundaries == 'same':
@@ -571,26 +608,37 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
             ylim_uxz = (ylim_uxz[-1], ylim_uxz[-2])
             ylim_uyx = (ylim_uyx[-1], ylim_uyx[-2])
         ax_uyz.set_xlim(xlim_uyz)
-        ax_uyz.set_ylim(ylim_uyz)
         ax_uxz.set_xlim(xlim_uxz)
-        ax_uxz.set_ylim(ylim_uxz)
         ax_uyx.set_xlim(xlim_uyx)
+        ax_uyz.set_ylim(ylim_uyz)
+        ax_uxz.set_ylim(ylim_uxz)
         ax_uyx.set_ylim(ylim_uyx)
+
+    # deal with xlim/ylim/zlim/Blim options
+    if xlim is not None:
+        ax_uxz.set_ylim(xlim)
+        ax_uyx.set_xlim(xlim)
+    if ylim is not None:
+        ax_uyz.set_ylim(ylim)
+        ax_uyx.set_ylim(ylim)
+    if zlim is not None:
+        ax_uyz.set_xlim(zlim)
+        ax_uxz.set_xlim(zlim)
     
     # add sliders
     plt.subplots_adjust(top=.95, bottom=0.05, left=0.07, right=0.93)
-    sx = Slider(ax_sx, "X", idx[0], idx[-1], valinit=idx[x0], valstep=idx, valfmt=valfmt)
-    sy = Slider(ax_sy, "Y", idy[0], idy[-1], valinit=idy[y0], valstep=idy, valfmt=valfmt)
-    sz = Slider(ax_sz, "Z", idz[0], idz[-1], valinit=idz[z0], valstep=idz, valfmt=valfmt)
-    sb = Slider(ax_sb, "B", idB[0], idB[-1], valinit=idB[B0], valstep=idB, color='m', valfmt=valfmt)    
+    sx = Slider(ax_sx, "X", idx[0], idx[-1], valinit=idx[x0], valstep=idx, color=sx_color, valfmt=valfmt)
+    sy = Slider(ax_sy, "Y", idy[0], idy[-1], valinit=idy[y0], valstep=idy, color=sy_color, valfmt=valfmt)
+    sz = Slider(ax_sz, "Z", idz[0], idz[-1], valinit=idz[z0], valstep=idz, color=sz_color, valfmt=valfmt)
+    sb = Slider(ax_sb, "B", idB[0], idB[-1], valinit=idB[B0], valstep=idB, color=sb_color, valfmt=valfmt)    
     sx.nval = Nx
     sy.nval = Ny
     sz.nval = Nz
     sb.nval = Nb
     sx.is_updating = sy.is_updating = sz.is_updating = sb.is_updating = False
     sx.valtext.set_text((valfmt + ' %s') % (xgrid[x0], spatial_unit))
-    sy.valtext.set_text((valfmt + ' %s') % (xgrid[y0], spatial_unit))
-    sz.valtext.set_text((valfmt + ' %s') % (xgrid[z0], spatial_unit))
+    sy.valtext.set_text((valfmt + ' %s') % (ygrid[y0], spatial_unit))
+    sz.valtext.set_text((valfmt + ' %s') % (zgrid[z0], spatial_unit))
     sb.valtext.set_text((valfmt + ' %s') % (Bgrid[B0], B_unit))
     ax_sx.set_title('X-slice')
     ax_sy.set_title('Y-slice')
@@ -611,6 +659,28 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     rb.set_visible(True)
     plt.draw()
     
+    # deal with colorbar display
+    if show_colorbar:
+        #
+        # usual color bar may move the figure (this typically happens
+        # when the image width is smaller than the image height),
+        # leading to unaesthetic uncentered display
+        #
+        #plt.colorbar(im_uyz, ax=ax_uyz)
+        #plt.colorbar(im_uxz, ax=ax_uxz)
+        #plt.colorbar(im_uyx, ax=ax_uyx)
+        #
+        # this fixes the issue presented above
+        d_uyz = make_axes_locatable(ax_uyz)
+        d_uxz = make_axes_locatable(ax_uxz)
+        d_uyx = make_axes_locatable(ax_uyx)
+        cax_uyz = d_uyz.append_axes("right", size="7%", pad=0.05)
+        cax_uxz = d_uxz.append_axes("right", size="7%", pad=0.05)
+        cax_uyx = d_uyx.append_axes("right", size="7%", pad=0.05)
+        plt.colorbar(im_uyz, cax=cax_uyz)
+        plt.colorbar(im_uxz, cax=cax_uxz)
+        plt.colorbar(im_uyx, cax=cax_uyx)
+    
     # gather parameters
     params = {
         'fig': fig,
@@ -622,6 +692,9 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
         'ax_uyx': ax_uyx,
         'ax_sb': ax_sb,
         'ax_h': ax_h,
+        'cax_uyz': cax_uyz,
+        'cax_uxz': cax_uxz,
+        'cax_uyx': cax_uyx,
         'rx': rx,
         'ry': ry,
         'rz': rz,
