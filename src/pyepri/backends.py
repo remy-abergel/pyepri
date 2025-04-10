@@ -711,7 +711,7 @@ class Backend:
             self.stack = lambda arrays, dim=0, out=None : lib.stack(arrays, dim=dim, out=out)
             self.quantile = lambda u, q, dim=None, keepdim=False, out=None, interpolation='linear' : lib.quantile(u, q, dim=dim, keepdim=keepdim, out=out, interpolation=interpolation)
             self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : lib.frombuffer(buffer, dtype=self.str_to_lib_dtypes[dtype], count=count, offset=offset)
-
+            
             # remap some other lib-dependent methods using direct
             # mappings
             self.rfft = lib.fft.rfft
@@ -729,7 +729,7 @@ class Backend:
             self.fftshift = lib.fft.fftshift
             self.ifftshift = lib.fft.ifftshift
             self.cumsum = lib.cumsum
-
+            
             # set minimal doc for the above defined lambda functions
             self.zeros.__doc__ = (
                 "return torch.zeros(*size, dtype=self.str_to_lib_dtypes[dtype], device='" + self.device + "')\n"
