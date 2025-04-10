@@ -12,8 +12,7 @@ from pyepri.monosrc import compute_3d_frequency_nodes
 
 def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
                                rfft_mode=True, notest=False):
-    """Compute 4D irregular frequency nodes involved in 4D \
-    projection & backprojection operations.
+    """Compute 4D irregular frequency nodes involved in 4D projection & backprojection operations.
     
     Parameters
     ----------
@@ -97,7 +96,7 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     pyepri.monosrc.compute_3d_frequency_nodes
     proj4d
     backproj4d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -126,9 +125,9 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     else:
         alf = backend.ifftshift(-(Nb//2) + backend.arange(Nb, dtype=dtype))
     indexes = nodes['indexes']
-    xi = (2. * math.pi / float(Nb)) * alf
+    xi = (2. * math.pi / float(Nb)) * alf # TODO : à intégrer direct dans t
     t = - backend.copy(xi).reshape((1, -1))
-    t = (t * backend.ones((fgrad.shape[1], 1), dtype=dtype)) # todo : remplacer par un repmat
+    t = (t * backend.ones((fgrad.shape[1], 1), dtype=dtype)) # TODO : remplacer par un repmat?
     t = t.reshape((-1,))[indexes]
     t, idt = backend.unique(t, return_inverse=True)
     lt = backend.arange(Nb, dtype=dtype).reshape((-1, 1)) * t.reshape((1, -1))
@@ -139,8 +138,7 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
 
 def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
                        make_contiguous=True, notest=False):
-    """Precompute weights to accelerate further proj4d & backproj4d \
-    calls.
+    """Precompute weights to accelerate further proj4d & backproj4d calls.
     
     Precomputing the weights is useful to save computation time when
     multiple evaluations of :py:func:`proj4d` or :py:func:`backproj4d`
@@ -198,7 +196,7 @@ def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
     backproj4d
     backproj4d_fft
     backproj4d_rfft
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -208,14 +206,10 @@ def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
     #if not notest:
     #    _check_nd_inputs_(TODO)
     
-    # retrieve real & complex datatypes
-    lt, idt = nodes['lt'], nodes['idt']
-    dtype = backend.lib_to_str_dtypes[lt.dtype]
-    cdtype = backend.mapping_to_complex_dtypes[dtype]
-    
     # compute weights (the use of backend.cos and backend.sin is
     # faster and less memory demanding than the use of backend.exp,
     # because lt input is real valued)
+    lt, idt = nodes['lt'], nodes['idt']
     w = nrm * (backend.cos(lt) + isign * 1j * backend.sin(lt))
     if make_contiguous:
         w = w[:, idt].ravel().reshape((w.shape[0], len(idt)))
@@ -226,8 +220,7 @@ def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
 
 def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
            rfft_mode=True, nodes=None, memory_usage=1, notest=False):
-    """Compute EPR projections of a 4D image (adjoint of the \
-    backproj4d operation).
+    """Compute EPR projections of a 4D image (adjoint of the backproj4d operation).
     
     Parameters
     ----------
@@ -300,7 +293,7 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
     memory_usage : int, optional
         Specify the computation strategy (depending on your available
         memory budget).
-
+    
         + ``memory_usage = 0``: fast computation but memory demanding
     
         + ``memory_usage = 1``: (recommended) pretty good tradeoff
@@ -311,7 +304,7 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-
+    
     
     Return
     ------
@@ -322,7 +315,7 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
         projections) such that ``out[k,:]`` corresponds the EPR
         projection of u with field gradient ``fgrad[:,k]`` sampled
         over the grid `B`.    
-
+    
     
     See also
     --------
@@ -330,7 +323,7 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
     compute_4d_frequency_nodes
     compute_4d_weights
     backproj4d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -361,8 +354,7 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
 def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
                eps=1e-06, out=None, nodes=None, memory_usage=1,
                notest=False):
-    """Compute EPR projections of a 4D image (output in Fourier \
-    domain).
+    """Compute EPR projections of a 4D image (output in Fourier domain).
     
     Parameters
     ----------
@@ -429,7 +421,7 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
     memory_usage : int, optional
         Specify the computation strategy (depending on your available
         memory budget).
-
+    
         + ``memory_usage = 0``: fast computation but memory demanding
     
         + ``memory_usage = 1``: (recommended) pretty good tradeoff
@@ -440,7 +432,7 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
         
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-
+    
     
     Return
     ------
@@ -451,7 +443,7 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
         projections) such that ``out[k,:]`` contains the discrete
         Fourier coefficients of the EPR projection of `u` with field
         gradient ``fgrad[:,k]``.    
-
+    
     
     See also
     --------
@@ -459,7 +451,7 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
     compute_4d_frequency_nodes
     compute_4d_weights
     proj4d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -495,7 +487,7 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
     
     # retrieve frequency nodes
     x, y, z, indexes = nodes['x'], nodes['y'], nodes['z'], nodes['indexes']
-    t, idt, lt = nodes['t'], nodes['idt'], nodes['lt']
+    t, idt = nodes['t'], nodes['idt']
     
     # fill output's non-zero discrete Fourier coefficients
     if 0 == memory_usage:
@@ -530,8 +522,7 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
 def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
                 eps=1e-06, out=None, nodes=None, memory_usage=1,
                 notest=False):
-    """Compute EPR projections of a 4D image (output in Fourier \
-    domain, half of the full spectrum).
+    """Compute EPR projections of a 4D image (output in Fourier domain, half of the full spectrum).
     
     Parameters
     ----------
@@ -598,7 +589,7 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
     memory_usage : int, optional
         Specify the computation strategy (depending on your available
         memory budget).
-
+    
         + ``memory_usage = 0``: fast computation but memory demanding
     
         + ``memory_usage = 1``: (recommended) pretty good tradeoff
@@ -609,7 +600,7 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-
+    
     
     Return
     ------
@@ -620,7 +611,7 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
         computed projections) such that ``out[k,:]`` corresponds to
         half of the discrete Fourier coefficients of the EPR
         projection of `u` with field gradient ``fgrad[:,k]``.
-
+    
     
     See also
     --------
@@ -628,7 +619,7 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
     compute_4d_frequency_nodes
     compute_4d_weights
     proj4d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -664,7 +655,7 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
     
     # retrieve frequency nodes
     x, y, z, indexes = nodes['x'], nodes['y'], nodes['z'], nodes['indexes']
-    t, idt, lt = nodes['t'], nodes['idt'], nodes['lt']
+    t, idt = nodes['t'], nodes['idt']
     
     # fill output's non-zero discrete Fourier coefficients
     if 0 == memory_usage:
@@ -699,8 +690,7 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
 def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
                weights=None, eps=1e-06, rfft_mode=True, nodes=None,
                memory_usage=1, notest=False):
-    """Perform EPR backprojection from 4D EPR projections (adjoint \
-    of the proj4d operation).
+    """Perform EPR backprojection from 4D EPR projections (adjoint of the proj4d operation).
     
     Parameters
     ----------
@@ -773,7 +763,7 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
     memory_usage : int, optional
         Specify the computation strategy (depending on your available
         memory budget).
-
+    
         + ``memory_usage = 0``: fast computation but memory demanding
     
         + ``memory_usage = 1``: (recommended) pretty good tradeoff
@@ -784,7 +774,7 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-
+    
     
     Return 
     ------
@@ -792,7 +782,7 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
     out : array_like (with type `backend.cls`)
         A four-dimensional array with specified shape corresponding
         to the backprojected image.
-
+    
     
     See also
     --------
@@ -800,7 +790,7 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
     compute_4d_frequency_nodes
     compute_4d_weights
     proj4d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -820,14 +810,14 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
                               backend=backend, weights=weights,
                               eps=eps, out_shape=out_shape,
                               nodes=nodes, memory_usage=memory_usage,
-                              notest=True).real
+                              preserve_input=False, notest=True).real
     else:
         fft_proj = backend.fft(proj)
         out = backproj4d_fft(fft_proj, delta, B, fgrad,
                              backend=backend, weights=weights,
                              eps=eps, out_shape=out_shape,
                              nodes=nodes, memory_usage=memory_usage,
-                             preserve_input=False, notest=True).real
+                             notest=True).real
     
     return out
 
@@ -835,8 +825,7 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
 def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
                    out_shape=None, out=None, weights=None, eps=1e-06,
                    nodes=None, memory_usage=1, notest=False):
-    """Perform EPR backprojection from 4D EPR projections provided \
-    in Fourier domain.
+    """Perform EPR backprojection from 4D EPR projections provided in Fourier domain.
     
     Parameters
     ----------
@@ -910,7 +899,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     memory_usage : int, optional
         Specify the computation strategy (depending on your available
         memory budget).
-
+    
         + ``memory_usage = 0``: fast computation but memory demanding
     
         + ``memory_usage = 1``: (recommended) pretty good tradeoff
@@ -937,7 +926,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     compute_4d_frequency_nodes
     compute_4d_weights
     backproj4d
-
+    
     """    
     # backend inference (if necessary)
     if backend is None:
@@ -953,7 +942,6 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     
     # retrieve signals dimensions
     Nb = len(B) # number of points per projection
-    Nproj = fgrad.shape[1] # number of projections
     out_shape = out.shape if out is not None else out_shape
     _, Ny, Nx, Nz = out_shape # spatial dimensions
     
@@ -970,7 +958,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     
     # retrieve frequency nodes
     x, y, z, indexes = nodes['x'], nodes['y'], nodes['z'], nodes['indexes']
-    t, idt, lt = nodes['t'], nodes['idt'], nodes['lt']
+    t, idt = nodes['t'], nodes['idt']
     
     # compute adjoint nufft
     if 0 == memory_usage:
@@ -987,8 +975,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         phat = backend.empty((Nb, len(indexes)), dtype=cdtype)
-        alf = backend.ifftshift(-(Nb//2) + backend.arange(Nb, dtype=dtype))
-        xi = nodes['xi'] #(2. * math.pi / float(Nb)) * alf
+        xi = nodes['xi']
         nrm = complex(delta**3 / float(Nb))
         for l in range(Nb):
             #w = nrm * backend.exp(1j * l * xi) # slow and memory consuming
@@ -1012,8 +999,7 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
                     out_shape=None, out=None, weights=None, eps=1e-06,
                     nodes=None, preserve_input=False, memory_usage=1,
                     notest=False):
-    """Perform EPR backprojection from 4D EPR projections provided \
-    in Fourier domain (half of the full spectrum).
+    """Perform EPR backprojection from 4D EPR projections provided in Fourier domain (half of the full spectrum).
     
     Parameters
     ----------
@@ -1087,7 +1073,7 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
     memory_usage : int, optional
         Specify the computation strategy (depending on your available
         memory budget).
-
+    
         + ``memory_usage = 0``: fast computation but memory demanding
     
         + ``memory_usage = 1``: (recommended) pretty good tradeoff
@@ -1130,7 +1116,6 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
     
     # retrieve signals dimensions
     Nb = len(B) # number of points per projection
-    Nproj = fgrad.shape[1] # number of projections
     out_shape = out.shape if out is not None else out_shape
     _, Ny, Nx, Nz = out_shape # spatial dimensions
     
@@ -1147,7 +1132,7 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
     
     # retrieve frequency nodes
     x, y, z, indexes = nodes['x'], nodes['y'], nodes['z'], nodes['indexes']
-    t, idt, lt = nodes['t'], nodes['idt'], nodes['lt']
+    t, idt = nodes['t'], nodes['idt']
     
     # rescale non zero DFT coefficients (this tricks allow to put back
     # the missing half-frequency-domain coefficient into the
@@ -1197,8 +1182,7 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
                                rfft_mode=True, nodes=None,
                                return_rfft4=False, notest=False,
                                memory_usage=1):
-    """Compute 4D Toeplitz kernel allowing fast computation of a \
-    ``proj4d`` followed by a ``backproj4d`` operation.
+    """Compute 4D Toeplitz kernel allowing fast computation of a ``proj4d`` followed by a ``backproj4d`` operation.
     
     Parameters
     ----------
@@ -1263,18 +1247,19 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
     memory_usage : int, optional
         Specify the computation strategy (depending on your available
         memory budget).
-
-        + ``memory_usage = 0``: fast computation but memory demanding
     
-        + ``memory_usage = 1``: (recommended) pretty good tradeoff
-          between speed and reduced memory usage
+        + ``memory_usage = 0``: fast computation but memory demanding
         
+        + ``memory_usage = 1``: same as ``memory_usage = 0`` (for
+          consistency with :py:func:`proj4d` and
+          :py:func:`backproj4d`)
+            
         + ``memory_usage = 2``: slow computation but very light memory
           usage
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.    
-
+    
     
     Return
     ------
@@ -1307,8 +1292,6 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
     
     # retrieve signals dimensions
     Nb = len(B) # number of points per projection
-    Nproj = fgrad.shape[1] # number of projections
-    _, Ny, Nx, Nz = out_shape # spatial dimensions
     
     # retrieve complex data type in str format
     dtype = backend.lib_to_str_dtypes[B.dtype]
@@ -1322,25 +1305,42 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
                                            notest=True)
     
     # retrieve frequency nodes
-    x, y, z, indexes = nodes['x'], nodes['y'], nodes['z'], nodes['indexes']
+    x, y, z = nodes['x'], nodes['y'], nodes['z']
     t, idt = nodes['t'], nodes['idt']
     
     # compute kernel
-    lt2 = backend.arange(2 * Nb, dtype=dtype).reshape((-1, 1)) * t.reshape((1, -1))
-    cof = (delta**6 / float(Nb)) * (backend.cos(lt2) + 1j * backend.sin(lt2))
-    if rfft_mode:
-        cof[:, 1::] *= 2.
-    COFS = cof[:, idt].ravel().reshape((2 * Nb, len(idt)))   
-    plan = backend.nufft_plan(1, (2*Ny, 2*Nx, 2*Nz), n_trans=2*Nb, dtype=cdtype, eps=eps)
-    backend.nufft_setpts(plan, y, x, z)
-    phi = backend.nufft_execute(plan, COFS).real
-    
+    if memory_usage in (0, 1):
+        lt2 = backend.arange(2 * Nb, dtype=dtype).reshape((-1, 1)) * t.reshape((1, -1))
+        cof = (delta**6 / float(Nb)) * (backend.cos(lt2) - 1j * backend.sin(lt2)) # TODO understand minus!
+        if rfft_mode:
+            nrm = 2. 
+            cof[:, t == 0] /= 2. # alf == 0 is not necessarily located on column 0 due to backend.unique reordering
+        else:
+            nrm = 1.
+        COFS = cof[:, idt].ravel().reshape((2 * Nb, len(idt)))
+        plan = backend.nufft_plan(1, out_shape[1:], n_trans=2*Nb, dtype=cdtype, eps=eps)
+        backend.nufft_setpts(plan, y, x, z)
+        phi = nrm * backend.nufft_execute(plan, COFS).real
+    else:
+        nrm = complex(delta**6 / float(Nb))
+        phi = backend.zeros(out_shape, dtype=dtype)
+        if rfft_mode:
+            nrm *= 2.
+            t0 = (t == 0)
+            for l in range(2*Nb):
+                w = nrm * (backend.cos(t * l) - 1j * backend.sin(t * l))
+                w[t0] /= 2.
+                phi[l, :, :, :] = backend.nufft3d_adjoint(y, x, z, w[idt], n_modes=out_shape[1:], eps=eps).real
+        else:
+            for l in range(2*Nb):
+                w = nrm * (backend.cos(t * l) - 1j * backend.sin(t * l))
+                phi[l, :, :, :] = backend.nufft3d_adjoint(y, x, z, w[idt], n_modes=out_shape[1:], eps=eps).real
+        
     return backend.rfftn(phi) if return_rfft4 else phi
 
 
 def apply_4d_toeplitz_kernel(u, rfft4_phi, backend=None, notest=False):
-    """Perform a ``proj4d`` followed by a ``backproj4d`` operation \
-    using a precomputed Toeplitz kernel provided in Fourier domain.
+    """Perform a ``proj4d`` followed by a ``backproj4d`` operation using a precomputed Toeplitz kernel provided in Fourier domain.
     
     Parameters
     ----------
@@ -1403,6 +1403,5 @@ def apply_4d_toeplitz_kernel(u, rfft4_phi, backend=None, notest=False):
 
 # TODO
 def _check_nd_inputs_():
-    """Factorized consistency checks for functions in the \
-    :py:mod:`pyepri.spectralspatial` submodule."""
+    """Factorized consistency checks for functions in the :py:mod:`pyepri.spectralspatial` submodule."""
     pass
