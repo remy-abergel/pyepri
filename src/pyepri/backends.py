@@ -702,8 +702,8 @@ class Backend:
             self.erfc = lambda x, out=None : lib.erfc(x, out=out)
             self.is_complex = lambda x : x.is_complex()
             self.to_numpy = lambda x : x.detach().cpu().numpy()
-            #self.from_numpy = lambda x : lib.from_numpy(x).to(device, copy=True) # conflict between pytorch and numpy 2.0.0
-            self.from_numpy = lambda x : lib.Tensor(x).to(device, copy=True, dtype=self.str_to_lib_dtypes[str(x.dtype)]) # need explicit type
+            self.from_numpy = lambda x : lib.from_numpy(x).to(device, copy=True) # conflict between pytorch and numpy 2.0.0
+            #self.from_numpy = lambda x : lib.Tensor(x).to(device, copy=True, dtype=self.str_to_lib_dtypes[str(x.dtype)]) # need explicit type
             self.cast = lambda x, dtype : x.type(self.str_to_lib_dtypes[dtype])
             self.transpose = lambda x : x.moveaxis((0,1),(1,0))
             self.copy = lambda x : lib.clone(x).detach()
@@ -782,12 +782,12 @@ class Backend:
             self.erfc.__doc__ = "return torch.erfc(x, out=out)"
             self.is_complex.__doc__ = "return x.is_complex()"
             self.to_numpy.__doc__ = "return x.detach().cpu().numpy()"
-            #self.from_numpy.__doc__ = "return torch.from_numpy(x).to('" + self.device + "', copy=True)"
-            self.from_numpy.__doc__ = (
-                "return torch.Tensor(x).to('" + self.device + "', copy=True, dtype=self.str_to_lib_dtypes[str(x.dtype)])\n"
-                "where `self` denotes the backends.Backend class instance from wich this lambda\n"
-                "function belongs to."
-            )
+            self.from_numpy.__doc__ = "return torch.from_numpy(x).to('" + self.device + "', copy=True)"
+            #self.from_numpy.__doc__ = (
+            #    "return torch.Tensor(x).to('" + self.device + "', copy=True, dtype=self.str_to_lib_dtypes[str(x.dtype)])\n"
+            #    "where `self` denotes the backends.Backend class instance from wich this lambda\n"
+            #    "function belongs to."
+            #)
             self.is_backend_compliant.__doc__ = "return all([isinstance(arg, torch.Tensor) for arg in args])"
             self.quantile.__doc__ = "return "+ lib.__name__ + ".quantile(u, q, dim=dim, keepdim=keepdim, out=out, interpolation=interpolation)"
             self.frombuffer.__doc__ = (
@@ -824,7 +824,7 @@ class Backend:
                 self.nufft3d_adjoint = numpyfy(assign_finufft_nthreads(finufft.nufft3d1))
                 self.nufft_plan = finufft.Plan
                 self.nufft_setpts = lambda plan, *pts : plan.setpts(*[point.numpy() for point in pts])
-                self.nufft_execute = lambda plan, arr, out=None : lib.from_numpy(plan.execute(arr.numpy(), out=out.numpy()))
+                self.nufft_execute = lambda plan, arr, out=None : lib.from_numpy(plan.execute(arr.numpy(), out=(out if out is None else out.numpy())))
                 #self.nufft_execute = lambda plan, arr : numpyfy(plan.execute)(arr)
                 
                 # add short documentation
