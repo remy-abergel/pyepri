@@ -16,7 +16,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy>=2.0.0",
+    "numpy>=2.2.4",
     "scipy",
     "matplotlib",
     "pyvista",
@@ -45,11 +45,11 @@ cupy-cuda11x = [
     "cufinufft",
 ]
 torch-cpu = [
-    "torch>=2.4",
+    "torch>=2.5.1",
     "torchinterp1d",
 ]
 torch-cuda = [
-    "torch>=2.4",
+    "torch>=2.5.1",
     "torchinterp1d",
     "cufinufft",
 ]
