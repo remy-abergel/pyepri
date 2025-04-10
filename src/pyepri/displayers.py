@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.gridspec import GridSpec
 from matplotlib.widgets import Slider
-from matplotlib import rcParams
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pylab as pl
 from IPython import display, get_ipython
@@ -354,9 +353,9 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
         elif event.key == 'R': # rescale yaxis to maximize the dynamic of all displayed spectra
             if len(params['lines']) >= 1:
                 cmin, cmax = math.inf, -math.inf
-                for l in params['lines']:
-                    ymin = l.get_ydata().min()
-                    ymax = l.get_ydata().max()
+                for line in params['lines']:
+                    ymin = line.get_ydata().min()
+                    ymax = line.get_ydata().max()
                     sgmin = -1 if ymin < 0 else 1
                     sgmax = -1 if ymax < 0 else 1
                     ymin = sgmin * (sgmin * ymin * 1.05)
@@ -370,10 +369,10 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
             lines = params['lines']
             n = len(lines)
             if n >= 2:
-                l = lines[-2]
-                col = l.get_color()
-                lines.remove(l)
-                l.remove()
+                line = lines[-2]
+                col = line.get_color()
+                lines.remove(line)
+                line.remove()
                 lines[-1].set_color(col)
                 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
                 id = (n % len(colors)) - 1
@@ -382,9 +381,9 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
                 update_legend(params)
         elif event.key == 'D': # delete all plots
             lines = params['lines']
-            for l in lines[:(len(lines)-1)]:
-                lines.remove(l)
-                l.remove()
+            for line in lines[:(len(lines)-1)]:
+                lines.remove(line)
+                line.remove()
             lines[-1].set_color(params['default_color'])
             colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
             rotated = colors[1:] + colors[:1]
@@ -474,22 +473,22 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
         # retrieve integer voxel indexes (if the pointer lies within a
         # displayed slice)
         kx, ky, kz, valid = get_k(params, event)
-        l = params['lines'][-1]
+        line = params['lines'][-1]
         params['ready_to_follow'] = params['ready_to_follow'] or valid
         if params['ready_to_follow'] and params['ax_h'].get_legend().get_visible():
-            l.set_visible(valid)
+            line.set_visible(valid)
         
         # if the pointer lies within a displayed slice, update the
         # displayed spectrum
         if valid:
             h = params['u'][:, ky, kx, kz]
-            l.set_ydata(h)
+            line.set_ydata(h)
             label = 'u[:, %d, %d, %d]' % (ky, kx, kz)
-            l.set_label(label)
+            line.set_label(label)
             update_legend(params)
             params['fig'].canvas.draw_idle()
         elif params['ready_to_follow'] and params['ax_h'].get_legend().get_visible(): 
-            l.set_label(' ')
+            line.set_label(' ')
             params['ax_h'].legend(loc=params['legend_loc'])
     
     def on_click(params, event):
@@ -502,11 +501,11 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
         # corresponding spectrum
         if valid:
             h = params['u'][:, ky, kx, kz]
-            l, = params['ax_h'].plot(params['bgrid'], h)
+            line, = params['ax_h'].plot(params['bgrid'], h)
             label = 'u[:, %d, %d, %d]' % (ky, kx, kz)
-            l.set_label(label)
+            line.set_label(label)
             update_legend(params)
-            params['lines'].append(l)            
+            params['lines'].append(line)
             params['fig'].canvas.draw_idle()
     
     # retrieve image dimensions
@@ -732,9 +731,9 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     sy.on_changed(functools.partial(slider_update, params, 'y'))
     sz.on_changed(functools.partial(slider_update, params, 'z'))
     sb.on_changed(functools.partial(slider_update, params, 'b'))
-    cid1 = fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, params))
-    cid2 = fig.canvas.mpl_connect('key_press_event', functools.partial(keypressed, params))
-    cid3 = fig.canvas.mpl_connect('motion_notify_event', functools.partial(on_mouse_move, params))
+    fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, params))
+    fig.canvas.mpl_connect('key_press_event', functools.partial(keypressed, params))
+    fig.canvas.mpl_connect('motion_notify_event', functools.partial(on_mouse_move, params))
     
     return params
 
