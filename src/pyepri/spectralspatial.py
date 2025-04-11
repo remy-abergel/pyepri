@@ -59,7 +59,7 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     Return
     ------
     
-    nodes : dict 
+    nodes : dict
         
         A dictionary with content ``{'x': x, 'y': y, 'z': z, 'xi': xi,
         't', t, 'lt': lt 'indexes': indexes, 'idt': idt, 'rfft_mode':
@@ -120,17 +120,23 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     
     # add the corresponding (regularly sampled) frequency nodes along
     # the spectral axis
-    if rfft_mode: 
+    if rfft_mode:
         alf = backend.arange(1 + Nb//2, dtype=dtype)
     else:
         alf = backend.ifftshift(-(Nb//2) + backend.arange(Nb, dtype=dtype))
     indexes = nodes['indexes']
-    xi = (2. * math.pi / float(Nb)) * alf # TODO : à intégrer direct dans t
+    xi = (2. * math.pi / float(Nb)) * alf
     t = - backend.copy(xi).reshape((1, -1))
-    t = (t * backend.ones((fgrad.shape[1], 1), dtype=dtype)) # TODO : remplacer par un repmat?
+    t = backend.tile(t, (fgrad.shape[1], 1))
     t = t.reshape((-1,))[indexes]
+    # now t[id] and (nodes['x'][id], nodes['y'][id], nodes['z'][id])
+    # share the same frequency index (alf) parameter
     t, idt = backend.unique(t, return_inverse=True)
+    # now, we remvoved duplicates from t (use t[idt] to get back to
+    # the full array)
     lt = backend.arange(Nb, dtype=dtype).reshape((-1, 1)) * t.reshape((1, -1))
+    # now, lt[l, id] = l * t[id] (for each unique entry in t), you can
+    # use lt[:, idt] to get all l * t values (including duplicates)
     nodes.update({'xi': xi, 't': t, 'idt': idt, 'lt': lt})
     
     return nodes
@@ -1308,10 +1314,11 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
     x, y, z = nodes['x'], nodes['y'], nodes['z']
     t, idt = nodes['t'], nodes['idt']
     
-    # compute kernel
+    # compute kernel (recall that t is of the type -2*i*pi*alf/Nb
+    # ----> this explains the - sign in cof and w below)
     if memory_usage in (0, 1):
         lt2 = backend.arange(2 * Nb, dtype=dtype).reshape((-1, 1)) * t.reshape((1, -1))
-        cof = (delta**6 / float(Nb)) * (backend.cos(lt2) - 1j * backend.sin(lt2)) # TODO understand minus!
+        cof = (delta**6 / float(Nb)) * (backend.cos(lt2) - 1j * backend.sin(lt2))
         if rfft_mode:
             nrm = 2. 
             cof[:, t == 0] /= 2. # alf == 0 is not necessarily located on column 0 due to backend.unique reordering
