@@ -62,8 +62,8 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     nodes : dict
         
         A dictionary with content ``{'x': x, 'y': y, 'z': z, 'xi': xi,
-        't', t, 'lt': lt 'indexes': indexes, 'idt': idt, 'rfft_mode':
-        rfft_mode}`` where
+        't', t, 'lt': lt 'indexes': indexes, 'idt': idt, 'idt0': idt0,
+        'rfft_mode': rfft_mode}`` where
         
         + ``x, y, z`` are the 3D frequency nodes computed using
           :py:func:`pyepri.monosrc.compute_3d_frequency_nodes`
@@ -84,6 +84,8 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
           differently, the 4D frequency nodes involved in the 4D
           projection and backprojection operations are the ``(x, y, z,
           t[idt])`` nodes.
+
+        + ``idt0`` corresponds to the location of the ``t == 0`` index
         
         + ``lt`` is a 2D array such that ``lt[l,k] = l * t[k]`` (those
           values are involved in the computation of weights for 4D
@@ -96,7 +98,7 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     pyepri.monosrc.compute_3d_frequency_nodes
     proj4d
     backproj4d
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -134,10 +136,11 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     t, idt = backend.unique(t, return_inverse=True)
     # now, we remvoved duplicates from t (use t[idt] to get back to
     # the full array)
+    idt0 = backend.argwhere(t == 0) # location of the alf = 0 frequency index in t
     lt = backend.arange(Nb, dtype=dtype).reshape((-1, 1)) * t.reshape((1, -1))
     # now, lt[l, id] = l * t[id] (for each unique entry in t), you can
     # use lt[:, idt] to get all l * t values (including duplicates)
-    nodes.update({'xi': xi, 't': t, 'idt': idt, 'lt': lt})
+    nodes.update({'xi': xi, 't': t, 'idt': idt, 'idt0': idt0, 'lt': lt})
     
     return nodes
 
@@ -1319,9 +1322,10 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
     if memory_usage in (0, 1):
         lt2 = backend.arange(2 * Nb, dtype=dtype).reshape((-1, 1)) * t.reshape((1, -1))
         cof = (delta**6 / float(Nb)) * (backend.cos(lt2) - 1j * backend.sin(lt2))
+        idt0 = nodes['idt0'] # location of the alf = 0 frequency index in t
         if rfft_mode:
             nrm = 2. 
-            cof[:, t == 0] /= 2. # alf == 0 is not necessarily located on column 0 due to backend.unique reordering
+            cof[:, idt0] /= 2.
         else:
             nrm = 1.
         COFS = cof[:, idt].ravel().reshape((2 * Nb, len(idt)))
@@ -1333,10 +1337,10 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
         phi = backend.zeros(out_shape, dtype=dtype)
         if rfft_mode:
             nrm *= 2.
-            t0 = (t == 0)
+            idt0 = nodes['idt0'] # location of the alf = 0 frequency index in t
             for l in range(2*Nb):
                 w = nrm * (backend.cos(t * l) - 1j * backend.sin(t * l))
-                w[t0] /= 2.
+                w[idt0] /= 2.
                 phi[l, :, :, :] = backend.nufft3d_adjoint(y, x, z, w[idt], n_modes=out_shape[1:], eps=eps).real
         else:
             for l in range(2*Nb):
