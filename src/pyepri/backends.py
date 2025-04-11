@@ -514,6 +514,7 @@ class Backend:
         self.tile = lib.tile
         self.moveaxis = lib.moveaxis
         self.unique = lib.unique
+        self.tile = lib.tile
         self.meshgrid = lambda *xi, indexing='xy' : lib.meshgrid(*xi, indexing=indexing)
         self.exp = lambda arr, out=None : lib.exp(arr, out=out)
 
