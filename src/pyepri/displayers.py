@@ -1,8 +1,30 @@
-"""This module provides tools for displaying 2D & 3D, mono & multi
-source images, with possibility to update the displayed image at any
-moment (useful in an iterative framework). The display
-functionnalities of this modules are compatible with console and
-interactive Python (IPython notebook) environments.
+"""This module provides static & interactive tools for image display.
+
+Interactive image displayers
+----------------------------
+
+Tools for displaying images (currently only 4D spectral-spatial
+images) and interacting with the display through mouse and keyboard
+interactive commands (interactions are not available using notebooks).
+
+
+Static (but updatable) image displayers
+---------------------------------------
+
+Static image displayers can be used to display different kind of
+images (2D & 3D, mono & multisource images) in different execution
+environments (console & notebooks).
+
+They come with the possibility to update the displayed image at any
+moment (useful in an iterative framework). 
+
+
+Interactive image displayers
+----------------------------
+
+Tools for displaying images (currently only 4D spectral-spatial
+images) and interacting with the display through mouse and keyboard
+interactive commands (interactions are not available using notebooks).
 
 """
 import math
