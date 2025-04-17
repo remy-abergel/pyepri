@@ -105,9 +105,9 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
         backend = checks._backend_inference_(B=B, fgrad=fgrad)
     
     # consistency checks
-    #if not notest:
-    #    _check_nd_inputs_(2, B, delta, fgrad, backend,
-    #                      rfft_mode=rfft_mode)    
+    if not notest:
+        _check_nd_inputs_(4, B, delta, fgrad, backend,
+                          rfft_mode=rfft_mode)
     
     # retrieve datatype in str format and number of points along the B
     # axis
@@ -211,9 +211,11 @@ def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
     if backend is None:
         backend = checks._backend_inference_(lt=nodes['lt'], idt=nodes['idt'])
     
-    # consistency checks    
-    #if not notest:
-    #    _check_nd_inputs_(TODO)
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, nodes=nodes, backend=backend, nrm=nrm,
+                          make_contiguous=make_contiguous,
+                          isign=isign)
     
     # compute weights (the use of backend.cos and backend.sin is
     # faster and less memory demanding than the use of backend.exp,
@@ -226,6 +228,7 @@ def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
         w = w[:, idt]
     
     return w
+
 
 def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
            rfft_mode=True, nodes=None, memory_usage=1, notest=False):
@@ -277,7 +280,7 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
     weights : complex array_like (with type `backend.cls`), optional
         A two dimensional array with shape ``(len(B),
         len(nodes['idt']))`` of weights precomputed using
-        :py:mod:`compute_4D_weights` (with option ``isign=1``).
+        :py:func:`compute_4d_weights` (with option ``isign=1``).
         
         Note that those weights are only used when ``memory_usage=0``.
     
@@ -339,10 +342,11 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
         backend = checks._backend_inference_(u=u, B=B, fgrad=fgrad)
     
     # consistency checks
-    #if not notest:
-    #    _check_nd_inputs_(2, B, delta, fgrad, backend, u=u, h=h,
-    #                      eps=eps, nodes=nodes, rfft_mode=rfft_mode)
-    
+    if not notest:
+        _check_nd_inputs_(4, B, delta, fgrad, backend, u=u, eps=eps,
+                          nodes=nodes, rfft_mode=rfft_mode,
+                          weights=weights, memory_usage=memory_usage)
+        
     # compute EPR projections in Fourier domain and apply inverse DFT
     # to get the projections in B-domain
     if rfft_mode:
@@ -410,7 +414,7 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
     weights : complex array_like (with type `backend.cls`), optional
         A two dimensional array with shape ``(len(B),
         len(nodes['idt']))`` of weights precomputed using
-        :py:mod:`compute_4D_weights` (with option ``isign=1``).
+        :py:func:`compute_4d_weights` (with option ``isign=1``).
     
         Note that those weights are only used when ``memory_usage=0``.
     
@@ -467,10 +471,11 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
         backend = checks._backend_inference_(u=u, B=B, fgrad=fgrad)
     
     # consistency checks
-    #if not notest:
-    #    _check_nd_inputs_(2, B, delta, fgrad, backend, u=u,
-    #                      nodes=nodes, eps=eps, rfft_mode=False,
-    #                      out_proj=out, fft_h=fft_h)
+    if not notest:
+        _check_nd_inputs_(4, B, delta, fgrad, backend, u=u,
+                          nodes=nodes, eps=eps, rfft_mode=False,
+                          out_proj=out, memory_usage=memory_usage,
+                          weights=weights)
     
     # retrieve signals dimensions
     Nb = len(B) # number of points per projection
@@ -578,7 +583,7 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
     weights : complex array_like (with type `backend.cls`), optional
         A two dimensional array with shape ``(len(B),
         len(nodes['idt']))`` of weights precomputed using
-        :py:mod:`compute_4D_weights` (with option ``isign=1``).
+        :py:func:`compute_4d_weights` (with option ``isign=1``).
         
         Note that those weights are only used when ``memory_usage=0``.
     
@@ -635,10 +640,11 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
         backend = checks._backend_inference_(u=u, B=B, fgrad=fgrad)
     
     # consistency checks
-    #if not notest:
-    #    _check_nd_inputs_(2, B, delta, fgrad, backend, u=u,
-    #                      nodes=nodes, eps=eps, rfft_mode=True,
-    #                      out_proj=out, fft_h=fft_h)
+    if not notest:
+        _check_nd_inputs_(4, B, delta, fgrad, backend, u=u,
+                          nodes=nodes, eps=eps, rfft_mode=True,
+                          out_proj=out, memory_usage=memory_usage,
+                          weights=weights)
     
     # retrieve signals dimensions
     Nb = len(B) # number of points per projection
@@ -740,7 +746,7 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
     weights : complex array_like (with type `backend.cls`), optional
         A two dimensional array with shape ``(len(B),
         len(nodes['idt']))`` of weights precomputed using
-        :py:mod:`compute_4D_weights` (with option ``isign=-1``).
+        :py:func:`compute_4d_weights` (with option ``isign=-1``).
         
         Note that those weights are only used when ``memory_usage=0``.
     
@@ -807,10 +813,11 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
                                              fgrad=fgrad)
     
     # consistency checks
-    #if not notest:
-    #    _check_nd_inputs_(3, B, delta, fgrad, backend, h=h, proj=proj,
-    #                      eps=eps, nodes=nodes, rfft_mode=rfft_mode,
-    #                      out_shape=out_shape)
+    if not notest:
+        _check_nd_inputs_(4, B, delta, fgrad, backend, proj=proj,
+                          eps=eps, nodes=nodes, rfft_mode=rfft_mode,
+                          out_shape=out_shape, weights=weights,
+                          memory_usage=memory_usage)
     
     # perform backprojection
     if rfft_mode:
@@ -872,7 +879,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     weights : complex array_like (with type `backend.cls`), optional
         A two dimensional array with shape ``(len(B),
         len(nodes['idt']))`` of weights precomputed using
-        :py:mod:`compute_4D_weights` (with option ``isign=-1``).
+        :py:func:`compute_4d_weights` (with option ``isign=-1``).
         
         Note that those weights are only used when ``memory_usage=0``.
     
@@ -943,11 +950,11 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
                                              fgrad=fgrad)
     
     # consistency checks
-    #if not notest:
-    #    _check_nd_inputs_(3, B, delta, fgrad, backend, nodes=nodes,
-    #                      eps=eps, rfft_mode=False, out_im=out,
-    #                      out_shape=out_shape, fft_h_conj=fft_h_conj,
-    #                      fft_proj=fft_proj)
+    if not notest:
+        _check_nd_inputs_(4, B, delta, fgrad, backend, nodes=nodes,
+                          eps=eps, rfft_mode=False, out_im=out,
+                          out_shape=out_shape, fft_proj=fft_proj,
+                          weights=weights, memory_usage=memory_usage)
     
     # retrieve signals dimensions
     Nb = len(B) # number of points per projection
@@ -1046,7 +1053,7 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
     weights : complex array_like (with type `backend.cls`), optional
         A two dimensional array with shape ``(len(B),
         len(nodes['idt']))`` of weights precomputed using
-        :py:mod:`compute_4D_weights` (with option ``isign=-1``).
+        :py:func:`compute_4d_weights` (with option ``isign=-1``).
         
         Note that those weights are only used when ``memory_usage=0``.
         
@@ -1117,11 +1124,12 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
                                              fgrad=fgrad)
     
     # consistency checks
-    #if not notest:
-    #    _check_nd_inputs_(3, B, delta, fgrad, backend, nodes=nodes,
-    #                      eps=eps, rfft_mode=False, out_im=out,
-    #                      out_shape=out_shape, fft_h_conj=fft_h_conj,
-    #                      fft_proj=fft_proj)
+    if not notest:
+        _check_nd_inputs_(4, B, delta, fgrad, backend, nodes=nodes,
+                          eps=eps, rfft_mode=False, out_im=out,
+                          out_shape=out_shape, fft_proj=fft_proj,
+                          memory_usage=memory_usage, weights=weights,
+                          preserve_input=preserve_input)
     
     # retrieve signals dimensions
     Nb = len(B) # number of points per projection
@@ -1293,11 +1301,12 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
         backend = checks._backend_inference_(B=B, fgrad=fgrad)
     
     # consistency checks
-    #if not notest:
-    #    _check_nd_inputs_(3, B, delta, fgrad, backend, h1=h1, h2=h2,
-    #                      nodes=nodes, eps=eps, out_shape=out_shape,
-    #                      rfft_mode=rfft_mode,
-    #                      return_rfft3=return_rfft3)
+    if not notest:
+        _check_nd_inputs_(4, B, delta, fgrad, backend, nodes=nodes,
+                          eps=eps, out_shape=out_shape,
+                          rfft_mode=rfft_mode,
+                          return_rfft4=return_rfft4,
+                          memory_usage=memory_usage)
     
     # retrieve signals dimensions
     Nb = len(B) # number of points per projection
@@ -1412,7 +1421,83 @@ def apply_4d_toeplitz_kernel(u, rfft4_phi, backend=None, notest=False):
                           s=s)[Nb::, Ny::, Nx::, Nz::]
 
 
-# TODO
-def _check_nd_inputs_():
+def _check_nd_inputs_(ndims, B, delta, fgrad, backend, u=None,
+                      proj=None, eps=None, nodes=None, rfft_mode=None,
+                      out_shape=None, fft_proj=None, rfft_proj=None,
+                      return_rfft4=None, nrm=None, isign=None,
+                      make_contiguous=None, memory_usage=None,
+                      weights=None, preserve_input=None):
     """Factorized consistency checks for functions in the :py:mod:`pyepri.spectralspatial` submodule."""
-    pass
+    ##################
+    # general checks #
+    ##################
+    
+    # check backend consistency 
+    checks._check_backend_(backend, u=u, B=B, fgrad=fgrad, proj=proj,
+                           fft_proj=fft_proj, rfft_proj=rfft_proj)
+    
+    # retrieve data types
+    dtype = B.dtype
+    str_dtype = backend.lib_to_str_dtypes[dtype]
+    str_cdtype = backend.mapping_to_complex_dtypes[str_dtype]
+    cdtype = backend.str_to_lib_dtypes[str_cdtype]
+    
+    # run other generic checks
+    checks._check_same_dtype_(u=u, B=B, proj=proj)
+    checks._check_dtype_(cdtype, fft_proj=fft_proj,
+                         rfft_proj=rfft_proj, weights=weights)
+    checks._check_ndim_(1, B=B)
+    checks._check_ndim_(2, fgrad=fgrad, proj=proj, fft_proj=fft_proj,
+                        rfft_proj=rfft_proj, weights=weights)
+    checks._check_ndim_(ndims, u=u)
+    checks._check_type_(bool, make_contiguous=make_contiguous,
+                        preserve_input=preserve_input)
+    checks._check_type_(float, isign=isign)
+    
+    #################
+    # custom checks #
+    #################
+    
+    # retrieve characteristic dimensions
+    Nb = len(B)
+    Nproj = fgrad.shape[1]    
+    
+    # delta: must be a float
+    if not isinstance(delta, (float, int)):
+        raise RuntimeError(
+            "Parameter `delta` must be a float scalar number (int is also tolerated)."
+        )
+    
+    # eps: must be None or a float
+    if eps is not None and not isinstance(eps, float):
+        raise RuntimeError(
+            "Parameter `eps` must be a float scalar number."
+        )
+    
+    # fgrad: must have (ndims - 1) rows
+    if fgrad.shape[0] != ndims - 1:
+        raise RuntimeError (
+            "Input parameter `fgrad` must contain %d rows (fgrad.shape[0] = %d)." % (ndims - 1, ndims - 1)
+        )
+    
+    # nrm: must be a complex number (float is also tolerated)
+    if (nrm is not None) and (not isinstance(nrm, (complex, float))):
+        raise RuntimeError(
+            "Parameter `nrm` must be a complex scalar number (float is also tolerated) [detected = %s]."
+        )
+    
+    # memory usage: must be in (0, 1, 2)
+    if (memory_usage is not None) and (memory_usage not in (0, 1, 2)):
+        raise RuntimeError(
+            "Parameter `memory_usage` must be in (0, 1, 2)."
+        )
+
+    # TODO nodes : many things to check
+    
+    # weights : check shape == (len(B), len(nodes['idt']))
+    if (weights is not None) and (weights.shape[0] != Nb or weights.shape[1] != len(nodes['idt'])):
+        raise RuntimeError (
+            "Input parameter `weights` must contain %d rows and `len(nodes['idt']) = %d` columns (weights.shape = (%d, %d))." % (Nb, len(nodes['idt']), *weights.shape)
+        )
+    
+    return True
