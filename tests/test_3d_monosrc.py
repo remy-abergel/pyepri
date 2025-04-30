@@ -1,24 +1,9 @@
-import pytest
 import pyepri.backends as backends
 import pyepri.monosrc as monosrc
 import importlib.util
 import numpy as np
 
-libname = ['numpy']
-
-if importlib.util.find_spec('torch') is not None:
-    import torch
-    libname += ['torch-cpu']
-    if torch.cuda.is_available():
-        libname += ['torch-cuda']
-if importlib.util.find_spec('cupy') is not None:
-    import cupy
-    libname += ['cupy']
-
-
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_proj3d_rfftmode(libname, dtype, nruns=100, tol=1000):
+def test_proj3d_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -63,11 +48,9 @@ def test_proj3d_rfftmode(libname, dtype, nruns=100, tol=1000):
         # compare results
         rel = backend.sqrt((backend.abs(Ax1 - Ax2)**2).sum() / (backend.abs(Ax1)**2).sum())
         assert rel < tol*eps
-        
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_backproj3d_rfftmode(libname, dtype, nruns=100, tol=1000):
+
+def test_backproj3d_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -113,11 +96,9 @@ def test_backproj3d_rfftmode(libname, dtype, nruns=100, tol=1000):
         # compare results
         rel = backend.sqrt((backend.abs(adjAy1 - adjAy2)**2).sum() / (backend.abs(adjAy1)**2).sum())
         assert rel < tol*eps
-        
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_3d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
+
+def test_3d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -160,11 +141,9 @@ def test_3d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
         # compare results
         rel = backend.sqrt((backend.abs(phi1 - phi2)**2).sum() / (backend.abs(phi1)**2).sum())
         assert rel < tol*eps
-        
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns=100, tol=1000):
+
+def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -236,9 +215,7 @@ def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns=100, tol=1000):
     assert rel < tol*eps
 
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_3d_toeplitz_kernel(libname, dtype, nruns=100, tol=1000):
+def test_3d_toeplitz_kernel(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':

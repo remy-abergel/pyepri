@@ -1,24 +1,9 @@
-import pytest
 import pyepri.backends as backends
 import pyepri.multisrc as multisrc
 import importlib.util
 import numpy as np
 
-libname = ['numpy']
-
-if importlib.util.find_spec('torch') is not None:
-    import torch
-    libname += ['torch-cpu']
-    if torch.cuda.is_available():
-        libname += ['torch-cuda']
-if importlib.util.find_spec('cupy') is not None:
-    import cupy
-    libname += ['cupy']
-
-
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_proj2d_rfftmode(libname, dtype, nruns=100, tol=1000):
+def test_proj2d_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -69,9 +54,8 @@ def test_proj2d_rfftmode(libname, dtype, nruns=100, tol=1000):
         rel = [relerr(Bu1[i], Bu2[i]) for i in range(L)]
         assert max(rel) < tol*eps
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_backproj2d_rfftmode(libname, dtype, nruns=100, tol=1000):
+
+def test_backproj2d_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -122,9 +106,8 @@ def test_backproj2d_rfftmode(libname, dtype, nruns=100, tol=1000):
         rel = [relerr(adjBs1[j], adjBs2[j]) for j in range(K)]
         assert max(rel) < tol*eps
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_2d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
+
+def test_2d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -172,9 +155,8 @@ def test_2d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
         rel = [relerr(phi1[k][j], phi2[k][j]) for k in range(K) for j in range(K)]
         assert max(rel) < tol*eps
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_proj2d_and_backproj2d_adjointness(libname, dtype, nruns=100, tol=1000):
+
+def test_proj2d_and_backproj2d_adjointness(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -229,9 +211,8 @@ def test_proj2d_and_backproj2d_adjointness(libname, dtype, nruns=100, tol=1000):
         rel = abs(1-inprod1/inprod2)
         assert rel < tol*eps
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_2d_toeplitz_kernel(libname, dtype, nruns=100, tol=1000):
+
+def test_2d_toeplitz_kernel(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':

@@ -1,23 +1,9 @@
-import pytest
 import pyepri.backends as backends
 import pyepri.spectralspatial as ss
 import importlib.util
 import numpy as np
 
-libname = ['numpy']
-
-if importlib.util.find_spec('torch') is not None:
-    import torch
-    libname += ['torch-cpu']
-    if torch.cuda.is_available():
-        libname += ['torch-cuda']
-if importlib.util.find_spec('cupy') is not None:
-    import cupy
-    libname += ['cupy']
-
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_proj4d_rfftmode(libname, dtype, nruns=100, tol=1000):
+def test_proj4d_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -42,14 +28,14 @@ def test_proj4d_rfftmode(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(10*backend.rand(1)[0])
-        Nb = 2 + int(10*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(10 * backend.rand(1)[0])
+        Nb = 2 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
         B = B0 + backend.arange(Nb, dtype=dtype)*dB
@@ -67,9 +53,8 @@ def test_proj4d_rfftmode(libname, dtype, nruns=100, tol=1000):
         rel = relerr(Ax1, Ax2, nrm=nrm)
         assert rel < tol*eps
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_proj4d_memory_usage(libname, dtype, nruns=100, tol=1000):
+
+def test_proj4d_memory_usage(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -94,14 +79,14 @@ def test_proj4d_memory_usage(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(10*backend.rand(1)[0])
-        Nb = 2 + int(10*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(10 * backend.rand(1)[0])
+        Nb = 2 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
         B = B0 + backend.arange(Nb, dtype=dtype)*dB
@@ -121,10 +106,9 @@ def test_proj4d_memory_usage(libname, dtype, nruns=100, tol=1000):
         rel2 = relerr(Ax0, Ax2, nrm=nrm)
         rel = max(rel1, rel2)
         assert rel < tol*eps
-        
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_backproj4d_rfftmode(libname, dtype, nruns=100, tol=1000):
+
+
+def test_backproj4d_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -149,14 +133,14 @@ def test_backproj4d_rfftmode(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(10*backend.rand(1)[0])
-        Nb = 2 + int(10*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(10 * backend.rand(1)[0])
+        Nb = 2 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
         B = B0 + backend.arange(Nb, dtype=dtype)*dB
@@ -176,9 +160,7 @@ def test_backproj4d_rfftmode(libname, dtype, nruns=100, tol=1000):
         assert rel < tol*eps
 
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_backproj4d_memory_usage(libname, dtype, nruns=100, tol=1000):
+def test_backproj4d_memory_usage(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -203,14 +185,14 @@ def test_backproj4d_memory_usage(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(10*backend.rand(1)[0])
-        Nb = 2 + int(10*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(10 * backend.rand(1)[0])
+        Nb = 2 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
         B = B0 + backend.arange(Nb, dtype=dtype)*dB
@@ -233,9 +215,7 @@ def test_backproj4d_memory_usage(libname, dtype, nruns=100, tol=1000):
         assert rel < tol*eps
 
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
+def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -260,14 +240,14 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(10*backend.rand(1)[0])
-        Nb = 2 + int(10*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(10 * backend.rand(1)[0])
+        Nb = 2 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
         B = B0 + backend.arange(Nb, dtype=dtype)*dB
@@ -281,11 +261,9 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
         nrm = 1. / backend.abs(phi1).max().item()
         rel = relerr(phi1, phi2, nrm=nrm)
         assert rel < tol*eps
-        
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_proj4d_and_backproj4d_adjointness(libname, dtype, nruns=100, tol=1000):
+
+def test_proj4d_and_backproj4d_adjointness(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -306,14 +284,14 @@ def test_proj4d_and_backproj4d_adjointness(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(10*backend.rand(1)[0])
-        Nb = 2 + int(10*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(10 * backend.rand(1)[0])
+        Nb = 2 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
         B = B0 + backend.arange(Nb, dtype=dtype)*dB
@@ -334,10 +312,9 @@ def test_proj4d_and_backproj4d_adjointness(libname, dtype, nruns=100, tol=1000):
         inprod2 = (x * adjAy).sum()
         rel = abs(1 - inprod1 / inprod2)
         assert rel < tol*eps
-        
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_proj4d_and_backproj4d_matrices(libname, dtype, nruns=10, tol=1000):
+
+
+def test_proj4d_and_backproj4d_matrices(libname, dtype, nruns, tol):
 
     # create backend
     if libname == 'numpy':
@@ -362,12 +339,12 @@ def test_proj4d_and_backproj4d_matrices(libname, dtype, nruns=10, tol=1000):
     for id in range(nruns):
     
         # compute a very small dataset
-        N1 = 1 + int(4*backend.rand(1)[0])
-        N2 = 1 + int(4*backend.rand(1)[0])
-        N3 = 1 + int(4*backend.rand(1)[0])
-        Nproj = 1 + int(5*backend.rand(1)[0])
-        Nb = 2 + int(5*backend.rand(1)[0])
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        N1 = 1 + int(4 * backend.rand(1)[0])
+        N2 = 1 + int(4 * backend.rand(1)[0])
+        N3 = 1 + int(4 * backend.rand(1)[0])
+        Nproj = 1 + int(5 * backend.rand(1)[0])
+        Nb = 2 + int(5 * backend.rand(1)[0])
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
         B = B0 + backend.arange(Nb, dtype=dtype)*dB
@@ -399,9 +376,7 @@ def test_proj4d_and_backproj4d_matrices(libname, dtype, nruns=10, tol=1000):
         assert rel < tol*eps
 
 
-@pytest.mark.parametrize("libname", ['numpy'])
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
+def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -426,14 +401,14 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(10*backend.rand(1)[0])
-        Nb = 2 + int(10*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(10 * backend.rand(1)[0])
+        Nb = 2 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
         B = B0 + backend.arange(Nb, dtype=dtype)*dB
@@ -449,9 +424,7 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
         assert rel < tol*eps
 
 
-@pytest.mark.parametrize("libname", ['numpy'])
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_4d_toeplitz_kernel_memory_usage(libname, dtype, nruns=100, tol=1000):
+def test_4d_toeplitz_kernel_memory_usage(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -476,14 +449,14 @@ def test_4d_toeplitz_kernel_memory_usage(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(10*backend.rand(1)[0])
-        Nb = 2 + int(10*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(10 * backend.rand(1)[0])
+        Nb = 2 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
         B = B0 + backend.arange(Nb, dtype=dtype)*dB
@@ -499,9 +472,7 @@ def test_4d_toeplitz_kernel_memory_usage(libname, dtype, nruns=100, tol=1000):
         assert rel < tol*eps
 
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_4d_toeplitz_kernel(libname, dtype, nruns=100, tol=1000):
+def test_4d_toeplitz_kernel(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -528,14 +499,14 @@ def test_4d_toeplitz_kernel(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(10*backend.rand(1)[0])
-        Nb = 2 + int(10*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(10 * backend.rand(1)[0])
+        Nb = 2 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
         B = B0 + backend.arange(Nb, dtype=dtype)*dB
