@@ -1,8 +1,6 @@
 """This module contains low-level operators related to **spectral-spatial
 EPR imaging** (projection, backprojection, projection-backprojection
-using Toeplitz kernels). Detailed mathematical definitions of the
-operators are provided in the :ref:`mathematical_definitions` section
-of the PyEPRI documentation.
+using Toeplitz kernels). 
 
 """
 
@@ -1193,7 +1191,6 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
     
     return out
 
-# TODO: deal with memory_usage optional input (not used yet)
 def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
                                backend=None, eps=1e-06,
                                rfft_mode=True, nodes=None,
@@ -1492,12 +1489,13 @@ def _check_nd_inputs_(ndims, B, delta, fgrad, backend, u=None,
             "Parameter `memory_usage` must be in (0, 1, 2)."
         )
 
-    # TODO nodes : many things to check
-    
     # weights : check shape == (len(B), len(nodes['idt']))
     if (weights is not None) and (weights.shape[0] != Nb or weights.shape[1] != len(nodes['idt'])):
         raise RuntimeError (
             "Input parameter `weights` must contain %d rows and `len(nodes['idt']) = %d` columns (weights.shape = (%d, %d))." % (Nb, len(nodes['idt']), *weights.shape)
         )
+
+    # nodes : many things to check, some could be factorized (could be
+    # done in a next release)
     
     return True
