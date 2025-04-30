@@ -513,6 +513,8 @@ class Backend:
         self.abs = lib.abs
         self.tile = lib.tile
         self.moveaxis = lib.moveaxis
+        self.unique = lib.unique
+        self.tile = lib.tile
         self.meshgrid = lambda *xi, indexing='xy' : lib.meshgrid(*xi, indexing=indexing)
         self.exp = lambda arr, out=None : lib.exp(arr, out=out)
 
@@ -560,6 +562,8 @@ class Backend:
             
             # remap lib-dependant methods using lambda functions
             self.zeros = lambda *size, dtype=None : lib.zeros(*size, dtype=lib.dtype(dtype))
+            self.ones = lambda *size, dtype=None : lib.ones(*size, dtype=lib.dtype(dtype))
+            self.empty = lambda *size, dtype=None : lib.empty(*size, dtype=lib.dtype(dtype))
             self.fftshift = lambda u, dim=None : lib.fft.fftshift(u, axes=dim)
             self.ifftshift = lambda u, dim=None : lib.fft.ifftshift(u, axes=dim)
             self.arange = lambda *args, dtype=None : functools.partial(lib.arange, dtype=dtype)(*args)
@@ -586,6 +590,8 @@ class Backend:
 
             # set minimal doc for the above defined lambda functions
             self.zeros.__doc__ = "return " + lib.__name__ + ".zeros(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
+            self.ones.__doc__ = "return " + lib.__name__ + ".ones(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
+            self.empty.__doc__ = "return " + lib.__name__ + ".empty(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
             self.fftshift.__doc__ = "return " + lib.__name__ + ".fft.fftshift(u, axes=dim)"
             self.ifftshift.__doc__ = "return " + lib.__name__ + ".fft.ifftshift(u, axes=dim)"
             self.arange.__doc__ = "return functools.partial(" + lib.__name__ + ".arange, dtype=dtype)(*args)"
@@ -634,28 +640,28 @@ class Backend:
             self.fft2.__doc__ = "return " + lib.__name__ + ".fft.fft2(u, n=n, axes=dim, norm=norm)"
             self.ifft2.__doc__ = "return " + lib.__name__ + ".fft.ifft2(u, n=n, axes=dim, norm=norm)"
             self.rfftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.rfftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "return " + lib.__name__ + ".fft.rfftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
             )
             self.irfftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.irfftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "return " + lib.__name__ + ".fft.irfftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
             )
             self.fftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.fftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "return " + lib.__name__ + ".fft.fftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
             )
             self.ifftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.ifftn(u, n=n, axes=g(u, s, dim), norm=norm)\n"
+                "return " + lib.__name__ + ".fft.ifftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
@@ -670,17 +676,25 @@ class Backend:
                 self.nufft3d = assign_finufft_nthreads(finufft.nufft3d2)
                 self.nufft2d_adjoint = assign_finufft_nthreads(finufft.nufft2d1)
                 self.nufft3d_adjoint = assign_finufft_nthreads(finufft.nufft3d1)
+                self.nufft_plan = finufft.Plan
+                self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
+                self.nufft_execute = lambda plan, arr, out=None : plan.execute(arr, out=out)
             else:
                 import cufinufft
                 self.nufft2d = cufinufft.nufft2d2
                 self.nufft3d = cufinufft.nufft3d2
                 self.nufft2d_adjoint = cufinufft.nufft2d1
                 self.nufft3d_adjoint = cufinufft.nufft3d1
+                self.nufft_plan = cufinufft.Plan
+                self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
+                self.nufft_execute = lambda plan, arr, out=None : plan.execute(arr, out=out)
                         
         else: # lib == torch
             
             # remap some lib-dependant methods using lambda functions
             self.zeros = lambda *size, dtype=None : lib.zeros(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
+            self.ones = lambda *size, dtype=None : lib.ones(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
+            self.empty = lambda *size, dtype=None : lib.empty(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
             self.arange = lambda *args, dtype=None : functools.partial(lib.arange, dtype=self.str_to_lib_dtypes[dtype], device=device)(*args)
             self.linspace = lambda *args, dtype=None : functools.partial(lib.linspace, dtype=self.str_to_lib_dtypes[dtype], device=device)(*args)
             self.rand = lambda *dims, dtype='float32' : lib.rand(*dims, dtype=self.str_to_lib_dtypes[dtype], device=device)
@@ -689,8 +703,8 @@ class Backend:
             self.erfc = lambda x, out=None : lib.erfc(x, out=out)
             self.is_complex = lambda x : x.is_complex()
             self.to_numpy = lambda x : x.detach().cpu().numpy()
-            #self.from_numpy = lambda x : lib.from_numpy(x).to(device, copy=True) # conflict between pytorch and numpy 2.0.0
-            self.from_numpy = lambda x : lib.Tensor(x).to(device, copy=True, dtype=self.str_to_lib_dtypes[str(x.dtype)]) # need explicit type
+            self.from_numpy = lambda x : lib.from_numpy(x).to(device, copy=True) # conflict between pytorch and numpy 2.0.0
+            #self.from_numpy = lambda x : lib.Tensor(x).to(device, copy=True, dtype=self.str_to_lib_dtypes[str(x.dtype)]) # need explicit type
             self.cast = lambda x, dtype : x.type(self.str_to_lib_dtypes[dtype])
             self.transpose = lambda x : x.moveaxis((0,1),(1,0))
             self.copy = lambda x : lib.clone(x).detach()
@@ -698,7 +712,7 @@ class Backend:
             self.stack = lambda arrays, dim=0, out=None : lib.stack(arrays, dim=dim, out=out)
             self.quantile = lambda u, q, dim=None, keepdim=False, out=None, interpolation='linear' : lib.quantile(u, q, dim=dim, keepdim=keepdim, out=out, interpolation=interpolation)
             self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : lib.frombuffer(buffer, dtype=self.str_to_lib_dtypes[dtype], count=count, offset=offset)
-
+            
             # remap some other lib-dependent methods using direct
             # mappings
             self.rfft = lib.fft.rfft
@@ -716,10 +730,20 @@ class Backend:
             self.fftshift = lib.fft.fftshift
             self.ifftshift = lib.fft.ifftshift
             self.cumsum = lib.cumsum
-
+            
             # set minimal doc for the above defined lambda functions
             self.zeros.__doc__ = (
                 "return torch.zeros(*size, dtype=self.str_to_lib_dtypes[dtype], device='" + self.device + "')\n"
+                "where `self` denotes the backends.Backend class instance from wich this lambda\n"
+                "function belongs to."
+            )
+            self.ones.__doc__ = (
+                "return torch.ones(*size, dtype=self.str_to_lib_dtypes[dtype], device='" + self.device + "')\n"
+                "where `self` denotes the backends.Backend class instance from wich this lambda\n"
+                "function belongs to."
+            )
+            self.empty.__doc__ = (
+                "return torch.empty(*size, dtype=self.str_to_lib_dtypes[dtype], device='" + self.device + "')\n"
                 "where `self` denotes the backends.Backend class instance from wich this lambda\n"
                 "function belongs to."
             )
@@ -759,12 +783,12 @@ class Backend:
             self.erfc.__doc__ = "return torch.erfc(x, out=out)"
             self.is_complex.__doc__ = "return x.is_complex()"
             self.to_numpy.__doc__ = "return x.detach().cpu().numpy()"
-            #self.from_numpy.__doc__ = "return torch.from_numpy(x).to('" + self.device + "', copy=True)"
-            self.from_numpy.__doc__ = (
-                "return torch.Tensor(x).to('" + self.device + "', copy=True, dtype=self.str_to_lib_dtypes[str(x.dtype)])\n"
-                "where `self` denotes the backends.Backend class instance from wich this lambda\n"
-                "function belongs to."
-            )
+            self.from_numpy.__doc__ = "return torch.from_numpy(x).to('" + self.device + "', copy=True)"
+            #self.from_numpy.__doc__ = (
+            #    "return torch.Tensor(x).to('" + self.device + "', copy=True, dtype=self.str_to_lib_dtypes[str(x.dtype)])\n"
+            #    "where `self` denotes the backends.Backend class instance from wich this lambda\n"
+            #    "function belongs to."
+            #)
             self.is_backend_compliant.__doc__ = "return all([isinstance(arg, torch.Tensor) for arg in args])"
             self.quantile.__doc__ = "return "+ lib.__name__ + ".quantile(u, q, dim=dim, keepdim=keepdim, out=out, interpolation=interpolation)"
             self.frombuffer.__doc__ = (
@@ -777,7 +801,7 @@ class Backend:
             # for GPU device)
             if device == "cpu" :
                 import finufft
-
+                
                 # define decorator for finufft functions (those
                 # function do not natively accept torch.Tensor input
                 # arrays, such input need to be cast into
@@ -793,13 +817,17 @@ class Backend:
                         kwargs2 = {key: val.numpy() if isinstance(val, lib.Tensor) else val for key, val in kwargs.items()}
                         return lib.from_numpy(func(*args2, **kwargs2))
                     return numpyfied_func
-
+                
                 # decorate finufft functions 
                 self.nufft2d = numpyfy(assign_finufft_nthreads(finufft.nufft2d2))
                 self.nufft3d = numpyfy(assign_finufft_nthreads(finufft.nufft3d2))
                 self.nufft2d_adjoint = numpyfy(assign_finufft_nthreads(finufft.nufft2d1))
                 self.nufft3d_adjoint = numpyfy(assign_finufft_nthreads(finufft.nufft3d1))
-
+                self.nufft_plan = finufft.Plan
+                self.nufft_setpts = lambda plan, *pts : plan.setpts(*[point.numpy() for point in pts])
+                self.nufft_execute = lambda plan, arr, out=None : lib.from_numpy(plan.execute(arr.numpy(), out=(out if out is None else out.numpy())))
+                #self.nufft_execute = lambda plan, arr : numpyfy(plan.execute)(arr)
+                
                 # add short documentation
                 self.nufft2d.__doc__ = (
                     "same as finufft.nufft2d2 but torch.Tensor inputs are cast into numpy.ndarray\n"                    
@@ -828,4 +856,6 @@ class Backend:
                 self.nufft3d = cufinufft.nufft3d2
                 self.nufft2d_adjoint = cufinufft.nufft2d1
                 self.nufft3d_adjoint = cufinufft.nufft3d1
-            
+                self.nufft_plan = cufinufft.Plan                
+                self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
+                self.nufft_execute = lambda plan, arr, out=None : plan.execute(arr, out=out)

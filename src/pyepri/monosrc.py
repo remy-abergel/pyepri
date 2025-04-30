@@ -21,7 +21,7 @@ def compute_2d_frequency_nodes(B, delta, fgrad, backend=None,
         magnetic field sampling grid, with unit denoted below as
         `[B-unit]` (can be `Gauss (G)`, `millitesla (mT)`, ...), to
         use to compute the projections.
-
+    
     delta : float 
         Pixel size given in a length unit denoted below as
         `[length-unit]` (can be `centimeter (cm)`, `millimeter (mm)`,
@@ -36,7 +36,7 @@ def compute_2d_frequency_nodes(B, delta, fgrad, backend=None,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
@@ -53,7 +53,7 @@ def compute_2d_frequency_nodes(B, delta, fgrad, backend=None,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-    
+
     
     Return
     ------
@@ -70,21 +70,22 @@ def compute_2d_frequency_nodes(B, delta, fgrad, backend=None,
           containing the frequency nodes along the vertical axis;
     
         + ``indexes`` is a one dimensional array, with same length as
-          ``x``, corresponding to the indexes where should be dispatched
-          the computed Fourier coefficients in the rfft of the 2D
-          projections.
+          ``x``, corresponding to the indexes where should be
+          dispatched the computed Fourier coefficients in the (r)fft
+          of the 2D projections.
     
         + ``rfft_mode`` a bool specifying whether the frequency nodes
           cover half of the frequency domain (``rfft_mode=True``) or the
           full frequency domain (``rfft_mode=False``).
 
+    
     See also
     --------
-
+    
     proj2d
     backproj2d
     compute_2d_toeplitz_kernel
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -168,11 +169,11 @@ def proj2d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
-
+        
         When backend is None, a default backend is inferred from the
         input arrays ``(u, B, h, fgrad)``.
         
@@ -196,8 +197,8 @@ def proj2d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-    
 
+    
     Return
     ------
     
@@ -214,7 +215,7 @@ def proj2d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
     
     compute_2d_frequency_nodes
     backproj2d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -224,7 +225,7 @@ def proj2d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
     if not notest:
         _check_nd_inputs_(2, B, delta, fgrad, backend, u=u, h=h,
                           eps=eps, nodes=nodes, rfft_mode=rfft_mode)
-
+    
     # compute EPR projections in Fourier domain and apply inverse DFT
     # to get the projections in B-domain
     if rfft_mode:
@@ -264,7 +265,7 @@ def proj2d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
         magnetic field sampling grid, with unit denoted below as
         `[B-unit]` (can be `Gauss (G)`, `millitesla (mT)`, ...), to
         use to compute the projections.
-    
+        
         **WARNING**: this function assumes that the range covered by `B`
         is large enough so that the computed EPR projections are fully
         supported by `B`. Using a too small range for `B` will result
@@ -284,11 +285,11 @@ def proj2d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
-
+        
         When backend is None, a default backend is inferred from the
         input arrays ``(u, B, rfft_h, fgrad)``.
     
@@ -307,7 +308,7 @@ def proj2d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-    
+
     
     Return
     ------
@@ -318,7 +319,7 @@ def proj2d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
         projections) such that ``out[k,:]`` contains the discrete
         Fourier coefficients of the EPR projection of `u` with field
         gradient ``fgrad[:,k]``.
-    
+
     
     See also
     --------
@@ -411,7 +412,7 @@ def proj2d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
@@ -434,7 +435,7 @@ def proj2d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-    
+
     
     Return
     ------
@@ -445,14 +446,14 @@ def proj2d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
         computed projections) such that ``out[k,:]`` corresponds to
         half of the discrete Fourier coefficients of the EPR
         projection of `u` with field gradient ``fgrad[:,k]``.
-    
+
     
     See also
     --------
     
     compute_2d_frequency_nodes
     proj2d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -565,6 +566,7 @@ def backproj2d(proj, delta, B, h, fgrad, out_shape, backend=None,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return 
     ------
@@ -572,13 +574,14 @@ def backproj2d(proj, delta, B, h, fgrad, out_shape, backend=None,
     out : array_like (with type `backend.cls`)
         A two-dimensional array with specified shape corresponding to
         the backprojected image.
+
     
     See also
     --------
     
     compute_2d_frequency_nodes
     proj2d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -622,7 +625,7 @@ def backproj2d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
         Two-dimensional array with shape ``(Nproj, len(B))`` (where
         ``Nproj = fgrad.shape[1]``) containing the EPR projections in
         Fourier domain.
-
+        
         More precisely, ``fft_proj[k,:]`` corresponds to the FFT of
         the k-th EPR projection (acquired with field gradient
         ``fgrad[:,k]`` and sampled over the grid `B`).
@@ -659,7 +662,7 @@ def backproj2d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
         
         When backend is None, a default backend is inferred from the
         input arrays ``(fft_proj, B, fft_h_conj, fgrad)``.
-
+    
     out_shape : integer or integer tuple of length 2, optional 
         Shape of the output image `out_shape = out.shape = (N1, N2)`
         (or `out_shape = N` when N1 = N2 = N). This optional input is
@@ -682,8 +685,8 @@ def backproj2d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
         :py:func:`pyepri.monosrc.compute_2d_frequency_nodes`.
     
     notest : bool, optional
-        Set ``notest=True`` to disable consistency checks.
-    
+        Set ``notest=True`` to disable consistency checks.    
+
     
     Return
     ------
@@ -691,13 +694,14 @@ def backproj2d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
     out : complex array_like (with type `backend.cls`)
         Backprojected image in complex format (imaginary part should
         be close to zero and can be thrown away).
+
     
     See also
     --------
     
     compute_2d_frequency_nodes
     backproj2d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -745,7 +749,7 @@ def backproj2d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
         Two-dimensional array with shape ``(Nproj, 1+len(B)//2)``
         (where ``Nproj = fgrad.shape[1]``) containing the EPR
         projections in Fourier domain (half of the spectrum).
-
+        
         More precisely, ``rfft_proj[k,:]`` corresponds to the real FFT
         (rfft) of the k-th EPR projection (acquired with field
         gradient ``fgrad[:,k]`` and sampled over the grid `B`).
@@ -777,11 +781,11 @@ def backproj2d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
-
+        
         When backend is None, a default backend is inferred from the
         input arrays ``(rfft_proj, B, rfft_h_conj, fgrad)``.
     
@@ -807,8 +811,8 @@ def backproj2d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
         :py:func:`pyepri.monosrc.compute_2d_frequency_nodes`.
     
     notest : bool, optional
-        Set ``notest=True`` to disable consistency checks.
-    
+        Set ``notest=True`` to disable consistency checks.    
+
     
     Return
     ------
@@ -816,13 +820,14 @@ def backproj2d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
     out : complex array_like (with type `backend.cls`)
         Backprojected image in complex format (imaginary part should
         be close to zero and can be thrown away).
+
     
     See also
     --------
     
     compute_2d_frequency_nodes
     backproj2d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -882,7 +887,7 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
         One dimensional array with same length as `B` corresponding to
         the reference spectrum involved in the forward (proj2d)
         operation (and sampled over the grid `B`).
-
+    
     h2 : array_like (with type `backend.cls`)
         One dimensional array with same length as `B` corresponding to
         the reference spectrum involved in the backward (backproj2d)
@@ -902,14 +907,14 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
         
         When backend is None, a default backend is inferred from the
         input array ``(B, h1, h2, fgrad)``.
-
+    
     out_shape : integer or integer tuple of length 2
         Shape of the output kernel ``out_shape = phi.shape = (M1,
         M2)``. The kernel shape should be twice the EPR image shape
@@ -918,7 +923,7 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
     
     eps : float, optional
         Precision requested (>1e-16).
-
+    
     rfft_mode : bool, optional
         The computation of the Toeplitz kernel involves the
         computation of discrete Fourier coefficients of real-valued
@@ -932,15 +937,15 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
         kernel. If not given, `nodes` will be automatically inferred
         from `B`, `delta` and `fgrad` using
         :py:func:`pyepri.monosrc.compute_2d_frequency_nodes`.
-
+    
     return_rfft2: bool, optional
         Set ``return_rfft2`` to return the real input FFT (rfft2) of
         the computed two-dimensional kernel (instead of the kernel
         itself).
     
     notest : bool, optional
-        Set ``notest=True`` to disable consistency checks.
-    
+        Set ``notest=True`` to disable consistency checks.    
+
     
     Return
     ------
@@ -948,6 +953,7 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
     phi : array_like (with type `backend.cls`)
         Computed Toeplitz kernel (or its two-dimensional real input
         FFT when ``return_rfft2 is True``).
+
     
     See also
     --------
@@ -956,7 +962,7 @@ def compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
     proj2d
     backproj2d
     apply_2d_toeplitz_kernel
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1027,14 +1033,14 @@ def apply_2d_toeplitz_kernel(u, rfft2_phi, backend=None, notest=False):
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-    
+
     
     Return 
     ------
     
     out : array_like (with type `backend.cls`) 
         output projected-backprojected image.
-    
+
     
     See also
     --------
@@ -1042,7 +1048,7 @@ def apply_2d_toeplitz_kernel(u, rfft2_phi, backend=None, notest=False):
     compute_2d_toeplitz_kernel
     proj2d
     backproj2d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1076,14 +1082,14 @@ def compute_3d_frequency_nodes(B, delta, fgrad, backend=None,
         magnetic field sampling grid, with unit denoted below as
         `[B-unit]` (can be `Gauss (G)`, `millitesla (mT)`, ...), to
         use to compute the projections.
-
+    
     delta : float 
         Pixel size given in a length unit denoted below as
         `[length-unit]` (can be `centimeter (cm)`, `millimeter (mm)`,
         ...).
     
     fgrad : array_like (with type `backend.cls`)
-        Three dimensional array with shape ``(3, fgrad.shape[1])``
+        Two-dimensional array with shape ``(3, fgrad.shape[1])``
         such that ``fgrad[:,k]`` corresponds to the (X,Y,Z)
         coordinates of the field gradient vector associated to the
         k-th EPR projection to be computed.
@@ -1091,14 +1097,14 @@ def compute_3d_frequency_nodes(B, delta, fgrad, backend=None,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
         
         When backend is None, a default backend is inferred from the
         input arrays ``(B, fgrad)``.
-
+    
     rfft_mode : bool, optional
         Set ``rfft_mode=True`` to compute only half of the frequency
         nodes (to be combined with the use of real FFT functions in
@@ -1108,7 +1114,7 @@ def compute_3d_frequency_nodes(B, delta, fgrad, backend=None,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-    
+
     
     Return
     ------
@@ -1123,25 +1129,26 @@ def compute_3d_frequency_nodes(B, delta, fgrad, backend=None,
     
         + ``y`` is a one dimensional array, with same length as ``x``,
           containing the frequency nodes along the Y-axis;
-
+    
         + ``z`` is a one dimensional array, with same length as ``x``,
           containing the frequency nodes along the Z-axis;
     
         + ``indexes`` is a one dimensional array, with same length as
-          ``x``, corresponding to the indexes where should be dispatched
-          the computed Fourier coefficients in the rfft of the 3D
-          projections.
+          ``x``, corresponding to the indexes where should be
+          dispatched the computed Fourier coefficients in the (r)fft
+          of the 3D projections.
     
         + ``rfft_mode`` a bool specifying whether the frequency nodes
           cover half of the frequency domain (``rfft_mode=True``) or the
           full frequency domain (``rfft_mode=False``).
+    
     
     See also
     --------
     
     proj3d
     backproj3d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1207,7 +1214,7 @@ def proj3d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
         magnetic field sampling grid, with unit denoted below as
         `[B-unit]` (can be `Gauss (G)`, `millitesla (mT)`, ...), to
         use to compute the projections.
-    
+        
         **WARNING**: this function assumes that the range covered by
         `B` is large enough so that the computed EPR projections are
         fully supported by `B`. Using a too small range for `B` will
@@ -1227,7 +1234,7 @@ def proj3d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
@@ -1255,8 +1262,8 @@ def proj3d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-    
 
+    
     Return
     ------
     
@@ -1266,14 +1273,14 @@ def proj3d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
         projections) such that ``out[k,:]`` corresponds the EPR
         projection of u with field gradient ``fgrad[:,k]`` sampled
         over the grid `B`.
-    
+
     
     See also
     --------
     
     compute_3d_frequency_nodes
     backproj3d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1344,7 +1351,7 @@ def proj3d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
@@ -1366,8 +1373,8 @@ def proj3d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
         :py:func:`pyepri.monosrc.compute_3d_frequency_nodes`.
     
     notest : bool, optional
-        Set ``notest=True`` to disable consistency checks.
-    
+        Set ``notest=True`` to disable consistency checks.    
+
     
     Return
     ------
@@ -1377,15 +1384,15 @@ def proj3d_fft(u, delta, B, fft_h, fgrad, backend=None, eps=1e-06,
         fgrad.shape[1]`` corresponds to the number of computed
         projections) such that ``out[k,:]`` contains the discrete
         Fourier coefficients of the EPR projection of `u` with field
-        gradient ``fgrad[:,k]``.
-    
+        gradient ``fgrad[:,k]``.    
+
     
     See also
     --------
     
     compute_2d_frequency_nodes
     proj2d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1451,7 +1458,7 @@ def proj3d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
         magnetic field sampling grid, with unit denoted below as
         `[B-unit]` (can be `Gauss (G)`, `millitesla (mT)`, ...), to
         use to compute the projections.
-    
+        
         **WARNING**: this function assumes that the range covered by `B`
         is large enough so that the computed EPR projections are fully
         supported by `B`. Using a too small range for `B` will result
@@ -1472,7 +1479,7 @@ def proj3d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
@@ -1495,7 +1502,7 @@ def proj3d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-    
+
     
     Return
     ------
@@ -1506,14 +1513,14 @@ def proj3d_rfft(u, delta, B, rfft_h, fgrad, backend=None, eps=1e-06,
         computed projections) such that ``out[k,:]`` corresponds to
         half of the discrete Fourier coefficients of the EPR
         projection of `u` with field gradient ``fgrad[:,k]``.
-        
+
     
     See also
     --------
     
     compute_2d_frequency_nodes
     proj2d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1627,6 +1634,7 @@ def backproj3d(proj, delta, B, h, fgrad, out_shape, backend=None,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
+
     
     Return 
     ------
@@ -1634,6 +1642,7 @@ def backproj3d(proj, delta, B, h, fgrad, out_shape, backend=None,
     out : array_like (with type `backend.cls`)
         A three-dimensional array with specified shape corresponding
         to the backprojected image.
+
     
     See also
     --------
@@ -1714,7 +1723,7 @@ def backproj3d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
@@ -1753,13 +1762,14 @@ def backproj3d_fft(fft_proj, delta, B, fft_h_conj, fgrad,
     out : complex array_like (with type `backend.cls`)
         Backprojected 3D image in complex format (imaginary part
         should be close to zero and can be thrown away).
+
     
     See also
     --------
     
     compute_3d_frequency_nodes
     backproj3d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1807,7 +1817,7 @@ def backproj3d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
         Two-dimensional array with shape ``(Nproj, 1+len(B)//2)``
         (where ``Nproj = fgrad.shape[1]``) containing the EPR
         projections in Fourier domain (half of the spectrum).
-
+        
         More precisely, ``rfft_proj[k,:]`` corresponds to the real FFT
         (rfft) of the k-th EPR projection (acquired with field
         gradient ``fgrad[:,k]`` and sampled over the grid `B`).
@@ -1839,15 +1849,15 @@ def backproj3d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
-
+        
         When backend is None, a default backend is inferred from the
         input arrays ``(rfft_proj, B, rfft_h_conj, fgrad)``.
     
-    out_shape : integer or integer tuple of length 2, optional 
+    out_shape : integer or integer tuple of length 3, optional 
         Shape of the output image `out_shape = out.shape = (N1, N2,
         N3)` (or `out_shape = N` when N1 = N2 = N3 = N). This optional
         input is in fact mandatory when no preallocated array is given
@@ -1879,12 +1889,13 @@ def backproj3d_rfft(rfft_proj, delta, B, rfft_h_conj, fgrad,
         Backprojected 3D image in complex format (imaginary part
         should be close to zero and can be thrown away).
     
+    
     See also
     --------
     
     compute_3d_frequency_nodes
     backproj3d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -1946,7 +1957,7 @@ def compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
         One dimensional array with same length as `B` corresponding to
         the reference spectrum involved in the forward (proj3d)
         operation (and sampled over the grid `B`).
-
+    
     h2 : array_like (with type `backend.cls`)
         One dimensional array with same length as `B` corresponding to
         the reference spectrum involved in the backward (backproj3d)
@@ -1966,7 +1977,7 @@ def compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-
+    
     out_shape : integer or integer tuple of length 3
         Shape of the output kernel ``out_shape = phi.shape = (M1, M2,
         M3)``. The kernel shape should be twice the EPR image shape
@@ -1976,13 +1987,13 @@ def compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
-
+        
         When backend is None, a default backend is inferred from the
         input arrays ``(B, h1, h2, fgrad)``.
     
     eps : float, optional
         Precision requested (>1e-16).
-
+    
     rfft_mode : bool, optional 
         The computation of the Toeplitz kernel involves the
         computation of discrete Fourier coefficients of real-valued
@@ -1990,7 +2001,7 @@ def compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
         (speed-up the computation and reduce memory usage). Otherwise,
         use ``rfft_mode=False``, to enable standard (complex) FFT
         mode.
-
+    
     nodes : dict, optional 
         Precomputed frequency nodes used to evaluate the output
         kernel. If not given, `nodes` will be automatically inferred
@@ -2003,8 +2014,8 @@ def compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
         itself).
     
     notest : bool, optional
-        Set ``notest=True`` to disable consistency checks.
-    
+        Set ``notest=True`` to disable consistency checks.    
+
     
     Return
     ------
@@ -2021,7 +2032,7 @@ def compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, out_shape,
     proj3d
     backproj3d
     apply_3d_toeplitz_kernel
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -2087,7 +2098,7 @@ def apply_3d_toeplitz_kernel(u, rfft3_phi, backend=None, notest=False):
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
-    
+        
         When backend is None, a default backend is inferred from the
         input arrays ``(u, rfft3_phi)``.
     
@@ -2108,7 +2119,7 @@ def apply_3d_toeplitz_kernel(u, rfft3_phi, backend=None, notest=False):
     compute_3d_toeplitz_kernel
     proj3d
     backproj3d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:

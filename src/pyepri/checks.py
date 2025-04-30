@@ -76,7 +76,7 @@ def _check_type_(t, **kwargs):
     ----------
 
     t : <class 'type'>
-        The specified array data type
+        The specified type
 
     **kwargs : keyword arguments
         Input keyword arguments to be tested. 
