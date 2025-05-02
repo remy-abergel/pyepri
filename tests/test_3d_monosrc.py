@@ -193,26 +193,64 @@ def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns, tol):
         inprod2 = (x * adjAy).sum()
         rel = abs(1 - inprod1 / inprod2)
         assert rel < tol * eps
+
+
+def test_proj2d_and_backproj2d_matrices(libname, dtype, nruns, tol):
+    
+    # create backend
+    if libname == 'numpy':
+        backend = backends.create_numpy_backend()
+    elif libname == 'torch-cpu': 
+        backend = backends.create_torch_backend('cpu')
+    elif libname == 'torch-cuda': 
+        backend = backends.create_torch_backend('cuda')
+    elif libname == 'cupy': 
+        backend = backends.create_cupy_backend()
         
-    # compute matricial representation of A and its adjoint (use the
-    # last generated dataset)
-    A = lambda x : monosrc.proj3d(x, delta, B, h, fgrad, backend=backend, rfft_mode=rfft_mode, eps=eps)
-    arr_to_vec = lambda arr : arr.reshape((-1,))
-    vec_to_arr = lambda vec, shape: vec.reshape(shape)
-    m = Nproj * Nb
-    n = N1 * N2 * N3
-    M = backend.zeros([m, n], dtype=dtype)
-    v = backend.zeros((n,), dtype=dtype)
-    for col in range(n):
-        v[col-1] = 0
-        v[col] = 1
-        M[:,col] = arr_to_vec(A(vec_to_arr(v, (N1, N2, N3))))
+    # retrieve machine epsilon
+    #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
+    eps = 1e-15 if dtype == 'float64' else 1e-6
+    
+    # check adjointness for the monosrc.proj2d and monosrc.backproj2d
+    # via matrix representation over very small datasets
+    for id in range(nruns):
         
-    # evaluate adjA(y) by matrix-vector multiplication
-    Mt = backend.transpose(M)
-    adjAy2 = vec_to_arr(Mt @ arr_to_vec(y), (N1, N2, N3))
-    rel = utils._relerr_(adjAy, adjAy2, backend=backend, notest=True)
-    assert rel < tol * eps
+        # compute a very small dataset
+        N1 = 1 + int(4 * backend.rand(1)[0])
+        N2 = 1 + int(4 * backend.rand(1)[0])
+        N3 = 1 + int(4 * backend.rand(1)[0])
+        Nproj = 1 + int(5 * backend.rand(1)[0])
+        Nb = 2 + int(5 * backend.rand(1)[0])
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
+        dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
+        delta = float(10. * eps + backend.rand(1)[0])
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
+        fgrad = backend.rand(3, Nproj, dtype=dtype)
+        h = backend.rand(Nb, dtype=dtype)
+        y = backend.rand(Nproj, Nb, dtype=dtype)
+        
+        # evaluate adjA(y) using monosrc.backproj2d        
+        rfft_mode = backend.rand(1)[0] > 0.5
+        adjAy1 = monosrc.backproj3d(y, delta, B, h, fgrad, backend=backend, out_shape=(N1, N2, N3), rfft_mode=rfft_mode, eps=eps)
+        
+        # compute matricial representation of A and its adjoint over this dataset
+        A = lambda x : monosrc.proj3d(x, delta, B, h, fgrad, backend=backend, rfft_mode=rfft_mode, eps=eps)
+        arr_to_vec = lambda arr : arr.reshape((-1,))
+        vec_to_arr = lambda vec, shape: vec.reshape(shape)
+        m = Nproj * Nb
+        n = N1 * N2 * N3
+        M = backend.zeros([m, n], dtype=dtype)
+        v = backend.zeros((n,), dtype=dtype)
+        for col in range(n):
+            v[col-1] = 0
+            v[col] = 1
+            M[:,col] = arr_to_vec(A(vec_to_arr(v, (N1, N2, N3))))
+
+        # evaluate adjA(y) by matrix-vector multiplication
+        Mt = backend.transpose(M)
+        adjAy2 = vec_to_arr(Mt @ arr_to_vec(y), (N1, N2, N3))
+        rel = utils._relerr_(adjAy1, adjAy2, backend=backend, notest=True)
+        assert rel < tol * eps
 
 
 def test_3d_toeplitz_kernel(libname, dtype, nruns, tol):
