@@ -323,12 +323,12 @@ def test_proj4d_and_backproj4d_matrices(libname, dtype, nruns, tol):
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         x = backend.rand(Nb, N1, N2, N3, dtype=dtype)
         y = backend.rand(Nproj, Nb, dtype=dtype)
         
-        # compute matricial representation of A and its adjoint (use a very small dataset)
+        # compute matricial representation of A and its adjoint over this dataset
         A = lambda x : ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=True, eps=eps)
         arr_to_vec = lambda arr : arr.reshape((-1,))
         vec_to_arr = lambda vec, shape: vec.reshape(shape)
