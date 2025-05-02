@@ -1,6 +1,6 @@
 import pyepri.backends as backends
 import pyepri.multisrc as multisrc
-import importlib.util
+import pyepri.utils as utils
 import numpy as np
 
 def test_proj2d_rfftmode(libname, dtype, nruns, tol):
@@ -17,9 +17,6 @@ def test_proj2d_rfftmode(libname, dtype, nruns, tol):
     
     # retrieve machine epsilon
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro
-    relerr = lambda arr1, arr2 : backend.sqrt(((arr1-arr2)**2).sum() / ((arr1)**2).sum())    
     
     # check that multisrc.proj2d returns the same results whenever
     # rfft_mode parameter is True or False
@@ -51,8 +48,8 @@ def test_proj2d_rfftmode(libname, dtype, nruns, tol):
         Bu2 = multisrc.proj2d(u, delta, B, h, fgrad, backend=backend, rfft_mode=False, eps=eps)
         
         # compare results
-        rel = [relerr(Bu1[i], Bu2[i]) for i in range(L)]
-        assert max(rel) < tol*eps
+        rel = [utils._relerr_(Bu1[i], Bu2[i], backend=backend, notest=True) for i in range(L)]
+        assert max(rel) < tol * eps
 
 
 def test_backproj2d_rfftmode(libname, dtype, nruns, tol):
@@ -69,9 +66,6 @@ def test_backproj2d_rfftmode(libname, dtype, nruns, tol):
     
     # retrieve machine epsilon
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro
-    relerr = lambda arr1, arr2 : backend.sqrt(((arr1-arr2)**2).sum() / ((arr1)**2).sum())    
     
     # check that multisrc.backproj2d returns the same results whenever
     # rfft_mode parameter is True or False
@@ -103,8 +97,8 @@ def test_backproj2d_rfftmode(libname, dtype, nruns, tol):
         adjBs2 = multisrc.backproj2d(s, delta, B, h, fgrad, u_shape, backend=backend, rfft_mode=False, eps=eps)
         
         # compare results
-        rel = [relerr(adjBs1[j], adjBs2[j]) for j in range(K)]
-        assert max(rel) < tol*eps
+        rel = [utils._relerr_(adjBs1[j], adjBs2[j], backend=backend, notest=True) for j in range(K)]
+        assert max(rel) < tol * eps
 
 
 def test_2d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
@@ -121,9 +115,6 @@ def test_2d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
     
     # retrieve machine epsilon
     eps = 1e-15 if dtype == 'float64' else 1e-6
-
-    # relative error computation macro
-    relerr = lambda arr1, arr2 : backend.sqrt(((arr1-arr2)**2).sum() / ((arr1)**2).sum())    
     
     # check that multisrc.compute_2d_toeplitz_kernels returns the same
     # results whenever rfft_mode parameter is True or False
@@ -152,8 +143,8 @@ def test_2d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
         phi2 = multisrc.compute_2d_toeplitz_kernels(B, h, delta, fgrad, u_shape, backend=backend, eps=eps, rfft_mode=False)
         
         # compare results
-        rel = [relerr(phi1[k][j], phi2[k][j]) for k in range(K) for j in range(K)]
-        assert max(rel) < tol*eps
+        rel = [utils._relerr_(phi1[k][j], phi2[k][j], backend=backend, notest=True) for k in range(K) for j in range(K)]
+        assert max(rel) < tol * eps
 
 
 def test_proj2d_and_backproj2d_adjointness(libname, dtype, nruns, tol):
@@ -208,8 +199,8 @@ def test_proj2d_and_backproj2d_adjointness(libname, dtype, nruns, tol):
         # compute inner products
         inprod1 = sum([(Bu[i] * s[i]).sum() for i in range(L)])
         inprod2 = sum([(u[j] * adjBs[j]).sum() for j in range(K)])
-        rel = abs(1-inprod1/inprod2)
-        assert rel < tol*eps
+        rel = abs(1 - inprod1 / inprod2)
+        assert rel < tol * eps
 
 
 def test_2d_toeplitz_kernel(libname, dtype, nruns, tol):
@@ -226,9 +217,6 @@ def test_2d_toeplitz_kernel(libname, dtype, nruns, tol):
     
     # retrieve dtype precision (threshold to 1e-16)
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro
-    relerr = lambda arr1, arr2 : backend.sqrt(((arr1-arr2)**2).sum() / ((arr1)**2).sum())    
     
     # denoting by B and adjB the operators associated to
     # multisrc.proj2d and multisrc.backproj2d, check that adjB(B(u))
@@ -276,6 +264,6 @@ def test_2d_toeplitz_kernel(libname, dtype, nruns, tol):
         out = multisrc.apply_2d_toeplitz_kernels(u, rfft2_phi, backend=backend)
         
         # check that `adjBBu` and `out` are close to each other
-        rel = [relerr(adjBBu[j], out[j]) for j in range(K)]
-        assert max(rel) < tol*eps
+        rel = [utils._relerr_(adjBBu[j], out[j], backend=backend, notest=True) for j in range(K)]
+        assert max(rel) < tol * eps
         

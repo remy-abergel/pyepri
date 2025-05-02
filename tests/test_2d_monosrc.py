@@ -1,6 +1,6 @@
 import pyepri.backends as backends
 import pyepri.monosrc as monosrc
-import importlib.util
+import pyepri.utils as utils
 import numpy as np
 
 def test_proj2d_rfftmode(libname, dtype, nruns, tol):
@@ -45,8 +45,8 @@ def test_proj2d_rfftmode(libname, dtype, nruns, tol):
         Ax2 = monosrc.proj2d(x, delta, B, h, fgrad, backend=backend, rfft_mode=False, eps=eps)
         
         # compare results
-        rel = backend.sqrt((backend.abs(Ax1 - Ax2)**2).sum() / (backend.abs(Ax1)**2).sum())
-        assert rel < tol*eps
+        rel = utils._relerr_(Ax1, Ax2, backend=backend, notest=True)
+        assert rel < tol * eps
         
 
 def test_backproj2d_rfftmode(libname, dtype, nruns, tol):
@@ -92,8 +92,8 @@ def test_backproj2d_rfftmode(libname, dtype, nruns, tol):
         adjAy2 = monosrc.backproj2d(y, delta, B, h, fgrad, out_shape, backend=backend, rfft_mode=False, eps=eps)
         
         # compare results
-        rel = backend.sqrt((backend.abs(adjAy1 - adjAy2)**2).sum() / (backend.abs(adjAy1)**2).sum())
-        assert rel < tol*eps
+        rel = utils._relerr_(adjAy1, adjAy2, backend=backend, notest=True)
+        assert rel < tol * eps
         
 
 def test_2d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
@@ -136,8 +136,8 @@ def test_2d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
         phi2 = monosrc.compute_2d_toeplitz_kernel(B, h1, h2, delta, fgrad, (2*N1, 2*N2), backend=backend, eps=eps, rfft_mode=False)
         
         # compare results
-        rel = backend.sqrt((backend.abs(phi1 - phi2)**2).sum() / (backend.abs(phi1)**2).sum())
-        assert rel < tol*eps
+        rel = utils._relerr_(phi1, phi2, backend=backend, notest=True)
+        assert rel < tol * eps
         
 
 def test_proj2d_and_backproj2d_adjointness(libname, dtype, nruns, tol):
@@ -187,8 +187,8 @@ def test_proj2d_and_backproj2d_adjointness(libname, dtype, nruns, tol):
         # compute inner products
         inprod1 = (Ax * y).sum()
         inprod2 = (x * adjAy).sum()
-        rel = abs(1-inprod1/inprod2)
-        assert rel < tol*eps
+        rel = abs(1 - inprod1 / inprod2)
+        assert rel < tol * eps
         
     # compute matricial representation of A and its adjoint (use the
     # last generated dataset)
@@ -207,8 +207,8 @@ def test_proj2d_and_backproj2d_adjointness(libname, dtype, nruns, tol):
     # evaluate adjA(y) by matrix-vector multiplication
     Mt = backend.transpose(M)
     adjAy2 = vec_to_arr(Mt @ arr_to_vec(y), (N1, N2))
-    rel = backend.sqrt((backend.abs(adjAy2 - adjAy)**2).sum() / (backend.abs(adjAy2)**2).sum())
-    assert rel < tol*eps
+    rel = utils._relerr_(adjAy, adjAy2, backend=backend, notest=True)
+    assert rel < tol * eps
 
 
 def test_2d_toeplitz_kernel(libname, dtype, nruns, tol):
@@ -269,7 +269,6 @@ def test_2d_toeplitz_kernel(libname, dtype, nruns, tol):
         out = monosrc.apply_2d_toeplitz_kernel(u, backend.rfft2(phi), backend=backend)
         
         # check that `adjAAu` and `out` are close to each other
-        #rel = backend.abs(adjAAu - out).max() / backend.sqrt((adjAAu**2).sum())
-        rel = backend.sqrt(((adjAAu - out)**2).sum()) / backend.sqrt((adjAAu**2).sum())
-        assert rel < tol*eps
+        rel = utils._relerr_(adjAAu, out, backend=backend, notest=True)
+        assert rel < tol * eps
         

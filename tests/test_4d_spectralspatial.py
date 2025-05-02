@@ -1,6 +1,6 @@
 import pyepri.backends as backends
 import pyepri.spectralspatial as ss
-import importlib.util
+import pyepri.utils as utils
 import numpy as np
 
 def test_proj4d_rfftmode(libname, dtype, nruns, tol):
@@ -18,10 +18,6 @@ def test_proj4d_rfftmode(libname, dtype, nruns, tol):
     # retrieve machine epsilon
     #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro (nrm input can be used to avoid
-    # underflow/overflow for the square values)
-    relerr = lambda arr1, arr2, nrm=1. : backend.sqrt((backend.abs(nrm * arr1 - nrm * arr2)**2).sum() / (backend.abs(nrm * arr1)**2).sum())
     
     # check that ss.proj4d returns the same results whenever rfft_mode
     # parameter is True or False
@@ -49,9 +45,8 @@ def test_proj4d_rfftmode(libname, dtype, nruns, tol):
         Ax2 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=False, eps=eps)
         
         # compare results
-        nrm = 1. / backend.abs(Ax1).max()
-        rel = relerr(Ax1, Ax2, nrm=nrm)
-        assert rel < tol*eps
+        rel = utils._relerr_(Ax1, Ax2, backend=backend, notest=True)
+        assert rel < tol * eps
 
 
 def test_proj4d_memory_usage(libname, dtype, nruns, tol):
@@ -69,10 +64,6 @@ def test_proj4d_memory_usage(libname, dtype, nruns, tol):
     # retrieve machine epsilon
     #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro (nrm input can be used to avoid
-    # underflow/overflow for the square values)
-    relerr = lambda arr1, arr2, nrm=1. : backend.sqrt((backend.abs(nrm * arr1 - nrm * arr2)**2).sum() / (backend.abs(nrm * arr1)**2).sum())
     
     # check that ss.proj4d returns the same results whenever rfft_mode
     # parameter is True or False
@@ -102,10 +93,10 @@ def test_proj4d_memory_usage(libname, dtype, nruns, tol):
         
         # compare results
         nrm = 1. / backend.abs(Ax0).max()
-        rel1 = relerr(Ax0, Ax1, nrm=nrm)
-        rel2 = relerr(Ax0, Ax2, nrm=nrm)
+        rel1 = utils._relerr_(Ax0, Ax1, backend=backend, notest=True)
+        rel2 = utils._relerr_(Ax0, Ax2, backend=backend, notest=True)
         rel = max(rel1, rel2)
-        assert rel < tol*eps
+        assert rel < tol * eps
 
 
 def test_backproj4d_rfftmode(libname, dtype, nruns, tol):
@@ -123,10 +114,6 @@ def test_backproj4d_rfftmode(libname, dtype, nruns, tol):
     # retrieve machine epsilon
     #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro (nrm input can be used to avoid
-    # underflow/overflow for the square values)
-    relerr = lambda arr1, arr2, nrm=1. : backend.sqrt((backend.abs(nrm * arr1 - nrm * arr2)**2).sum() / (backend.abs(nrm * arr1)**2).sum())
     
     # check that ss.backproj4d returns the same results whenever
     # rfft_mode parameter is True or False
@@ -155,9 +142,8 @@ def test_backproj4d_rfftmode(libname, dtype, nruns, tol):
         adjAy2 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, rfft_mode=False, eps=eps)
         
         # compare results
-        nrm = 1. / backend.abs(adjAy1).max().item()
-        rel = relerr(adjAy1, adjAy2, nrm=nrm)
-        assert rel < tol*eps
+        rel = utils._relerr_(adjAy1, adjAy2, backend=backend, notest=True)
+        assert rel < tol * eps
 
 
 def test_backproj4d_memory_usage(libname, dtype, nruns, tol):
@@ -175,10 +161,6 @@ def test_backproj4d_memory_usage(libname, dtype, nruns, tol):
     # retrieve machine epsilon
     #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro (nrm input can be used to avoid
-    # underflow/overflow for the square values)
-    relerr = lambda arr1, arr2, nrm=1. : backend.sqrt((backend.abs(nrm * arr1 - nrm * arr2)**2).sum() / (backend.abs(nrm * arr1)**2).sum())
     
     # check that ss.backproj4d returns the same results whenever
     # rfft_mode parameter is True or False
@@ -208,11 +190,10 @@ def test_backproj4d_memory_usage(libname, dtype, nruns, tol):
         adjAy2 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, rfft_mode=(backend.rand(1)[0] > 0.5), eps=eps, memory_usage=2)
         
         # compare results
-        nrm = 1. / backend.abs(adjAy0).max().item()
-        rel1 = relerr(adjAy0, adjAy1, nrm=nrm)
-        rel2 = relerr(adjAy0, adjAy2, nrm=nrm)
+        rel1 = utils._relerr_(adjAy0, adjAy1, backend=backend, notest=True)
+        rel2 = utils._relerr_(adjAy0, adjAy2, backend=backend, notest=True)
         rel = max(rel1, rel2)
-        assert rel < tol*eps
+        assert rel < tol * eps
 
 
 def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
@@ -258,9 +239,8 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
         phi2 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=False)
         
         # compare results
-        nrm = 1. / backend.abs(phi1).max().item()
-        rel = relerr(phi1, phi2, nrm=nrm)
-        assert rel < tol*eps
+        rel = backend._relerr_(phi1, phi2, backend=backend, notest=True)
+        assert rel < tol * eps
 
 
 def test_proj4d_and_backproj4d_adjointness(libname, dtype, nruns, tol):
@@ -311,7 +291,7 @@ def test_proj4d_and_backproj4d_adjointness(libname, dtype, nruns, tol):
         inprod1 = (Ax * y).sum()
         inprod2 = (x * adjAy).sum()
         rel = abs(1 - inprod1 / inprod2)
-        assert rel < tol*eps
+        assert rel < tol * eps
 
 
 def test_proj4d_and_backproj4d_matrices(libname, dtype, nruns, tol):
@@ -329,10 +309,6 @@ def test_proj4d_and_backproj4d_matrices(libname, dtype, nruns, tol):
     # retrieve machine epsilon
     #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro (nrm input can be used to avoid
-    # underflow/overflow for the square values)
-    relerr = lambda arr1, arr2, nrm=1. : backend.sqrt((backend.abs(nrm * arr1 - nrm * arr2)**2).sum() / (backend.abs(nrm * arr1)**2).sum())
     
     # check adjointness for the ss.proj4d and ss.backproj4d via matrix
     # representation over very small datasets
@@ -371,9 +347,8 @@ def test_proj4d_and_backproj4d_matrices(libname, dtype, nruns, tol):
         adjAy2 = vec_to_arr(Mt @ arr_to_vec(y), (Nb, N1, N2, N3))
 
         # check relative error
-        nrm = 1. / backend.abs(adjAy2).max()
-        rel = relerr(adjAy2, adjAy, nrm=nrm)
-        assert rel < tol*eps
+        rel = utils._relerr_(adjAy, adjAy2, backend=backend, notest=True)
+        assert rel < tol * eps
 
 
 def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
@@ -391,10 +366,6 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
     # retrieve machine epsilon
     #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro (nrm input can be used to avoid
-    # underflow/overflow for the square values)
-    relerr = lambda arr1, arr2, nrm=1. : backend.sqrt((backend.abs(nrm * arr1 - nrm * arr2)**2).sum() / (backend.abs(nrm * arr1)**2).sum())
     
     # check that monosrc.compute_3d_toeplitz_kernel returns the same
     # results whenever rfft_mode parameter is True or False
@@ -419,9 +390,8 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
         phi2 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=False)
         
         # compare results
-        nrm = 1./ backend.abs(phi1).max()
-        rel = relerr(phi1, phi2, nrm=nrm)
-        assert rel < tol*eps
+        rel = utils._relerr_(phi1, phi2, backend=backend, notest=True)
+        assert rel < tol * eps
 
 
 def test_4d_toeplitz_kernel_memory_usage(libname, dtype, nruns, tol):
@@ -439,10 +409,6 @@ def test_4d_toeplitz_kernel_memory_usage(libname, dtype, nruns, tol):
     # retrieve machine epsilon
     #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro (nrm input can be used to avoid
-    # underflow/overflow for the square values)
-    relerr = lambda arr1, arr2, nrm=1. : backend.sqrt((backend.abs(nrm * arr1 - nrm * arr2)**2).sum() / (backend.abs(nrm * arr1)**2).sum())
     
     # check that monosrc.compute_3d_toeplitz_kernel returns the same
     # results whenever rfft_mode parameter is True or False
@@ -467,9 +433,8 @@ def test_4d_toeplitz_kernel_memory_usage(libname, dtype, nruns, tol):
         phi2 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=(backend.rand(1)[0] > 0.5), memory_usage=2)
         
         # compare results
-        nrm = 1./ backend.abs(phi0).max()
-        rel = relerr(phi0, phi2, nrm=nrm)
-        assert rel < tol*eps
+        rel = utils._relerr_(phi0, phi2, backend=backend, notest=True)
+        assert rel < tol * eps
 
 
 def test_4d_toeplitz_kernel(libname, dtype, nruns, tol):
@@ -487,10 +452,6 @@ def test_4d_toeplitz_kernel(libname, dtype, nruns, tol):
     # retrieve dtype precision (threshold to 1e-16)
     #eps = float(max(1e-16, backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps))
     eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # relative error computation macro (nrm input can be used to avoid
-    # underflow/overflow for the square values)
-    relerr = lambda arr1, arr2, nrm=1. : backend.sqrt((backend.abs(nrm * arr1 - nrm * arr2)**2).sum() / (backend.abs(nrm * arr1)**2).sum())
     
     # denoting by A and adjA the operators associated to ss.proj4d and
     # ss.backproj4d, check that Adj(A(u)) is the same as the
@@ -533,6 +494,5 @@ def test_4d_toeplitz_kernel(libname, dtype, nruns, tol):
         out = ss.apply_4d_toeplitz_kernel(u, backend.rfftn(phi), backend=backend)
         
         # check that `adjAAu` and `out` are close to each other
-        nrm = 1. / backend.abs(adjAAu).max()
-        rel = relerr(adjAAu, out, nrm=nrm)
-        assert rel < tol*eps
+        rel = utils._relerr_(adjAAu, out, backend=backend, notest=True)
+        assert rel < tol * eps
