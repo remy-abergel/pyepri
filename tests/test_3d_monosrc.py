@@ -1,24 +1,9 @@
-import pytest
 import pyepri.backends as backends
 import pyepri.monosrc as monosrc
-import importlib.util
+import pyepri.utils as utils
 import numpy as np
 
-libname = ['numpy']
-
-if importlib.util.find_spec('torch') is not None:
-    import torch
-    libname += ['torch-cpu']
-    if torch.cuda.is_available():
-        libname += ['torch-cuda']
-if importlib.util.find_spec('cupy') is not None:
-    import cupy
-    libname += ['cupy']
-
-
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_proj3d_rfftmode(libname, dtype, nruns=100, tol=1000):
+def test_proj3d_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -39,17 +24,17 @@ def test_proj3d_rfftmode(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(15*backend.rand(1)[0])
-        N2 = 1 + int(15*backend.rand(1)[0])
-        N3 = 1 + int(15*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(15 * backend.rand(1)[0])
+        N2 = 1 + int(15 * backend.rand(1)[0])
+        N3 = 1 + int(15 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
@@ -61,13 +46,11 @@ def test_proj3d_rfftmode(libname, dtype, nruns=100, tol=1000):
         Ax2 = monosrc.proj3d(x, delta, B, h, fgrad, backend=backend, rfft_mode=False, eps=eps)
         
         # compare results
-        rel = backend.sqrt((backend.abs(Ax1 - Ax2)**2).sum() / (backend.abs(Ax1)**2).sum())
-        assert rel < tol*eps
-        
+        rel = utils._relerr_(Ax1, Ax2, backend=backend, notest=True)
+        assert rel < tol * eps
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_backproj3d_rfftmode(libname, dtype, nruns=100, tol=1000):
+
+def test_backproj3d_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -88,17 +71,17 @@ def test_backproj3d_rfftmode(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(15*backend.rand(1)[0])
-        N2 = 1 + int(15*backend.rand(1)[0])
-        N3 = 1 + int(15*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(15 * backend.rand(1)[0])
+        N2 = 1 + int(15 * backend.rand(1)[0])
+        N3 = 1 + int(15 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
         B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
@@ -111,13 +94,11 @@ def test_backproj3d_rfftmode(libname, dtype, nruns=100, tol=1000):
         adjAy2 = monosrc.backproj3d(y, delta, B, h, fgrad, out_shape, backend=backend, rfft_mode=False, eps=eps)
         
         # compare results
-        rel = backend.sqrt((backend.abs(adjAy1 - adjAy2)**2).sum() / (backend.abs(adjAy1)**2).sum())
-        assert rel < tol*eps
-        
+        rel = utils._relerr_(adjAy1, adjAy2, backend=backend, notest=True)
+        assert rel < tol * eps
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_3d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
+
+def test_3d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -138,17 +119,17 @@ def test_3d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(15*backend.rand(1)[0])
-        N2 = 1 + int(15*backend.rand(1)[0])
-        N3 = 1 + int(15*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(15 * backend.rand(1)[0])
+        N2 = 1 + int(15 * backend.rand(1)[0])
+        N3 = 1 + int(15 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h1 = backend.rand(Nb, dtype=dtype)
         h2 = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
@@ -158,13 +139,11 @@ def test_3d_toeplitz_kernel_rfftmode(libname, dtype, nruns=100, tol=1000):
         phi2 = monosrc.compute_3d_toeplitz_kernel(B, h1, h2, delta, fgrad, (2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=False)
         
         # compare results
-        rel = backend.sqrt((backend.abs(phi1 - phi2)**2).sum() / (backend.abs(phi1)**2).sum())
-        assert rel < tol*eps
-        
+        rel = utils._relerr_(phi1, phi2, backend=backend, notest=True)
+        assert rel < tol * eps
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns=100, tol=1000):
+
+def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -185,17 +164,17 @@ def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(15*backend.rand(1)[0])
-        Nb = 2 + int(40*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(15 * backend.rand(1)[0])
+        Nb = 2 + int(40 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
@@ -212,33 +191,69 @@ def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns=100, tol=1000):
         # compute inner products
         inprod1 = (Ax * y).sum()
         inprod2 = (x * adjAy).sum()
-        rel = abs(1-inprod1/inprod2)
-        assert rel < tol*eps
-        
-    # compute matricial representation of A and its adjoint (use the
-    # last generated dataset)
-    A = lambda x : monosrc.proj3d(x, delta, B, h, fgrad, backend=backend, rfft_mode=rfft_mode, eps=eps)
-    arr_to_vec = lambda arr : arr.reshape((-1,))
-    vec_to_arr = lambda vec, shape: vec.reshape(shape)
-    m = Nproj * Nb
-    n = N1 * N2 * N3
-    M = backend.zeros([m, n], dtype=dtype)
-    v = backend.zeros((n,), dtype=dtype)
-    for col in range(n):
-        v[col-1] = 0
-        v[col] = 1
-        M[:,col] = arr_to_vec(A(vec_to_arr(v, (N1, N2, N3))))
-        
-    # evaluate adjA(y) by matrix-vector multiplication
-    Mt = backend.transpose(M)
-    adjAy2 = vec_to_arr(Mt @ arr_to_vec(y), (N1, N2, N3))
-    rel = backend.sqrt((backend.abs(adjAy2 - adjAy)**2).sum() / (backend.abs(adjAy2)**2).sum())
-    assert rel < tol*eps
+        rel = abs(1 - inprod1 / inprod2)
+        assert rel < tol * eps
 
 
-@pytest.mark.parametrize("libname", libname)
-@pytest.mark.parametrize("dtype", ['float32', 'float64'])
-def test_3d_toeplitz_kernel(libname, dtype, nruns=100, tol=1000):
+def test_proj2d_and_backproj2d_matrices(libname, dtype, nruns, tol):
+    
+    # create backend
+    if libname == 'numpy':
+        backend = backends.create_numpy_backend()
+    elif libname == 'torch-cpu': 
+        backend = backends.create_torch_backend('cpu')
+    elif libname == 'torch-cuda': 
+        backend = backends.create_torch_backend('cuda')
+    elif libname == 'cupy': 
+        backend = backends.create_cupy_backend()
+        
+    # retrieve machine epsilon
+    #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
+    eps = 1e-15 if dtype == 'float64' else 1e-6
+    
+    # check adjointness for the monosrc.proj2d and monosrc.backproj2d
+    # via matrix representation over very small datasets
+    for id in range(nruns):
+        
+        # compute a very small dataset
+        N1 = 1 + int(4 * backend.rand(1)[0])
+        N2 = 1 + int(4 * backend.rand(1)[0])
+        N3 = 1 + int(4 * backend.rand(1)[0])
+        Nproj = 1 + int(5 * backend.rand(1)[0])
+        Nb = 2 + int(5 * backend.rand(1)[0])
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
+        dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
+        delta = float(10. * eps + backend.rand(1)[0])
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
+        fgrad = backend.rand(3, Nproj, dtype=dtype)
+        h = backend.rand(Nb, dtype=dtype)
+        y = backend.rand(Nproj, Nb, dtype=dtype)
+        
+        # evaluate adjA(y) using monosrc.backproj2d        
+        rfft_mode = backend.rand(1)[0] > 0.5
+        adjAy1 = monosrc.backproj3d(y, delta, B, h, fgrad, backend=backend, out_shape=(N1, N2, N3), rfft_mode=rfft_mode, eps=eps)
+        
+        # compute matricial representation of A and its adjoint over this dataset
+        A = lambda x : monosrc.proj3d(x, delta, B, h, fgrad, backend=backend, rfft_mode=rfft_mode, eps=eps)
+        arr_to_vec = lambda arr : arr.reshape((-1,))
+        vec_to_arr = lambda vec, shape: vec.reshape(shape)
+        m = Nproj * Nb
+        n = N1 * N2 * N3
+        M = backend.zeros([m, n], dtype=dtype)
+        v = backend.zeros((n,), dtype=dtype)
+        for col in range(n):
+            v[col-1] = 0
+            v[col] = 1
+            M[:,col] = arr_to_vec(A(vec_to_arr(v, (N1, N2, N3))))
+        
+        # evaluate adjA(y) by matrix-vector multiplication
+        Mt = backend.transpose(M)
+        adjAy2 = vec_to_arr(Mt @ arr_to_vec(y), (N1, N2, N3))
+        rel = utils._relerr_(adjAy1, adjAy2, backend=backend, notest=True)
+        assert rel < tol * eps
+
+
+def test_3d_toeplitz_kernel(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -261,17 +276,17 @@ def test_3d_toeplitz_kernel(libname, dtype, nruns=100, tol=1000):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(15*backend.rand(1)[0])
-        Nb = 2 + int(40*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(15 * backend.rand(1)[0])
+        Nb = 2 + int(40 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
@@ -291,13 +306,9 @@ def test_3d_toeplitz_kernel(libname, dtype, nruns=100, tol=1000):
         phi = monosrc.compute_3d_toeplitz_kernel(B, h, h, delta, fgrad, (2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=rfft_mode, nodes=nodes)
         
         # apply 2D convolution
-        #u_large = backend.zeros([2*N1, 2*N2, 2*N3], dtype=backend.lib_to_str_dtypes[u.dtype])
-        #u_large[:N1, :N2, :N3] = u
-        #out = backend.irfftn(backend.rfftn(phi) * backend.rfftn(u_large), s=u_large.shape)[N1::,N2::,N3::]
         out = monosrc.apply_3d_toeplitz_kernel(u, backend.rfftn(phi), backend=backend)
         
         # check that `adjAAu` and `out` are close to each other
-        #rel = backend.abs(adjAAu - out).max() / backend.sqrt((adjAAu**2).sum())
-        rel = backend.sqrt(((adjAAu - out)**2).sum()) / backend.sqrt((adjAAu**2).sum())
-        assert rel < tol*eps
-        
+        rel = utils._relerr_(adjAAu, out, backend=backend, notest=True)
+        assert rel < tol * eps
+
