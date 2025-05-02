@@ -2,6 +2,26 @@
 
 <!--next-version-placeholder-->
 
+## Future v1.1.0 (current main branch)
+
+- improved unitary tests [#14](../../pull/14)
+
+- added spectral-spatial 4D projection, backprojection and Topelitz
+  operators
+  ([src/pyepri/spectralspatial.py](src/pyepri/spectral-spatial.py),
+  [#13](../../pull/13))
+
+- added unit tests for 4D spectral-spatial operators
+  ([tests/test_4d_spectralspatial.py](tests/test_4d_spectralspatial.py),
+  [#13](../../pull/13))
+
+- added interactive 4D spectral-spatial image displayer
+  ([src/pyepri/displayers.py](src/pyepri/displayers.py),
+  [#13](../../pull/13))
+
+- made some minor corrections in the documentation
+  ([#13](../../pull/13)).
+
 ## v1.0.4 (March 7th, 2025)
 
 ### Documentation
@@ -10,7 +30,7 @@
 
 ### Code 
 
-- Removed escape character `\` from class docstrings in
+- removed escape character `\` from class docstrings in
   [backends.py](src/pyepri/backends.py) and
   [displayers.py](src/pyepri/displayers.py) to avoid SyntaxWarning
   ([#8](../../pull/8))
