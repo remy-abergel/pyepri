@@ -24,17 +24,17 @@ def test_proj3d_rfftmode(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(15*backend.rand(1)[0])
-        N2 = 1 + int(15*backend.rand(1)[0])
-        N3 = 1 + int(15*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(15 * backend.rand(1)[0])
+        N2 = 1 + int(15 * backend.rand(1)[0])
+        N3 = 1 + int(15 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
@@ -71,17 +71,17 @@ def test_backproj3d_rfftmode(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(15*backend.rand(1)[0])
-        N2 = 1 + int(15*backend.rand(1)[0])
-        N3 = 1 + int(15*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(15 * backend.rand(1)[0])
+        N2 = 1 + int(15 * backend.rand(1)[0])
+        N3 = 1 + int(15 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
         B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
@@ -119,17 +119,17 @@ def test_3d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(15*backend.rand(1)[0])
-        N2 = 1 + int(15*backend.rand(1)[0])
-        N3 = 1 + int(15*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(15 * backend.rand(1)[0])
+        N2 = 1 + int(15 * backend.rand(1)[0])
+        N3 = 1 + int(15 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h1 = backend.rand(Nb, dtype=dtype)
         h2 = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
@@ -164,17 +164,17 @@ def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(15*backend.rand(1)[0])
-        Nb = 2 + int(40*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(15 * backend.rand(1)[0])
+        Nb = 2 + int(40 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
@@ -245,7 +245,7 @@ def test_proj2d_and_backproj2d_matrices(libname, dtype, nruns, tol):
             v[col-1] = 0
             v[col] = 1
             M[:,col] = arr_to_vec(A(vec_to_arr(v, (N1, N2, N3))))
-
+        
         # evaluate adjA(y) by matrix-vector multiplication
         Mt = backend.transpose(M)
         adjAy2 = vec_to_arr(Mt @ arr_to_vec(y), (N1, N2, N3))
@@ -276,17 +276,17 @@ def test_3d_toeplitz_kernel(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10*backend.rand(1)[0])
-        N2 = 1 + int(10*backend.rand(1)[0])
-        N3 = 1 + int(10*backend.rand(1)[0])
-        Nproj = 1 + int(15*backend.rand(1)[0])
-        Nb = 2 + int(40*backend.rand(1)[0])
+        N1 = 1 + int(10 * backend.rand(1)[0])
+        N2 = 1 + int(10 * backend.rand(1)[0])
+        N3 = 1 + int(10 * backend.rand(1)[0])
+        Nproj = 1 + int(15 * backend.rand(1)[0])
+        Nb = 2 + int(40 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
@@ -306,9 +306,6 @@ def test_3d_toeplitz_kernel(libname, dtype, nruns, tol):
         phi = monosrc.compute_3d_toeplitz_kernel(B, h, h, delta, fgrad, (2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=rfft_mode, nodes=nodes)
         
         # apply 2D convolution
-        #u_large = backend.zeros([2*N1, 2*N2, 2*N3], dtype=backend.lib_to_str_dtypes[u.dtype])
-        #u_large[:N1, :N2, :N3] = u
-        #out = backend.irfftn(backend.rfftn(phi) * backend.rfftn(u_large), s=u_large.shape)[N1::,N2::,N3::]
         out = monosrc.apply_3d_toeplitz_kernel(u, backend.rfftn(phi), backend=backend)
         
         # check that `adjAAu` and `out` are close to each other

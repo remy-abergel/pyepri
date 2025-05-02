@@ -24,21 +24,22 @@ def test_proj3d_rfftmode(libname, dtype, nruns, tol):
         
         # sample random number of sources and random number of
         # experiment
-        K = 1 + int(5*backend.rand(1)[0])
-        L = 1 + int(5*backend.rand(1)[0])
+        K = 1 + int(5 * backend.rand(1)[0])
+        L = 1 + int(5 * backend.rand(1)[0])
         
         # sample random dimensions
-        Nb = 2 + int(40*backend.rand(1)[0])
-        u_shape = [(1 + int(15*backend.rand(1)[0]), 1 +
-                    int(15*backend.rand(1)[0]), 1 + int(15*backend.rand(1)[0]))
+        Nb = 2 + int(40 * backend.rand(1)[0])
+        u_shape = [(1 + int(16 * backend.rand(1)[0]),
+                    1 + int(16 * backend.rand(1)[0]),
+                    1 + int(16 * backend.rand(1)[0]))
                    for j in range(K)]
-        s_shape = [(1 + int(25*backend.rand(1)[0]), Nb) for i in range(L)]
+        s_shape = [(1 + int(20 * backend.rand(1)[0]), Nb) for i in range(L)]
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = [[backend.rand(Nb, dtype=dtype) for j in range(K)] for i in range(L)]
         fgrad = [backend.rand(3, s[0], dtype=dtype) for s in s_shape]
         
@@ -76,24 +77,25 @@ def test_backproj3d_rfftmode(libname, dtype, nruns, tol):
         
         # sample random number of sources and random number of
         # experiment
-        K = 1 + int(5*backend.rand(1)[0])
-        L = 1 + int(5*backend.rand(1)[0])
+        K = 1 + int(5 * backend.rand(1)[0])
+        L = 1 + int(5 * backend.rand(1)[0])
         
         # sample random dimensions
-        Nb = 2 + int(40*backend.rand(1)[0])
-        u_shape = [(1 + int(15*backend.rand(1)[0]), 1 +
-                    int(15*backend.rand(1)[0]), 1 + int(15*backend.rand(1)[0]))
+        Nb = 2 + int(40 * backend.rand(1)[0])
+        u_shape = [(1 + int(16 * backend.rand(1)[0]),
+                    1 + int(16 * backend.rand(1)[0]),
+                    1 + int(16 * backend.rand(1)[0]))
                    for j in range(K)]
-        s_shape = [(1 + int(25*backend.rand(1)[0]), Nb) for i in range(L)]
+        s_shape = [(1 + int(20 * backend.rand(1)[0]), Nb) for i in range(L)]
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * B0 + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = [[backend.rand(Nb, dtype=dtype) for j in range(K)] for i in range(L)]
         fgrad = [backend.rand(3, s[0], dtype=dtype) for s in s_shape]
-                
+        
         # sample random 3D projections
         s = [backend.rand(s[0], Nb, dtype=dtype) for s in s_shape]
         
@@ -127,21 +129,22 @@ def test_3d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
         
         # sample random number of sources and random number of
         # experiment
-        K = 1 + int(5*backend.rand(1)[0])
-        L = 1 + int(5*backend.rand(1)[0])
+        K = 1 + int(5 * backend.rand(1)[0])
+        L = 1 + int(5 * backend.rand(1)[0])
         
         # sample random dimensions
-        Nb = 2 + int(40*backend.rand(1)[0])
-        u_shape = [(1 + int(15*backend.rand(1)[0]), 1 +
-                    int(15*backend.rand(1)[0]), 1 + int(15*backend.rand(1)[0]))
+        Nb = 2 + int(40 * backend.rand(1)[0])
+        u_shape = [(1 + int(16 * backend.rand(1)[0]),
+                    1 + int(16 * backend.rand(1)[0]),
+                    1 + int(16 * backend.rand(1)[0]))
                    for j in range(K)]
-        s_shape = [(1 + int(25*backend.rand(1)[0]), Nb) for i in range(L)]
+        s_shape = [(1 + int(20 * backend.rand(1)[0]), Nb) for i in range(L)]
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10 * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = [[backend.rand(Nb, dtype=dtype) for j in range(K)] for i in range(L)]
         fgrad = [backend.rand(3, s[0], dtype=dtype) for s in s_shape]
 
@@ -175,21 +178,22 @@ def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns, tol):
         
         # sample random number of sources and random number of
         # experiment
-        K = 1 + int(5*backend.rand(1)[0])
-        L = 1 + int(5*backend.rand(1)[0])
+        K = 1 + int(5 * backend.rand(1)[0])
+        L = 1 + int(5 * backend.rand(1)[0])
         
         # sample random dimensions
-        Nb = 2 + int(50*backend.rand(1)[0])
-        u_shape = [(1 + int(15*backend.rand(1)[0]), 1 +
-                    int(15*backend.rand(1)[0]), 1 + int(15*backend.rand(1)[0]))
+        Nb = 2 + int(50 * backend.rand(1)[0])
+        u_shape = [(1 + int(16 * backend.rand(1)[0]),
+                    1 + int(16 * backend.rand(1)[0]),
+                    1 + int(16 * backend.rand(1)[0]))
                    for j in range(K)]
-        s_shape = [(1 + int(25*backend.rand(1)[0]), Nb) for i in range(L)]
+        s_shape = [(1 + int(20 * backend.rand(1)[0]), Nb) for i in range(L)]
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = [[backend.rand(Nb, dtype=dtype) for j in range(K)] for i in range(L)]
         fgrad = [backend.rand(3, s[0], dtype=dtype) for s in s_shape]
         
@@ -236,21 +240,22 @@ def test_3d_toeplitz_kernel(libname, dtype, nruns, tol):
         
         # sample random number of sources and random number of
         # experiment
-        K = 1 + int(5*backend.rand(1)[0])
-        L = 1 + int(5*backend.rand(1)[0])
+        K = 1 + int(5 * backend.rand(1)[0])
+        L = 1 + int(5 * backend.rand(1)[0])
         
         # sample random dimensions
-        Nb = 2 + int(40*backend.rand(1)[0])
-        u_shape = [(1 + int(15*backend.rand(1)[0]), 1 +
-                    int(15*backend.rand(1)[0]), 1 + int(15*backend.rand(1)[0]))
+        Nb = 2 + int(40 * backend.rand(1)[0])
+        u_shape = [(1 + int(20 * backend.rand(1)[0]),
+                    1 + int(20 * backend.rand(1)[0]),
+                    1 + int(20 * backend.rand(1)[0]))
                    for j in range(K)]
-        s_shape = [(1 + int(25*backend.rand(1)[0]), Nb) for i in range(L)]
+        s_shape = [(1 + int(20 * backend.rand(1)[0]), Nb) for i in range(L)]
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = [[backend.rand(Nb, dtype=dtype) for j in range(K)] for i in range(L)]
         fgrad = [backend.rand(3, s[0], dtype=dtype) for s in s_shape]
         

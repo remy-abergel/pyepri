@@ -34,7 +34,7 @@ def test_proj4d_rfftmode(libname, dtype, nruns, tol):
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
         # sample random 4D image
@@ -80,7 +80,7 @@ def test_proj4d_memory_usage(libname, dtype, nruns, tol):
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
         # sample random 4D image
@@ -130,7 +130,7 @@ def test_backproj4d_rfftmode(libname, dtype, nruns, tol):
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
         # sample random 4D projections
@@ -177,7 +177,7 @@ def test_backproj4d_memory_usage(libname, dtype, nruns, tol):
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
         # sample random 4D projections
@@ -231,7 +231,7 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
         # compute Toeplitz kernel (with rfft_mode enabled or not)
@@ -274,7 +274,7 @@ def test_proj4d_and_backproj4d_adjointness(libname, dtype, nruns, tol):
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
         # sample random signals (x=image, y=projections)
@@ -382,7 +382,7 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
         # compute Toeplitz kernel (with rfft_mode enabled or not)
@@ -425,7 +425,7 @@ def test_4d_toeplitz_kernel_memory_usage(libname, dtype, nruns, tol):
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
         # compute Toeplitz kernel (with rfft_mode enabled or not)
@@ -470,7 +470,7 @@ def test_4d_toeplitz_kernel(libname, dtype, nruns, tol):
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
         # sample random image

@@ -24,16 +24,16 @@ def test_proj2d_rfftmode(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(16*backend.rand(1)[0])
-        N2 = 1 + int(16*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(16 * backend.rand(1)[0])
+        N2 = 1 + int(16 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(2, Nproj, dtype=dtype)
         
@@ -70,16 +70,16 @@ def test_backproj2d_rfftmode(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(16*backend.rand(1)[0])
-        N2 = 1 + int(16*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(16 * backend.rand(1)[0])
+        N2 = 1 + int(16 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(2, Nproj, dtype=dtype)
         
@@ -117,16 +117,16 @@ def test_2d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(16*backend.rand(1)[0])
-        N2 = 1 + int(16*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(16 * backend.rand(1)[0])
+        N2 = 1 + int(16 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h1 = backend.rand(Nb, dtype=dtype)
         h2 = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(2, Nproj, dtype=dtype)
@@ -161,16 +161,16 @@ def test_proj2d_and_backproj2d_adjointness(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(16*backend.rand(1)[0])
-        N2 = 1 + int(16*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(16 * backend.rand(1)[0])
+        N2 = 1 + int(16 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(2, Nproj, dtype=dtype)
         
@@ -202,7 +202,7 @@ def test_proj2d_and_backproj2d_matrices(libname, dtype, nruns, tol):
         backend = backends.create_torch_backend('cuda')
     elif libname == 'cupy': 
         backend = backends.create_cupy_backend()
-        
+    
     # retrieve machine epsilon
     #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
     eps = 1e-15 if dtype == 'float64' else 1e-6
@@ -240,14 +240,14 @@ def test_proj2d_and_backproj2d_matrices(libname, dtype, nruns, tol):
             v[col-1] = 0
             v[col] = 1
             M[:,col] = arr_to_vec(A(vec_to_arr(v, (N1, N2))))
-
+        
         # evaluate adjA(y) by matrix-vector multiplication
         Mt = backend.transpose(M)
         adjAy2 = vec_to_arr(Mt @ arr_to_vec(y), (N1, N2))
         rel = utils._relerr_(adjAy1, adjAy2, backend=backend, notest=True)
         assert rel < tol * eps
-        
-    
+
+
 def test_2d_toeplitz_kernel(libname, dtype, nruns, tol):
     
     # create backend
@@ -271,16 +271,16 @@ def test_2d_toeplitz_kernel(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(16*backend.rand(1)[0])
-        N2 = 1 + int(16*backend.rand(1)[0])
-        Nproj = 1 + int(25*backend.rand(1)[0])
-        Nb = 2 + int(50*backend.rand(1)[0])
+        N1 = 1 + int(16 * backend.rand(1)[0])
+        N2 = 1 + int(16 * backend.rand(1)[0])
+        Nproj = 1 + int(25 * backend.rand(1)[0])
+        Nb = 2 + int(50 * backend.rand(1)[0])
         
         # sample random inputs 
-        B0 = backend.cast(200+100*backend.rand(1)[0], dtype)
+        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
         dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
         delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype)*dB
+        B = B0 + backend.arange(Nb, dtype=dtype) * dB
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(2, Nproj, dtype=dtype)
         
@@ -300,9 +300,6 @@ def test_2d_toeplitz_kernel(libname, dtype, nruns, tol):
         phi = monosrc.compute_2d_toeplitz_kernel(B, h, h, delta, fgrad, (2*N1, 2*N2), backend=backend, eps=eps, rfft_mode=rfft_mode, nodes=nodes)
         
         # apply 2D convolution
-        #u_large = backend.zeros([2*N1, 2*N2], dtype=backend.lib_to_str_dtypes[u.dtype])
-        #u_large[:N1, :N2] = u
-        #out = backend.irfft2(backend.rfft2(phi) * backend.rfft2(u_large), s=u_large.shape)[N1::,N2::]
         out = monosrc.apply_2d_toeplitz_kernel(u, backend.rfft2(phi), backend=backend)
         
         # check that `adjAAu` and `out` are close to each other
