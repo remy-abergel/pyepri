@@ -1,5 +1,5 @@
-"""This module contains standard operators usually involved in signal
-or image processing.
+"""This module contains standard functions, like operators usually
+involved in signal or image processing.
 
 """
 import pyepri.checks as checks
@@ -58,7 +58,7 @@ def grad1d(u, backend=None, notest=False):
     return G
 
 def div1d(P, backend=None, notest=False):
-    """discrete divergence of a mono-dimensional array (opposite adjoint of grad1d).
+    """Discrete divergence of a mono-dimensional array (opposite adjoint of grad1d).
     
     Parameters
     ----------
@@ -168,7 +168,7 @@ def grad2d(u, backend=None, notest=False):
     return G
 
 def div2d(P, backend=None, notest=False):
-    """discrete divergence of a 2D field vector (opposite adjoint of grad2d).
+    """Discrete divergence of a 2D field vector (opposite adjoint of grad2d).
     
     Parameters
     ----------
@@ -284,7 +284,7 @@ def grad3d(u, backend=None, notest=False):
     return G
 
 def div3d(P, backend=None, notest=False):
-    """discrete divergence of a 3D field vector (opposite adjoint of grad3d).
+    """Discrete divergence of a 3D field vector (opposite adjoint of grad3d).
 
     Parameters
     ----------
@@ -350,6 +350,60 @@ def div3d(P, backend=None, notest=False):
     # return output divergence
     return div
 
+def _relerr_(u, v, backend=None, nrm=1., notest=False):
+    """Compute relative error between two arrays.    
+    
+    Parameters
+    ----------
+    
+    u : array_like (with type `backend.cls`)
+        First input array.
+    
+    v : array_like (with type `backend.cls`)
+        Second input array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input arrays ``u`` and ``v``.
+    
+    nrm : float, optional
+        A normalization factor to be applied to both input array
+        (useful to avoid underflow or overflow issues in the
+        computation of the relative error). If not given, ``nrm`` will
+        be taken equal to one over the infinite norm of ``u``, i.e.,
+        ``nrm = 1. / ||u||_inf``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+        
+    Return
+    ------
+    
+    rel : float
+        The relative error ``||nrm * u - nrm * v|| / ||nrm * u||``
+        where ``||.||`` denotes the l2 norm.
+
+    """   
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(u=u, v=v)
+    
+    # consistency checks
+    if not notest:
+        checks._check_backend_(backend, u=u, v=v)
+        checks._check_dtype_(u.dtype, v=v)
+        checks._check_ndim_(u.ndim, v=v)
+    
+    # deal with nrm default value
+    if nrm is None:
+        nrm = 1. / backend.abs(u).max().item()
+        
+    # compute & return relative error between nrm * u and nrm * v
+    rel = backend.sqrt((backend.abs(nrm * u - nrm * v)**2).sum() / (backend.abs(nrm * u)**2).sum()).item()
+    return rel
 
 def _check_nd_inputs_(ndims, backend, u=None, P=None):
     """Factorized consistency checks for functions in the :py:mod:`pyepri.utils` submodule."""
