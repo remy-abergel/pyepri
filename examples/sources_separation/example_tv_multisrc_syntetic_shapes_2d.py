@@ -7,38 +7,54 @@ TEMPO using TV regularized least-squares (synthetic experiment).
 
 """
 
-# %% Generate synthetic projections (mixture of TAM & TEMPO)
 
-# -------------- #
-# Import modules #
-# -------------- #
-import math
-import matplotlib.pyplot as plt
-import numpy as np
-import pyepri.backends as backends
-import pyepri.datasets as datasets
-import pyepri.displayers as displayers
-import pyepri.monosrc as monosrc
-import pyepri.processing as processing
-plt.ion()
+# %%
+# Import needed modules
+# ---------------------
 
-# -------------- #
-# Create backend #
-# -------------- #
+# sphinx_gallery_thumbnail_number = 1
+import math # basic math functions
+import numpy as np # for array manipulations
+import matplotlib.pyplot as plt # tools for data visualization
+import pyepri.backends as backends # to instanciate PyEPRI backends
+import pyepri.datasets as datasets # to retrieve the path (on your own machine) of the demo dataset
+import pyepri.displayers as displayers # tools for displaying images (with update along the computation)
+import pyepri.monosrc as monosrc # tools related to standard EPR operators (projections, backprojections, ...)
+import pyepri.processing as processing # tools for EPR image reconstruction
+import pyepri.io as io # tools for loading EPR datasets (in BES3T or Python .PKL format)
+
+# %%
+# Create backend
+# --------------
 #
 # We create a numpy backend here because it should be available on
-# your system (as a mandatory dependency of the PyEPRI
-# package).
+# your system (as a mandatory dependency of the PyEPRI package). You
+# can try another backend (if available on your system) by
+# uncommenting the appropriate line below (using a GPU backend may
+# drastically reduce the computation time).
 #
-# However, you can also try another backend (if available on your
-# system) by uncommenting one of the following commands. Depending on
-# your system, using another backend may drastically reduce the
-# computation time.
+backend = backends.create_numpy_backend() # default numpy backend (CPU)
+#backend = backends.create_torch_backend('cpu') # uncomment here for torch-cpu backend (CPU)
+#backend = backends.create_cupy_backend() # uncomment here for cupy backend (GPU)
+#backend = backends.create_torch_backend('cuda') # uncomment here for torch-gpu backend (GPU)
+
+
+# %% Generate synthetic projections (mixture of TAM & TEMPO)
 #
-backend = backends.create_numpy_backend()
-#backend = backends.create_torch_backend('cpu') # uncomment here for torch-cpu backend
-#backend = backends.create_cupy_backend() # uncomment here for cupy backend
-#backend = backends.create_torch_backend('cuda') # uncomment here for torch-gpu backend
+# Let us create two synthetic 2D images containing binary shapes (one
+# disk for the first image, and one rectangle for the second one). We
+# will then load two (real) EPR spectra (one spectrum of TAM and one
+# spectrum of TEMPO).
+#
+# In this synthetic experiment, the first synthetic image (containing
+# the disk) shall represent the 2D concentration mapping of TAM and
+# the second one (containing the rectangle) shall represent the 2D
+# concentration mapping of a TEMPO.
+#
+# For each species, a synthetic sequence of projection is generated,
+# then the two sequences are summed to simulate the sequence of
+# projections corresponding to a mixture of TAM and TEMPO.
+#
 
 #--------------------------#
 # Compute synthetic images # 
@@ -130,19 +146,31 @@ plt.title("Synthetic projections of the mixture (a) + (b)")
 plt.xlabel("B: homogeneous magnetic field intensity (G)")
 _ = plt.ylabel("field gradient orientation (degree)")
 
-# %% Source separation (reconstruction of the TAM & TEMPO source images)
 
-# set reconstruction parameters
-tam_shape = (100, 100) # required size for the output TAM source
-tempo_shape = (100, 100) # required size for the output TEMPO source
+# %%
+# Source separation (reconstruction of the TAM & TEMPO source images)
+# -------------------------------------------------------------------
+#
+# Now let us perform the source separation, that is, the
+# reconstruction of two 2D images: the concentration mappings of the
+# (simulated) TAM species that of the (simulated) TEMPO species.
+#
+
+# ----------------------------- #
+# Set reconstruction parameters #
+# ----------------------------- #
+tam_shape = (100, 100) # required shape (number of pixels along each axe) for the output TAM source
+tempo_shape = (100, 100) # required shape (number of pixels along each axe) for the output TEMPO source
 out_shape = (tam_shape, tempo_shape) # output image shape
-delta = 3e-2 # sampling step of the reconstruction (cm)
-lbda = 10 # normalized regularity parameter
+delta = 3e-2 # sampling step in the same length unit as the provided field gradient coordinates (here cm)
+lbda = 10 # normalized regularity parameter (arbitrary unit)
 proj = (proj_mixture,) # list of input experiments (here only one experiment)
 h = ((h_tam, h_tempo),) # list of source spectra associated to each experiment
 fgrad = (fg,) # list of field gradient vectors associated to each experiment
 
-# set optional parameters
+# ----------------------- #
+# Set optional parameters #
+# ----------------------- #
 nitermax = 5000 # maximal number of iterations
 verbose = False # disable console verbose mode
 video = True # enable video display
@@ -150,8 +178,10 @@ Ndisplay = 20 # refresh display rate (iteration per refresh)
 eval_energy = False # disable TV-regularized least-square energy
                     # evaluation each Ndisplay iteration
 
-# customize 2D multi-sources image displayer: also optional, customize
-# display (when video mode is enabled)
+# ---------------------------------------------------------- #
+# Customize 2D multi-sources image displayer (optional, used #
+# only when video=True above)                                #
+# ---------------------------------------------------------- #
 tam_shape = out_shape[0]
 tempo_shape = out_shape[1]
 xgrid_tam = (-(tam_shape[1]//2) + np.arange(tam_shape[1])) * delta
@@ -164,9 +194,8 @@ grids = (grid_tam, grid_tempo) # provide spatial sampling grids for each source
 unit = 'cm' # provide length unit associated to the grids
 display_labels = True # display axes labels within subplots
 adjust_dynamic = True # maximize displayed dynamic at each refresh
-boundaries = 'same' #  give all subplots the same axes boundaries
-                    #  (ensure same pixel size for each displayed
-                    #  slice)
+boundaries = 'same' # give all subplots the same axes boundaries (ensure same pixel size for
+                    # each displayed slice)
 displayFcn = lambda u : [np.maximum(im, 0) for im in u] # display
                                                         # positive
                                                         # part of each
@@ -182,7 +211,9 @@ displayer = displayers.create_2d_displayer(nsrc=2, units=unit,
                                            src_labels=src_labels,
                                            displayFcn=displayFcn)
                     
-# run processing
+# --------------------------------------------------------------------- #
+# Configure and run the TV-regularized multisource image reconstruction #
+# --------------------------------------------------------------------- #
 out = processing.tv_multisrc(proj, B, fgrad, delta, h, lbda,
                              out_shape, backend=backend, tol=1e-5,
                              nitermax=nitermax,
