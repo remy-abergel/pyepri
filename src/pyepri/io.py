@@ -178,6 +178,11 @@ def read_bruker_bes3t_dataset(name, squeeze=True, stack=True, dtype=None, backen
         shape, or use ``stack = False`` to reshape the data (Z-axis
         signals are stacked vertically along the first axis).
     
+    dtype : str, optional
+        Desired datatype (given in str format) for the loaded data
+        arrays (spectrum or projections, field gradient vector
+        coordinates, etc.).
+    
     backends : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
@@ -385,9 +390,9 @@ def load(path, backend=None, dtype='float32'):
     path : str
         The full filename of the dataset (including the .DSC or .DTA
         or .PKL extension). If the dataset is provided in BES3T
-        format, the user may supply either the path to the .DSC file
-        or the .DTA file interchangeably (remind that the two files
-        must be stored in the same folder).
+        format, the user may supply either the .DSC or .DTA file path;
+        both are accepted interchangeably (remind however that the two
+        files must be stored in the same folder).
     
     backends : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
@@ -406,7 +411,7 @@ def load(path, backend=None, dtype='float32'):
     out : dict
         A dictionary containing the retrieved data, with the same
         key-value as those described above for .PKL input dataset.
-    
+
     """
     
     # instantiate backend (if necessary)
