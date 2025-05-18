@@ -1,7 +1,8 @@
-"""Basic function for loading data in Bruker BES3T format.
+"""Basic functions for loading datasets (in Bruker BES3T format or
+pickle Python format).
 
-The functions of this module were adapted from the open source MIT
-licensed `DIVE package (v0.2.1)
+The functions of this module related to BES3T format were adapted from
+the open source MIT licensed `DIVE package (v0.2.1)
 <https://github.com/StollLab/dive/releases/tag/v0.2.1>`_, as detailed
 below:
 
@@ -46,6 +47,7 @@ We provide below the copy of the license file of the DIVE package
 """
 import numpy as np
 import os
+import pickle
 import re
 import pyepri.backends as backends
 from warnings import warn
@@ -175,6 +177,11 @@ def read_bruker_bes3t_dataset(name, squeeze=True, stack=True, dtype=None, backen
         the Z axis, set ``stack = True`` to keep the original data
         shape, or use ``stack = False`` to reshape the data (Z-axis
         signals are stacked vertically along the first axis).
+    
+    dtype : str, optional
+        Desired datatype (given in str format) for the loaded data
+        arrays (spectrum or projections, field gradient vector
+        coordinates, etc.).
     
     backends : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
@@ -353,3 +360,88 @@ def read_bruker_bes3t_dataset(name, squeeze=True, stack=True, dtype=None, backen
     return B, data, parameters
 
 read_bruker_best3_dataset = read_bruker_bes3t_dataset # for backward compatibility (typo in function name introduced in v1.0.0)
+
+def load(path, backend=None, dtype='float32'):
+    """load a dataset stored in BES3T (.DSC or .DTA) or Python pickle (.PKL) format.
+    
+    In case of a BES3T dastaset, both the .DSC file and the .DTA file
+    must be stored in the same directory.
+    
+    Otherwise, when the dataset is stored in .PKL format, it is
+    assumed to contain the following key-values content:
+    
+    + 'DAT': the spectrum or projections measurements;
+    
+    + 'B': a monodimensional array containing the
+      homogeneous magnetic field intensities sampling nodes;
+    
+    Additionally, when the dataset contains projections, it must also
+    contain the following key-value:
+    
+    + 'FGRAD': an two dimensional array containing the coordinates of
+      the sequence of field gradient vectors associated to the measured
+      projections (first row = first coordinate, second row = second
+      coordinate, etc).
+    
+    
+    Parameters
+    ----------
+    
+    path : str
+        The full filename of the dataset (including the .DSC or .DTA
+        or .PKL extension). If the dataset is provided in BES3T
+        format, the user may supply either the .DSC or .DTA file path;
+        both are accepted interchangeably (remind however that the two
+        files must be stored in the same folder).
+    
+    backends : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a numpy backend is instantiated.
+    
+    dtype : str, optional
+        Desired datatype for the loaded data arrays (spectrum or
+        projections, field gradient vector coordinates, etc.).
+    
+    
+    Returns
+    -------
+    
+    out : dict
+        A dictionary containing the retrieved data, with the same
+        key-value as those described above for .PKL input dataset.
+
+    """
+    
+    # instantiate backend (if necessary)
+    if backend is None:
+        backend = backends.create_numpy_backend()
+    
+    # check file format
+    filename, fileextension = os.path.splitext(path)
+    
+    # consistency checks
+    if not os.path.isfile(path):
+        raise RuntimeError(f"File '{path}' does not exist.")
+    if fileextension not in ('.DSC', '.DTA', '.PKL', '.dsc', '.dta', '.pkl'):
+        raise RuntimeError("The input file extension must be in ('.DSC', '.DTA', '.PKL', '.dsc', '.dta', '.pkl')")
+    
+    # load dataset (select loader according to the file extension)
+    if fileextension in (".DSC", ".DTA", ".dsc", ".dta"):
+        B, DAT, PARAM = read_bruker_bes3t_dataset(path, dtype=dtype, backend=backend)
+        dataset = {'B': B, 'DAT': DAT}
+        if 'FGRAD' in PARAM.keys():
+            dataset['FGRAD'] = PARAM['FGRAD']
+            PARAM.pop('FGRAD', None)
+        dataset['PARAM'] = PARAM
+    elif fileextension:
+        with open(path, 'rb') as f:
+            dataset = pickle.load(f)
+        dataset['B'] = backend.from_numpy(dataset['B'].astype(dtype))
+        dataset['DAT'] = backend.from_numpy(dataset['DAT'].astype(dtype))
+        if 'FGRAD' in dataset.keys():
+            dataset['FGRAD'] = backend.from_numpy(dataset['FGRAD'])
+    
+    return dataset
+            

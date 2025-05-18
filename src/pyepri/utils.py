@@ -350,7 +350,7 @@ def div3d(P, backend=None, notest=False):
     # return output divergence
     return div
 
-def _relerr_(u, v, backend=None, nrm=1., notest=False):
+def _relerr_(u, v, backend=None, nrm=None, notest=False):
     """Compute relative error between two arrays.    
     
     Parameters

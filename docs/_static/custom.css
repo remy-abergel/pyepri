@@ -1,3 +1,18 @@
+.pyepricitation p {
+  position: relative;
+  padding-left: 4.5em;
+  /*padding-right: 2.5em;*/
+  text-indent: 0;
+}
+
+.pyepricitation p::before {
+  content: "[ADF25] ";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: bold;
+}
+
 .highlight {
     background: #eeffcc
 }

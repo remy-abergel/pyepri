@@ -116,7 +116,7 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     
     figsize : (float, float), optional
         When given, figsize must be a tuple with length two and such
-        taht ``figsize[0]`` and ``figsize[1]`` are the width and
+        that ``figsize[0]`` and ``figsize[1]`` are the width and
         height in inches of the figure to be displayed. When not
         given, the default setting is that of `matplotlib` (see key
         'figure.figsize' of the matplotlib configuration parameter
@@ -760,11 +760,11 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     return params
 
 
-def init_display_monosrc_2d(u, figsize=None, time_sleep=0.01,
-                            units=None, display_labels=False,
-                            displayFcn=None, cmap=None, grids=None,
-                            origin='lower', aspect=None,
-                            is_notebook=False):
+def init_display_monosrc_2d(u, newfig=True, figsize=None,
+                            time_sleep=0.01, units=None,
+                            display_labels=False, displayFcn=None,
+                            cmap=None, grids=None, origin='lower',
+                            aspect=None, is_notebook=False):
     """Initialize display for a single 2D image.
     
     Parameters
@@ -772,10 +772,14 @@ def init_display_monosrc_2d(u, figsize=None, time_sleep=0.01,
     
     u : ndarray
         Two-dimensional array
+
+    newfig : bool, optional
+        Specify whether the display must be done into a new figure or
+        not.
     
     figsize : (float, float), optional
         When given, figsize must be a tuple with length two and such
-        taht ``figsize[0]`` and ``figsize[1]`` are the width and
+        that ``figsize[0]`` and ``figsize[1]`` are the width and
         height in inches of the figure to be displayed. When not
         given, the default setting is that of `matplotlib` (see key
         'figure.figsize' of the matplotlib configuration parameter
@@ -859,8 +863,12 @@ def init_display_monosrc_2d(u, figsize=None, time_sleep=0.01,
             extent = (xgrid[0], xgrid[-1], ygrid[-1], ygrid[0])
     else:
         extent = None
+
+    # draw a new figure (if needed)
+    if newfig:
+        plt.figure(figsize=figsize)
     
-    # draw image & retrieve figure number
+    # draw image
     fg = plt.imshow(im, cmap=cmap, extent=extent, origin=origin, aspect=aspect)
     
     # update figsize (if needed)
@@ -950,12 +958,12 @@ def update_display_monosrc_2d(u, fg, is_notebook=False, displayFcn=None, adjust_
     return
         
 
-def init_display_monosrc_3d(u, figsize=None, time_sleep=0.01,
-                            units=None, display_labels=False,
-                            displayFcn=None, cmap=None, grids=None,
-                            origin='lower', aspect=None,
-                            boundaries='auto', is_notebook=False,
-                            indexes=None):
+def init_display_monosrc_3d(u, newfig=True, figsize=None,
+                            time_sleep=0.01, units=None,
+                            display_labels=False, displayFcn=None,
+                            cmap=None, grids=None, origin='lower',
+                            aspect=None, boundaries='auto',
+                            is_notebook=False, indexes=None):
     """Initialize display for a single 3D image (display the three central slices of a 3D volume).
     
     Parameters
@@ -964,9 +972,13 @@ def init_display_monosrc_3d(u, figsize=None, time_sleep=0.01,
     u : ndarray
         Three-dimensional array
     
+    newfig : bool, optional
+        Specify whether the display must be done into a new figure or
+        not.
+    
     figsize : (float, float), optional
         When given, figsize must be a tuple with length two and such
-        taht ``figsize[0]`` and ``figsize[1]`` are the width and
+        that ``figsize[0]`` and ``figsize[1]`` are the width and
         height in inches of the figure to be displayed. When not
         given, the default setting is that of `matplotlib` (see key
         'figure.figsize' of the matplotlib configuration parameter
@@ -1058,7 +1070,7 @@ def init_display_monosrc_3d(u, figsize=None, time_sleep=0.01,
     
     # compute image to be displayed
     im = u if displayFcn is None else displayFcn(u)
-   
+    
     # retrieve slice images
     if indexes is not None:
         xc = im.shape[1]//2 if indexes[1] is None else indexes[1]
@@ -1071,7 +1083,7 @@ def init_display_monosrc_3d(u, figsize=None, time_sleep=0.01,
     im_01 = im[:, :, zc]
     im_02 = im[:, xc, :]
     im_12 = im[yc, :, :]
-
+    
     # compute imshow extents (if grids are given)
     if grids is not None:
         xgrid, ygrid, zgrid = grids[1], grids[0], grids[2]
@@ -1086,9 +1098,13 @@ def init_display_monosrc_3d(u, figsize=None, time_sleep=0.01,
         zc = zgrid[zc] # slice index is changed into its actual coordinate
     else:
         extents = (None, None, None)
-
+    
     # prepare figure
-    #fg, ax = plt.subplots(1,3)    
+    #fg, ax = plt.subplots(1,3)
+    
+    # draw a new figure (if needed)
+    if newfig:
+        plt.figure(figsize=figsize)    
     
     # update figsize (if needed)
     if figsize is not None:
@@ -1101,19 +1117,19 @@ def init_display_monosrc_3d(u, figsize=None, time_sleep=0.01,
     fg1 = plt.imshow(im_01, cmap=cmap, extent=extents[0],
                      origin=origin, aspect=aspect)
     plt.title("XY slice (Z=%g)" % zc)
-
+    
     # display ZY slice (X = xc)
     plt.subplot(1,3,2)
     fg2 = plt.imshow(im_02, cmap=cmap, extent=extents[1],
                      origin=origin, aspect=aspect)
     plt.title("ZY slice (X=%g)" % xc)
-
+    
     # display ZX slice (Y = yc)
     plt.subplot(1,3,3)
     fg3 = plt.imshow(im_12, cmap=cmap, extent=extents[2],
                      origin=origin, aspect=aspect)
     plt.title("ZX slice (Y=%g)" % yc)
-
+    
     # display axes labels (if needed)
     if display_labels:
         xlab = 'X' if units is None else ('X (%s)' % units)
@@ -1128,7 +1144,7 @@ def init_display_monosrc_3d(u, figsize=None, time_sleep=0.01,
     
     # if same pixel size is needed, give to all subplots the same axes
     # boundaries
-    if boundaries == 'auto':
+    if boundaries == 'same':
         if grids is not None:
             xlim = (min(xgrid[0], zgrid[0]), max(xgrid[-1], zgrid[-1])) 
             ylim = (min(xgrid[0], ygrid[0]), max(xgrid[-1], ygrid[-1]))
@@ -1150,10 +1166,10 @@ def init_display_monosrc_3d(u, figsize=None, time_sleep=0.01,
         fg2.axes.set_ylim(ylim)
         fg3.axes.set_xlim(xlim)
         fg3.axes.set_ylim(ylim)
-
+    
     # aggregate imshow handles
     fg = (fg1, fg2, fg3)
-
+    
     # pause an return
     if is_notebook:
         time.sleep(time_sleep)
@@ -1258,12 +1274,12 @@ def update_display_monosrc_3d(u, fg, is_notebook=False, displayFcn=None, adjust_
     
     return
 
-def init_display_multisrc_2d(u, figsize=None, time_sleep=0.01,
-                             units=None, display_labels=False,
-                             displayFcn=None, cmap=None, grids=None,
-                             origin='lower', aspect=None,
-                             boundaries='auto', is_notebook=False,
-                             src_labels=None):
+def init_display_multisrc_2d(u, newfig=True, figsize=None,
+                             time_sleep=0.01, units=None,
+                             display_labels=False, displayFcn=None,
+                             cmap=None, grids=None, origin='lower',
+                             aspect=None, boundaries='auto',
+                             is_notebook=False, src_labels=None):
     """Initialize display for a sequence of 2D images.
     
     Parameters
@@ -1272,10 +1288,14 @@ def init_display_multisrc_2d(u, figsize=None, time_sleep=0.01,
     u : sequence of ndarray
         The sequence (tuple or list) of two-dimensional images to be
         displayed.
+        
+    newfig : bool, optional
+        Specify whether the display must be done into a new figure or
+        not.
     
     figsize : (float, float), optional
         When given, figsize must be a tuple with length two and such
-        taht ``figsize[0]`` and ``figsize[1]`` are the width and
+        that ``figsize[0]`` and ``figsize[1]`` are the width and
         height in inches of the figure to be displayed. When not
         given, the default setting is that of `matplotlib` (see key
         'figure.figsize' of the matplotlib configuration parameter
@@ -1370,7 +1390,11 @@ def init_display_multisrc_2d(u, figsize=None, time_sleep=0.01,
     # retrieve number of sources 
     nsrc = len(im)
     
-    # display figure
+    # draw a new figure (if needed)
+    if newfig:
+        plt.figure(figsize=figsize)
+    
+    # set figure size (if given)
     if figsize is not None:
         FG = plt.gcf()
         FG.set_figwidth(figsize[0])
@@ -1506,12 +1530,13 @@ def update_display_multisrc_2d(u, fg, is_notebook=False, displayFcn=None, adjust
     return
 
 
-def init_display_multisrc_3d(u, figsize=None, time_sleep=0.01,
-                             units=None, display_labels=False,
-                             displayFcn=None, cmap=None, grids=None,
-                             origin='lower', aspect=None,
-                             boundaries='auto', is_notebook=False,
-                             indexes=None, src_labels=None):
+def init_display_multisrc_3d(u, newfig=True, figsize=None,
+                             time_sleep=0.01, units=None,
+                             display_labels=False, displayFcn=None,
+                             cmap=None, grids=None, origin='lower',
+                             aspect=None, boundaries='auto',
+                             is_notebook=False, indexes=None,
+                             src_labels=None):
     """Initialize display for a sequence of 3D images.
     
     Parameters
@@ -1521,9 +1546,13 @@ def init_display_multisrc_3d(u, figsize=None, time_sleep=0.01,
         The sequence (tuple or list) of three-dimensional images to be
         displayed.
     
+    newfig : bool, optional
+        Specify whether the display must be done into a new figure or
+        not.
+    
     figsize : (float, float), optional
         When given, figsize must be a tuple with length two and such
-        taht ``figsize[0]`` and ``figsize[1]`` are the width and
+        that ``figsize[0]`` and ``figsize[1]`` are the width and
         height in inches of the figure to be displayed. When not
         given, the default setting is that of `matplotlib` (see key
         'figure.figsize' of the matplotlib configuration parameter
@@ -1663,11 +1692,11 @@ def init_display_multisrc_3d(u, figsize=None, time_sleep=0.01,
     else:
         extents = ((None, None, None),)*nsrc
     
-    # retrieve current figure instance
-    _fg_ = plt.gcf()
+    # draw a new figure or retrieve the current one
+    _fg_ = plt.figure(figsize=figsize) if newfig else plt.gcf()
     
     # update figsize (if needed)
-    if figsize is not None:
+    if (not newfig) and (figsize is not None):
         _fg_.set_figwidth(figsize[0])
         _fg_.set_figheight(figsize[1])
     
@@ -1859,8 +1888,8 @@ def update_display_multisrc_3d(u, fg, is_notebook=False, displayFcn=None, adjust
     return
 
 
-def create_2d_displayer(nsrc=1, figsize=None, displayFcn=None,
-                        time_sleep=0.01, units=None,
+def create_2d_displayer(nsrc=1, newfig=True, figsize=None,
+                        displayFcn=None, time_sleep=0.01, units=None,
                         adjust_dynamic=True, display_labels=False,
                         cmap=None, grids=None, origin='lower',
                         aspect=None, boundaries='auto', indexes=None,
@@ -1874,7 +1903,7 @@ def create_2d_displayer(nsrc=1, figsize=None, displayFcn=None,
 
     """
     ndim = 2
-    return Displayer(nsrc, ndim, figsize=figsize,
+    return Displayer(nsrc, ndim, newfig=newfig, figsize=figsize,
                      displayFcn=displayFcn, time_sleep=time_sleep,
                      units=units, adjust_dynamic=adjust_dynamic,
                      display_labels=display_labels, cmap=cmap,
@@ -1882,12 +1911,13 @@ def create_2d_displayer(nsrc=1, figsize=None, displayFcn=None,
                      boundaries=boundaries, indexes=indexes,
                      src_labels=src_labels)
 
-def create_3d_displayer(nsrc=1, figsize=None, displayFcn=None,
-                        time_sleep=0.01, units=None, extents=None,
-                        adjust_dynamic=True, display_labels=False,
-                        cmap=None, grids=None, origin='lower',
-                        aspect=None, boundaries='auto',
-                        indexes=None, src_labels=None):
+def create_3d_displayer(nsrc=1, newfig=True, figsize=None,
+                        displayFcn=None, time_sleep=0.01, units=None,
+                        extents=None, adjust_dynamic=True,
+                        display_labels=False, cmap=None, grids=None,
+                        origin='lower', aspect=None,
+                        boundaries='auto', indexes=None,
+                        src_labels=None):
     """Instantiate a single 3D image displayer.
 
     This function instantiate a ``pyepri.Displayer`` class instance
@@ -1897,7 +1927,7 @@ def create_3d_displayer(nsrc=1, figsize=None, displayFcn=None,
 
     """
     ndim = 3
-    return Displayer(nsrc, ndim, figsize=figsize,
+    return Displayer(nsrc, ndim, newfig=newfig, figsize=figsize,
                      displayFcn=displayFcn, time_sleep=time_sleep,
                      units=units, adjust_dynamic=adjust_dynamic,
                      display_labels=display_labels, cmap=cmap,
@@ -1905,10 +1935,10 @@ def create_3d_displayer(nsrc=1, figsize=None, displayFcn=None,
                      boundaries=boundaries, indexes=indexes,
                      src_labels=src_labels)
 
-def create(u, figsize=None, displayFcn=None, time_sleep=0.01,
-           units=None, extents=None, adjust_dynamic=True,
-           display_labels=False, cmap=None, grids=None,
-           origin='lower', aspect=None, boundaries='auto',
+def create(u, newfig=True, figsize=None, displayFcn=None,
+           time_sleep=0.01, units=None, extents=None,
+           adjust_dynamic=True, display_labels=False, cmap=None,
+           grids=None, origin='lower', aspect=None, boundaries='auto',
            indexes=None, src_labels=None):
     """Instantiate a Displayer object suited to the input parameter.
     
@@ -1935,7 +1965,7 @@ def create(u, figsize=None, displayFcn=None, time_sleep=0.01,
         force_multisrc = False
 
     # create & return Displayer object instance
-    return Displayer(nsrc, ndim, figsize=figsize,
+    return Displayer(nsrc, ndim, newfig=newfig, figsize=figsize,
                      displayFcn=displayFcn, time_sleep=time_sleep,
                      units=units, adjust_dynamic=adjust_dynamic,
                      display_labels=display_labels, cmap=cmap,
@@ -1976,8 +2006,8 @@ def _check_inputs_(nsrc=None, ndim=None, displayFcn=None,
                    time_sleep=None, units=None, adjust_dynamic=None,
                    display_labels=None, cmap=None, grids=None,
                    origin=None, aspect=None, boundaries=None,
-                   u=__EMPTY_ARRAY__, figsize=None, indexes=None,
-                   src_labels=None):
+                   u=__EMPTY_ARRAY__, newfig=None, figsize=None,
+                   indexes=None, src_labels=None):
     """Factorized consistency checks for functions in this :py:mod:`pyepri.displayers` submodule.
 
     """
@@ -1985,7 +2015,7 @@ def _check_inputs_(nsrc=None, ndim=None, displayFcn=None,
     # type checks
     checks._check_type_(int, nsrc=nsrc, ndim=ndim)
     checks._check_type_(float, time_sleep=time_sleep)
-    checks._check_type_(bool, adjust_dynamic=adjust_dynamic, display_labels=display_labels)
+    checks._check_type_(bool, adjust_dynamic=adjust_dynamic, display_labels=display_labels, newfig=newfig)
     checks._check_type_(str, units=units, cmap=cmap, origin=origin, aspect=aspect, boundaries=boundaries)
     checks._check_type_(types.FunctionType, displayFcn=displayFcn)
     
@@ -2137,11 +2167,12 @@ class Displayer:
     
     """
     
-    def __init__(self, nsrc, ndim, figsize=None, displayFcn=None,
-                 time_sleep=0.01, units=None, adjust_dynamic=True,
-                 display_labels=False, cmap=None, grids=None,
-                 origin='lower', aspect=None, boundaries='auto',
-                 force_multisrc=False, indexes=None, src_labels=None):
+    def __init__(self, nsrc, ndim, newfig=True, figsize=None,
+                 displayFcn=None, time_sleep=0.01, units=None,
+                 adjust_dynamic=True, display_labels=False, cmap=None,
+                 grids=None, origin='lower', aspect=None,
+                 boundaries='auto', force_multisrc=False,
+                 indexes=None, src_labels=None):
         """Default constructor for ``pyepri.displayers.Displayer`` objects instanciation.
         
         
@@ -2154,9 +2185,13 @@ class Displayer:
         ndim : int in {1, 2, 3}
             Dimensions of the source images to be displayed.
         
+        newfig : bool, optional
+            Specify whether the display must be done into a new figure
+            or not.
+        
         figsize : (float, float), optional
             When given, figsize must be a tuple with length two and
-            such taht ``figsize[0]`` and ``figsize[1]`` are the width
+            such that ``figsize[0]`` and ``figsize[1]`` are the width
             and height in inches of the figure to be displayed. When
             not given, the default setting is that of `matplotlib`
             (see key 'figure.figsize' of the matplotlib configuration
@@ -2283,7 +2318,7 @@ class Displayer:
         # check consistency
         _check_inputs_(nsrc=nsrc, ndim=ndim, displayFcn=displayFcn,
                        time_sleep=time_sleep, units=units,
-                       adjust_dynamic=adjust_dynamic,
+                       adjust_dynamic=adjust_dynamic, newfig=newfig,
                        display_labels=display_labels, cmap=cmap,
                        grids=grids, origin=origin, aspect=aspect,
                        boundaries=boundaries, figsize=figsize,
@@ -2319,6 +2354,7 @@ class Displayer:
             if ndim == 2:
                 self.init_display = \
                 functools.partial(init_display_monosrc_2d,
+                                  newfig=newfig,
                                   figsize=figsize,
                                   displayFcn=displayFcn,
                                   time_sleep=time_sleep, units=units,
@@ -2335,6 +2371,7 @@ class Displayer:
             elif ndim == 3:
                 self.init_display = \
                 functools.partial(init_display_monosrc_3d,
+                                  newfig=newfig,
                                   figsize=figsize,
                                   displayFcn=displayFcn,
                                   time_sleep=time_sleep, units=units,
@@ -2355,6 +2392,7 @@ class Displayer:
             if ndim == 2:
                 self.init_display = \
                 functools.partial(init_display_multisrc_2d,
+                                  newfig=newfig,
                                   figsize=figsize,
                                   displayFcn=displayFcn,
                                   time_sleep=time_sleep, units=units,
@@ -2373,6 +2411,7 @@ class Displayer:
             elif ndim == 3:
                 self.init_display = \
                 functools.partial(init_display_multisrc_3d,
+                                  newfig=newfig,
                                   figsize=figsize,
                                   displayFcn=displayFcn,
                                   time_sleep=time_sleep, units=units,

@@ -889,6 +889,8 @@ the 2D and 3D settings. Detailed examples of computation and use of
 Toeplitz kernels are available in the two last sections of :ref:`this
 tutorial <tutorial_toeplitz>`.
 
+.. _mathematical_processing_fbp:
+
 Filtered backprojection
 -----------------------
 
@@ -1255,3 +1257,29 @@ to reconstruct, the frequency cut-off parameter :math:`\tau` to use in
 :eq:`fbp3d_filter` and the 1D interpolation method used to evaluate
 the :math:`(\widetilde{J_n}(k))_{k \in I_{N_2} \times I_{N_2} \times I_{N_3}}` from
 the :math:`(J_n(\ell))_{\ell \in I_{N_B}}`.
+
+..
+  Spectral-spatial operators
+  --------------------------
+
+  TODO
+
+  Modeling
+  ~~~~~~~~
+
+  TODO
+
+  Projection operator
+  ~~~~~~~~~~~~~~~~~~~
+
+  TODO
+
+  Backprojection operator
+  ~~~~~~~~~~~~~~~~~~~~~~~
+
+  TODO
+
+  Fast evaluation of a projection-backprojection operation
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  TODO

@@ -4,23 +4,32 @@
 
 ## Future v1.1.0 (current main branch)
 
+### Code
+
 - improved unitary tests [#14](../../pull/14)
 
 - added spectral-spatial 4D projection, backprojection and Topelitz
-  operators
-  ([src/pyepri/spectralspatial.py](src/pyepri/spectral-spatial.py),
-  [#13](../../pull/13))
+  operators in [spectralspatial.py](src/pyepri/spectralspatial.py)
+  ([#13](../../pull/13))
 
-- added unit tests for 4D spectral-spatial operators
-  ([tests/test_4d_spectralspatial.py](tests/test_4d_spectralspatial.py),
-  [#13](../../pull/13))
+- created
+  [test_4d_spectralspatial.py](tests/test_4d_spectralspatial.py) file
+  containing unit tests for 4D spectral-spatial operators
+  ([#13](../../pull/13))
 
-- added interactive 4D spectral-spatial image displayer
-  ([src/pyepri/displayers.py](src/pyepri/displayers.py),
-  [#13](../../pull/13))
+- added interactive 4D spectral-spatial image displayer in
+  [displayers.py](src/pyepri/displayers.py) ([#13](../../pull/13))
 
-- made some minor corrections in the documentation
-  ([#13](../../pull/13)).
+- added ``newfig`` option to {mono,multi}src image displayers
+  ([#15](../../pull/15))
+
+### Documentation
+
+- major documentation update (transition to .pkl format for the
+  embedded dataset and complete rewrite of the "Getting Started"
+  tutorials) ([#13](../../pull/13), [#15](../../pull/15)).
+
+- minor docstring improvements ([#15](../../pull/15)).
 
 ## v1.0.4 (March 7th, 2025)
 

@@ -173,10 +173,10 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
     Return
     ------
     
-    out : array_like (with type `backend.cls`) 
+    out : array_like (with type `backend.cls`)
         Output image (when convergence of the numerical optimization
-        scheme, this image is a minimizer of the TV-regularized
-        least-squares energy).
+        scheme is achieved, this image corresponds to a minimizer of
+        the TV-regularized least-squares energy).
     
     
     See also
@@ -476,10 +476,10 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
     Return
     ------
     
-    out : array_like (with type `backend.cls`) 
+    out : array_like (with type `backend.cls`)
         Output image (when convergence of the numerical optimization
-        scheme, this image is a minimizer of the TV-regularized
-        least-squares energy).
+        scheme is achieved, this image corresponds to a minimizer of
+        the TV-regularized least-squares energy).
     
     
     See also
@@ -487,7 +487,7 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
     
     pyepri.optimization.tvsolver_cp2016
     tv_monosrc
-    
+
     """
     
     # backend inference (if necessary)
