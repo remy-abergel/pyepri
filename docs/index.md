@@ -32,7 +32,6 @@ License](https://github.com/remy-abergel/pyepri/blob/main/LICENSE).
 
 installation
 definitions
-processing
 API documentation <autoapi/pyepri/index>
 acknowledgments
 references
