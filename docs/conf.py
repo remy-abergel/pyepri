@@ -64,6 +64,7 @@ sphinx_gallery_conf = {
                       #'../examples/plug_and_play_regularization',
                       #'../tutorials',
                       '../examples/getting_started',
+                      '../examples/core',
                       ], # path to input example scripts
     'gallery_dirs': ['_gallery/filtered_back_projection',
                      '_gallery/tv_regularization',
@@ -71,6 +72,7 @@ sphinx_gallery_conf = {
                      #'_gallery/plug_and_play_regularization',
                      #'_gallery/tutorials',
                      '_gallery/getting_started',
+                     '_gallery/core',
                      ], # path to where to save gallery generated outputs
     'within_subsection_order': FileNameSortKey,
     'example_extensions': {'.py'},
@@ -81,12 +83,14 @@ sphinx_gallery_conf = {
     'image_scrapers': (DynamicScraper(), "matplotlib"),
     'remove_config_comments': True,
 }
-suppress_warnings = ["config.cache"] # suppress warning about caching
-                                     # caused by the use of
-                                     # FileNameSortKey (could be
+suppress_warnings = [ "bibtex.duplicate_citation",
+                      "config.cache" # config.cache : suppress warning
+                                     # about caching caused by the use
+                                     # of FileNameSortKey (could be
                                      # removed in a near future, see
                                      # https://github.com/sphinx-gallery/sphinx-gallery/pull/1289)
-
+                     ]
+                    
 # -- PyVista configuration --------------------------------------------------
 #
 # Adapted from PyVista conf.py in https://github.com/pyvista Manage

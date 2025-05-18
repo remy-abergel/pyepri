@@ -3,13 +3,14 @@
 This package was created and is maintained by [Rémy
 Abergel](https://www.math-info.univ-paris5.fr/~rabergel) (Research
 Engineer at CNRS & Université Paris Cité, MAP5 Laboratory) and would
-have never existed without the help and support of [Sylvain
+never have existed without the fruitful scientific discussions and
+helpful feedback he received from [Sylvain
 Durand](https://helios2.mi.parisdescartes.fr/~sdurand/index.html)
 (Professor at Université Paris Cité, MAP5 Laboratory) and [Yves-Michel
 Frapart](https://lcbpt.biomedicale.parisdescartes.fr/bio-spectroscopy/epr-and-imaging/yves-frapart/)
 (Senior Research Engineer at CNRS & Université Paris Cité, LCBPT),
 founders of many of the applications presented in the provided
-examples and significant contributors to this work as a whole.
+examples.
 
 We would like to thank the maintainers of several open source projects
 for their hard work and for their availability regarding several
