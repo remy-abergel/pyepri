@@ -85,15 +85,18 @@ u_tempo = backend.cast((backend.abs(X) <= rx/2.) &
 #--------------------------------------------------------#
 
 # retrieve paths towards of the different files comprised in the dataset
-path_B = datasets.get_path('tam-and-tempo-tubes-2d-20210609-B.npy')
-path_htam = datasets.get_path('tam-and-tempo-tubes-2d-20210609-htam.npy')
-path_htempo = datasets.get_path('tam-and-tempo-tubes-2d-20210609-htempo.npy')
+path_htam = datasets.get_path('tam-and-tempo-tubes-2d-20210609-htam.pkl') # or use your own dataset, e.g., path_htam = '~/my_tam_spectrum.DSC'
+path_htempo = datasets.get_path('tam-and-tempo-tubes-2d-20210609-htempo.pkl') # or use your own dataset, e.g., path_htempo = '~/my_tempo_spectrum.DSC'
 
-# load the dataset
+# load the dataset in float32 precision
 dtype = 'float32'
-B = backend.from_numpy(np.load(path_B).astype(dtype))
-h_tam = backend.from_numpy(np.load(path_htam).astype(dtype))
-h_tempo = backend.from_numpy(np.load(path_htempo).astype(dtype))
+dataset_htam = io.load(path_htam, backend=backend, dtype=dtype) # load the dataset containing the TAM reference spectrum
+dataset_htempo = io.load(path_htempo, backend=backend, dtype=dtype) # load the dataset containing the TEMPO reference spectrum
+
+# extract data from the loaded datasets
+B = dataset_htam['B'] # B sampling nodes
+h_tam = dataset_htam['DAT'] # reference spectrum of the TAM
+h_tempo = dataset_htempo['DAT'] # reference spectrum of the TEMPO
 
 #--------------------------------#
 # generate synthetic projections #
