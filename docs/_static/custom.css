@@ -1,3 +1,34 @@
+/* toggle containers (show/hide buttons) */
+.toggle-container {
+    margin: 1em 0;
+}
+
+.toggle-container input[type="checkbox"] {
+    display: none;
+}
+
+.toggle-container label {
+    cursor: pointer;
+    background: #2980b9;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.toggle-container .toggle-content {
+    display: none;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+}
+
+.toggle-container input[type="checkbox"]:checked ~ .toggle-content {
+    display: block;
+}
+
+/* handmade PyEPRI Citation (displayed on the index page, because .. bibliography:: yields unpretty display) */
 .pyepricitation p {
   position: relative;
   padding-left: 4.5em;
@@ -13,6 +44,7 @@
   font-weight: bold;
 }
 
+/* other stuffs */
 .highlight {
     background: #eeffcc
 }
