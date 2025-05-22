@@ -12,32 +12,31 @@ Frapart](https://lcbpt.biomedicale.parisdescartes.fr/bio-spectroscopy/epr-and-im
 founders of many of the applications presented in the provided
 examples.
 
-We would like to thank the maintainers of several open source projects
-for their hard work and for their availability regarding several
-issues we faced during the development of PyEPRI.
+We would also like to thank the maintainers of several open source
+projects for their hard work and their responsiveness in addressing
+various issues we encountered during the development of PyEPRI.
   
 + [FINUFFT](https://finufft.readthedocs.io): the core functionalities
-  of the PyEPRI package (i.e., the projection and backprojection
-  operations) strongly depend on the FINUFFT package for the
-  computation of Nonuniform Fast Fourier Transforms. The fastness and
-  impressively low memory consumption of the FINUFFT package has
-  strongly motivated the creation of the PyEPRI package. We would like
-  to thank the FINUFFT Team for their availability and support on
-  [Github](https://github.com/flatironinstitute/finufft).
+  of PyEPRI (i.e., projection and backprojection operations) heavily
+  depend on the FINUFFT package for the computation of Nonuniform Fast
+  Fourier Transforms. The speed and remarkably low memory consumption
+  of FINUFFT were strong motivators behind the creation of PyEPRI. We
+  would like to thank the FINUFFT Team for their availability and
+  support on [Github](https://github.com/flatironinstitute/finufft).
   
 + [Sphinx](https://www.sphinx-doc.org/) and
   [Sphinx-Gallery](https://sphinx-gallery.github.io/): this
   documentation was created using Sphinx and the example galleries it
   contains were created using Sphinx-gallery. Special thanks to the
-  Sphinx-gallery team for its kind support on
+  Sphinx-gallery team for their kind support on
   [Github](https://github.com/sphinx-gallery/sphinx-gallery).
   
 More generally, we thank the developers of the other packages or
 projects ([Numpy](https://numpy.org/), [Cupy](https://cupy.dev/),
 [PyTorch](https://pytorch.org/), [Pyvista](https://docs.pyvista.org/)
-...) on which PyEPRI relies on.
+...) on which PyEPRI relies.
 
-Many thanks also to [Plateforme en Ligne
+Finally, many thanks also to [Plateforme en Ligne
 Mathrice](https://services.math.cnrs.fr/) for hosting the
 [documentation of the PyEPRI
 package](https://pyepri.math.cnrs.fr/), and more generally
