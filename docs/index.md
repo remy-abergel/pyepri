@@ -1,13 +1,13 @@
 # PyEPRI -- A CPU & GPU compatible Python package for Electron Paramagnetic Resonance Imaging
 
-This Python package implements Low-Level Operators involved in
-Electron Paramagnetic Resonance (EPR) and also High-level Advanced
-Algorithms for end-users. This package is fully implemented in Python
+This Python package implements low-level operators involved in
+Electron Paramagnetic Resonance (EPR) and also high-level advanced
+algorithms for end-users. This package is fully implemented in Python
 and provides both CPU and GPU computation capabilities, through the
 libraries [Numpy](https://numpy.org/), [PyTorch](https://pytorch.org/)
 and [Cupy](https://cupy.dev/). 
 
-The PyEPRI package is the fruit of a long term interdisciplinary
+The PyEPRI package is the fruit of a long-term interdisciplinary
 collaboration between two French laboratories hosted at [Université
 Paris Cité](https://u-paris.fr/): the [MAP5
 Laboratory](https://map5.mi.parisdescartes.fr/) (Laboratory of Applied

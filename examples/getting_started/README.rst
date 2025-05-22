@@ -1,4 +1,4 @@
 Getting started
 ===============
 
-We recommend newcomers to take a quick look at the following tutorials before going to practical EPR imaging applications. 
+We recommend that newcomers take a quick look at the following tutorials before proceeding to practical EPR imaging applications. 
