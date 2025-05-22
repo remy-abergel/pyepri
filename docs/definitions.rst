@@ -370,7 +370,7 @@ Neglecting the modeling and approximation errors involved in
 
    p_{X,\gamma} = A_{X,\gamma}(u_X)
 
-where :math:`A_{X,\gamma} u_X` is defined through its discrete Fourier
+where :math:`A_{X,\gamma} (u_X)` is defined through its discrete Fourier
 coefficients by setting, for all :math:`\alpha\in I_{N_B}`, 
 
  .. math ::
@@ -889,20 +889,319 @@ the 2D and 3D settings. Detailed examples of computation and use of
 Toeplitz kernels are available in the two last sections of :ref:`this
 tutorial <tutorial_toeplitz>`.
 
+
 Spectral-spatial operators
 --------------------------
-
-TODO
 
 Modeling
 ~~~~~~~~
 
-TODO
+We will consider from now a spectral-spatial image :math:`U^c :
+\mathbb{R}^d \times \mathbb{R} \to \mathbb{R}`, such that, for all
+spatial position :math:`x \in \mathbb{R}^d`, the monodimensional
+function :math:`B \mapsto U^c(x,B)` represents the EPR spectrum of the
+paramagnetic species located at the spatial position :math:`x`. As we
+did above, we shall consider a field gradient vector :math:`\gamma \in
+\mathbb{R}^d`, and denote by :math:`\mu` its amplitude and by
+:math:`e_\theta \in \mathbb{R}^d` the unit vector parameterized by an
+angle :math:`\theta \in \mathbb{R}^{d-1}` representing its direction
+(recall the conventions :ref:`here <polar_and_spherical-systems>`),
+i.e., such that
+
+.. math::
+   
+   \gamma = \mu \cdot e_\theta\,.
+
+Denoting by :math:`L` the smallest diameter of a sphere enclosing the
+sample placed inside the spectrometer cavity (or enclosing the cavity
+itself if the sample extends beyond the resonant cavity), and denoting
+again by :math:`B_{\mathrm{sw}}` the acquisition sweep-width, we
+define a so-called spectral angle :math:`\varphi` using
+
+.. math::
+
+   \tan{\left(\varphi\right)} = \frac{L \,
+   \mu}{B_{\mathrm{sw}}}\,.
+
+In the following, we assume that the sample is fully included into the
+field of view (FOV) domain, which is the centered ball with diameter
+:math:`D_\mathrm{fov}(\mu) = \frac{B_{\mathrm{sw}}}{\mu}`, leading to
+:math:`L \leq \frac{B_{\mathrm{sw}}}{\mu}`. Consequently, we have
+:math:`\tan{\left(\varphi\right)} \in [0,1]`, and thus, the
+spectral angle :math:`\varphi` satisfies
+
+.. math::
+   :label: admissible-range-spectral-angle
+
+   0 \leq \varphi \leq \frac{\pi}{4} \quad \text{and}\quad
+   \cos{(\varphi)} > 0\,.
+
+In the following, we shall also consider the :math:`(d+1)`-dimensional
+unit vector
+
+.. math::
+   :label: e-theta-phi
+   
+   e_{\theta,\varphi} = \bigg(\sin(\varphi) \, e_\theta ,\,
+   \cos(\varphi)\bigg) \in \mathbb{R}^d \times \mathbb{R}
+
+which is collinear to the line with direction :math:`(\theta,
+\varphi)` in the :math:`(d+1)`-dimensional spatial-spectral space
+(endowed with the :math:`(d+1)`-dimensional hyperspherical coordinate
+system).
+
+We will denote by :math:`V^c` the (spatial) rescaling by the
+factor :math:`\frac{B_\mathrm{sw}}{L}` of the spectral-spatial image
+:math:`U^c`, that is, the function defined by
+
+.. math::
+   
+   \forall (x', B') \in \mathbb{R}^d\times \mathbb{R}\,,\quad
+   V^c(x',B') = \left(\frac{L}{B_\mathrm{sw}}\right)^d \cdot
+   U^c\left(-\frac{L}{B_\mathrm{sw}}x', B'\right)\,.
+
+Last, we will denote by :math:`\mathcal{R}_{\theta,\varphi}(V^c)` the
+Radon transform of the rescaled spectral-spatial image :math:`V^c` in
+the direction :math:`e_{\theta,\varphi}`, that is, the signal defined
+by
+
+.. math::
+   :label: rescaling_u_into_v
+   
+   \forall r \in \mathbb{R}\,,\quad
+   \mathcal{R}_{\theta,\varphi}(V^c)(r) =
+   \int_{\mathbb{R}}\int_{\mathbb{R}^d} V(x', B') \,
+   \delta_*\left(\langle \left(\begin{array}{c}x'\\B'\end{array}\right) \,,\, e_{\theta,\varphi}
+   \rangle - r \right)\, dx' \, dB'\,,
+
+denoting again by :math:`\delta_*` the Dirac mass.
+   
+We will now describe in detail the projection and backprojection
+operations associated with spectral-spatial signals. As we did
+previously, we will describe the projection operator in the continuous
+framework before moving on to the discrete case. Also, as we did
+previously, we will detail the calculation of a single projection with
+field gradient :math:`\gamma` (with amplitude :math:`\mu`, angle
+:math:`\theta`, and spectral-spatial angle :math:`\varphi` implicitly
+depending on this field vector :math:`\gamma`, as described
+above). Then we will generalize to the acquisition of multiple
+projections (sinogram) obtained with different field gradients
+vectors.
 
 Projection operator
 ~~~~~~~~~~~~~~~~~~~
 
-TODO
+**Continuous setting**
+
+Let :math:`\mathcal{P}^c_\gamma : \mathbb{R} \to \mathbb{R}` be the
+projection signal measured in presence of the field gradient
+:math:`\gamma`, we have
+
+.. math::
+   :label: spectral-spatial-proj
+   
+   \forall B\in\mathbb{R}\,,\quad \mathcal{P}^c_\gamma(B) = |
+   \cos(\varphi) | \cdot
+   \mathcal{R}_{\theta,\varphi}(V^c)(B\cos(\varphi))\,.
+   
+.. raw:: html
+
+    <div class="toggle-container">
+        <input type="checkbox" id="toggle-1">
+        <label for="toggle-1">Show/hide the proof</label>
+        <div class="toggle-content">
+
+Let :math:`B \in \mathbb{R}`, we have
+    
+.. math::
+      
+   \begin{array}{cl}
+   \mathcal{P}_\gamma^c(B) &= \displaystyle{\int_{\mathbb{R}^d} U^c(x, B + \langle \gamma, x\rangle) \, dx} \\
+   &= \displaystyle{\int_{\mathbb{R}}\int_{\mathbb{R}^d} U^c(x, B') \, \delta_*\left(B' - \left[B + \langle \gamma , x \rangle \right]\right)\, dx\, dB'} \\
+   &= \displaystyle{\int_{\mathbb{R}}\int_{\mathbb{R}^d} U^c(x, B') \, \delta_*\left(B' - \left[B + \langle \tfrac{B_\mathrm{sw}}{L} \, \tan{(\varphi)}\, e_\theta , x \rangle \right]\right)\, dx\, dB'} ~~\text{using } \gamma = \mu \, e_\theta \text{ and } \mu = \tfrac{B_\mathrm{sw}}{L} \, \tan{(\varphi)}\\
+   &= \displaystyle{\int_{\mathbb{R}}\int_{\mathbb{R}^d} U^c(x, B') \, \delta_*\left(\dfrac{B'\cos(\varphi) - \left[B\cos(\varphi) + \langle \tfrac{B_\mathrm{sw}}{L} \, \sin{(\varphi)}\, e_\theta , x \rangle \right]}{\cos(\varphi)}\right)\, dx\, dB'} \\
+   &= | \cos(\varphi) | \cdot \displaystyle{\int_{\mathbb{R}}\int_{\mathbb{R}^d} U^c(x, B') \, \delta_*\left(B'\cos(\varphi) - \left[B\cos(\varphi) + \langle \tfrac{B_\mathrm{sw}}{L} \, \sin{(\varphi)}\, e_\theta , x \rangle \right]\right)\, dx\, dB'} ~~\text{using the rescaling identity } \delta_*\left(\frac{\cdot}{\cos{(\varphi)}}\right) = | \cos(\varphi) | \cdot \delta(\cdot)\\
+   &= | \cos(\varphi) | \cdot \displaystyle{\int_{\mathbb{R}}\int_{\mathbb{R}^d} U^c(x, B') \, \delta_*\left(\left\langle \left(\begin{array}{c}-\tfrac{B_\mathrm{sw}}{L}\, x\\B'\end{array}\right) , \left(\begin{array}{c}\sin(\varphi)\, e_\theta \\ \cos(\varphi)\end{array}\right)\right\rangle - B\cos(\varphi)\right)\, dx\, dB'} \\
+   &= | \cos(\varphi) | \cdot \displaystyle{\int_{\mathbb{R}}\int_{\mathbb{R}^d} U^c(x, B') \, \delta_*\left(\left\langle \left(\begin{array}{c}-\tfrac{B_\mathrm{sw}}{L}x\\B'\end{array}\right) , e_{\theta,\varphi}\right\rangle - B\cos(\varphi)\right)\, dx\, dB'} \\
+   &= \left( \frac{L}{B_\mathrm{sw}} \right)^d \cdot | \cos(\varphi) | \cdot \displaystyle{\int_{\mathbb{R}}\int_{\mathbb{R}^d} U^c\left(- \tfrac{L}{B_\mathrm{sw}} x', B'\right) \, \delta_*\left(\left\langle \left(\begin{array}{c}x'\\B'\end{array}\right) , e_{\theta,\varphi}\right\rangle - B\cos(\varphi)\right)\, dx'\, dB'} ~~\text{using the variable change } x' = - \frac{B_\mathrm{sw}}{L} x\\
+   &= | \cos(\varphi) | \cdot \displaystyle{\int_{\mathbb{R}}\int_{\mathbb{R}^d} V^c(x',B') \, \delta_*\left(\left\langle \left(\begin{array}{c}x'\\B'\end{array}\right) , e_{\theta,\varphi}\right\rangle - B\cos(\varphi)\right)\, dx'\, dB'} ~~\text{using } V^c(x',B') = \left( \frac{L}{B_\mathrm{sw}} \right)^d \cdot U^c\left(- \tfrac{L}{B_\mathrm{sw}} x', B'\right)\\
+   &=    | \cos(\varphi) | \cdot \mathcal{R}_{\theta,\varphi}(V^c)(B\cos(\varphi))\,.\\
+   &
+   \end{array}
+   
+.. raw:: html
+
+        </div>
+    </div>
+
+The above result :eq:`spectral-spatial-proj` provides an explicit link
+between the projection :math:`\mathcal{P}_\gamma^c` signal and the
+Radon transform of the rescaled image :math:`V^c : (x',B') \mapsto
+\left( \frac{L}{B_\mathrm{sw}} \right)^d \cdot U^c\left(-
+\tfrac{L}{B_\mathrm{sw}} x', B'\right)`. By moving into the Fourier
+domain, we can obtain an even more explicit link between
+:math:`\mathcal{P}_\gamma^c` and :math:`U^c`. Indeed, show below that
+
+.. math::
+   :label: spectral-spatial-fourier
+   
+   \forall \xi \in \mathbb{R}\,,\quad \mathcal{F}(\mathcal{P}_\gamma^c)(\xi) = \mathcal{F}(U^c)(-\xi \, \gamma, \xi)\,.
+
+.. raw:: html
+
+    <div class="toggle-container">
+        <input type="checkbox" id="toggle-2">
+        <label for="toggle-2">Show/hide the proof</label>
+        <div class="toggle-content">
+
+To prove this result, we shall use Fourier Slice Theorem [TODO
+REF]. In the spectral-spatial framework, it states that, given any
+spectral-spatial function :math:`f:\mathbb{R}^d \times \mathbb{R} \to
+\mathbb{R}`, we have
+
+.. math::
+   
+   \forall \xi \in \mathbb{R}\,,\quad
+   \mathcal{F}(\mathcal{R}_{\theta,\varphi}(f))(\xi) =
+   \mathcal{F}(f)(\xi \, e_{\theta,\varphi}) = \mathcal{F}(f)(\xi \,
+   \sin(\varphi) \, e_\theta, \xi \, \cos(\varphi))\,.
+
+Now, ket :math:`\xi \in \mathbb{R}`, based on the above, we have
+    
+.. math::
+
+   \begin{array}{cl}
+   \mathcal{F}(\mathcal{P}_\gamma^c)(\xi) &= \mathcal{F}\bigg(B \mapsto
+   | \cos(\varphi) | \cdot \mathcal{R}_{\theta,\varphi}(V^c)(B
+   \cos(\varphi))\bigg)(\xi)\\
+   &= \mathcal{F}\bigg(\mathcal{R}_{\theta,\varphi}(V^c)\bigg)\left(\tfrac{\xi}{\cos(\varphi)}\right)
+   \end{array}
+
+using the standard Fourier transform rescaling property
+:math:`\mathcal{F}\left(| a | \cdot g(a\,\cdot)\right)(\xi) =
+\mathcal{F}(g)(\xi/a)` (for any integrable function :math:`g :
+\mathbb{R} \to \mathbb{R}`, for any rescaling parameter :math:`a > 0`,
+and for any frequency position :math:`\xi \in \mathbb{R}`).
+
+Thus, from Fourier Slice Theorem, we get
+
+.. math::
+
+   \begin{array}{cl}
+   \mathcal{F}(\mathcal{P}_\gamma^c)(\xi)
+   &= \mathcal{F}(V^c)\left(\tfrac{\xi}{\cos(\varphi)} \, e_{\theta,\varphi}\right) \\
+   &= \mathcal{F}(V^c)\left(\xi \, \tan{(\varphi)}\, e_{\theta} , \xi\right)
+   \end{array}
+
+because :math:`e_{\theta,\varphi} = \left(\sin(\varphi)\,e_\theta,
+\cos(\varphi)\right)`.  Using again Fourier transform rescaling
+properties, and recalling that :math:`\gamma = \mu\, e_\theta =
+\tfrac{B_\mathrm{sw}}{L}\, \tan{(\varphi)}\, e_{\theta}`, we end up with
+
+.. math::
+
+   \mathcal{F}(\mathcal{P}_\gamma^c)(\xi)
+   = \mathcal{F}(U^c)\left(-\xi \, \tfrac{B_\mathrm{sw}}{L}\, \tan{(\varphi)}\, e_{\theta} , \xi\right)
+   = \mathcal{F}(U^c)\left(-\xi \, \gamma , \xi\right)\,,
+
+which terminates the proof.
+
+.. raw:: html
+
+        </div>
+    </div>
+
+**Discretization**
+
+Equation :eq:`spectral-spatial-fourier` provides an explicit links in
+the continuous setting between the Fourier transform of the projection
+:math:`\mathcal{P}_\gamma^c` and that of the spectral-spatial image
+:math:`U^c`. Let us now discretize the projection (with step
+:math:`\delta_B`) and the image (with step :math:`\delta`) as we did
+earlier. Let the discrete projection :math:`p_\gamma : I_{N_B} \to
+\mathbb{R}` and the discrete spectral-spatial image :math:`u : \Omega
+\times I_{N_B} \to \mathbb{R}` be the discrete signals defined by
+
+.. math::
+   
+   \forall k\in\Omega\,,~\forall m \in I_{N_B}\,,\quad p_\gamma(m) =
+   \widetilde{\mathcal{P}_\gamma}(B_{\mathrm{cf}} + m \delta_B)
+   ~~\text{and}~~ u(k, m) = \widetilde{U^c}(k\delta, B_{\mathrm{cf}} +
+   m \delta_B)\,,
+
+where :math:`\widetilde{\mathcal{P}_\gamma^c} = g_{\delta_B} *
+\mathcal{P_\gamma^c}` and :math:`\widetilde{U^c} = f_{\delta} *
+\mathcal{P_\gamma^c}` denote the appropriately filtered (relatively to
+the required sampling steps) versions of the continous projection
+:math:`\mathcal{P}_\gamma^c` and continous spectral-spatial image
+:math:`U^c` (see the cutband filters definitions in
+:eq:`cutband-filter` and :eq:`filtered-image`). Using the same
+discretization framework as in :cite:p:`Abergel_2023`, we can exhibit
+a link between the discrete Fourier coefficients of those two discrete
+signals, that is,
+
+.. math::
+   :label: approx-dft-spectral-spatial
+   
+   \forall \alpha \in I_{N_B}\,,~~
+   \mathrm{DFT}\left(p_\gamma\right)(\alpha) \approx \left\{
+   \begin{array}{cl}
+   \delta^d \cdot \mathrm{NDFT}(u)\left(-\frac{2\pi \alpha \delta}{N_B \delta_B} \, \gamma , \frac{2\pi \alpha}{N_B}\right) & \text{if } \alpha \in C_{\delta,\delta_B}^{N_B}(\gamma)\\
+   0 & \text{otherwise.}
+   \end{array}
+   \right.
+
+We recall that the definition of the discrete frequency support
+:math:`C_{\delta,\delta_B}^{N_B}(\gamma)` was given in
+:eq:`discrete-frequency-support`.
+
+Neglecting the approximation errors in
+:eq:`approx-dft-spectral-spatial`, we get an explicit relation
+
+.. math::
+   :label: discrete-projection-spectral-spatial
+   
+   p_\gamma = A_\gamma(u)
+
+where :math:`A_\gamma` is the discrete spectral-spatial projection
+operator defined in the Fourier domain by
+
+.. math::
+   :label: approx-dft-A-spectral-spatial
+   
+   \forall \alpha \in I_{N_B}\,,~~
+   \mathrm{DFT}\left(A_\gamma(u)\right)(\alpha) = \left\{
+   \begin{array}{cl}
+   \delta^d \cdot \mathrm{NDFT}(u)\left(-\frac{2\pi \alpha \delta}{N_B \delta_B} \, \gamma , \frac{2\pi \alpha}{N_B}\right) & \text{if } \alpha \in C_{\delta,\delta_B}^{N_B}(\gamma)\\
+   0 & \text{otherwise.}
+   \end{array}
+   \right.
+
+If we consider now a sequence of field gradient vectors :math:`\Gamma
+= (\gamma_1,\gamma_2,\dots,\gamma_N) \in \left(\mathbb{R}^d\right)^N`,
+the sequence :math:`p_\Gamma := (p_{\gamma_1}, p_{\gamma_2}, \dots,
+p_{\gamma_N})` of measured discrete projections can be linked to the
+discrete spectral-spatial image :math:`u` by stacking the individual
+projection operators, leading to
+
+
+.. math::
+   :label: discrete-sinogram-spectral-spatial
+   
+   p_\Gamma = A_\Gamma(u) := \bigg(A_{\gamma_1}(u), A_{\gamma_2}(u),
+   \dots, A_{\gamma_N}(u)\bigg)\,.
+
+**PyEPRI implementation** : the :math:`A_{\Gamma}` operator is
+implemented in the :py:mod:`pyepri.spectralspatial` submodule of the
+PyEPRI package, currently for :math:`d = 3` (that is, for 4D
+spectral-spatial images, with :math:`d = 3` spatial dimensions and one
+spectral dimension). More precisely, the discrete projection operator
+:math:`A_\Gamma` is implemented in the
+:py:func:`pyepri.spectralspatial.proj4d`. Implementation in the case
+:math:`d = 2` (that is, for 3D spectral-spatial images with
+:math:`d=2` spatial dimensions and one spectral dimension) will be
+added in a future release.
+
 
 Backprojection operator
 ~~~~~~~~~~~~~~~~~~~~~~~
