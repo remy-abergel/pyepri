@@ -11,29 +11,36 @@ Filtered backprojection
 In this section, we give mathematical details about the
 filtered-backprojection features implemented in the PyEPRI package.
 Within all this section, we assume that the sample is made of a single
-EPR species.
+EPR species :math:`X`, with reference spectrum :math:`h_X^c :
+\mathbb{R}\to\mathbb{R}` and concentration mapping :math:`U_X^c:
+\mathbb{R}^d \to \mathbb{R}` (reconstruction will be addressed in the
+continuous setting, and discretized afterwards).
 
 Inversion formula in the continuous setting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Let us go back to :eq:`continuous-projection` that defines a
-projection :math:`\mathcal{P}_{X,\gamma}^{c}` with field gradient
-:math:`\gamma = \mu \cdot e_\theta` as the convolution between the
-reference spectrum :math:`h_X^c` and the dilatation with factor
-:math:`-\mu` of the Radon transform of :math:`U_X^c` in the direction
-:math:`e_\theta`, that is, the signal :math:`\mathcal{R}_\theta^\mu(U_X^c) =
-B \mapsto \frac{1}{\mu} \, \mathcal{R}_\theta(U_X^c)(-B/\mu)` already
-defined in :eq:`spin-profile-continuous`. Taking the Fourier transform
-of :eq:`continuous-projection` yields
+In the :ref:`Mathematical definitions <mathematical_definitions>`
+section, we defined a projection :math:`\mathcal{P}_{X,\gamma}^{c}`
+with field gradient :math:`\gamma = \mu \cdot e_\theta` as the
+convolution between the reference spectrum :math:`h_X^c` and the
+dilatation with factor :math:`-\mu` of the Radon transform of
+:math:`U_X^c` in the direction :math:`e_\theta`, that is, the signal
+:math:`\mathcal{R}_\theta^\mu(U_X^c) = B \mapsto \frac{1}{\mu} \,
+\mathcal{R}_\theta(U_X^c)(-B/\mu)` (see Equation
+:eq:`continuous-projection` and Equation :eq:`spin-profile-continuous`
+of the :ref:`Mathematical definitions <mathematical_definitions>`
+section). Therefore, taking the Fourier transform of such a projection
+yields
 
  .. math ::
    :label: fourier_continuous_projection
  
    \forall \xi \in \mathbb{R}\,,\quad \mathcal{F}(\mathcal{P}_{X,\gamma}^c)(\xi) = \mathcal{F}(h_X^c)(\xi) \cdot \mathcal{F}(\mathcal{R}_\theta(U_X^c))(-\mu \xi)\,.
 
-Since the reference spectrum is the derivative of an absorption
-profile :math:`g_X^c`, we have :math:`\mathcal{F}(h_X^c)(\xi) = i \xi
-\cdot \mathcal{F}(g_X^c)(\xi)`. In the following, we assume that
+Since the reference spectrum can be modeled the derivative of an
+absorption profile :math:`g_X^c`, we have
+:math:`\mathcal{F}(h_X^c)(\xi) = i \xi \cdot
+\mathcal{F}(g_X^c)(\xi)`. In the following, we assume that
 :math:`\mathcal{F}(g_X^c)` does not vanishes. Besides, using Fourier
 Slice Theorem, we have
 :math:`\mathcal{F}(\mathcal{R}_\theta(U_X^c))(-\mu\xi) =
@@ -74,7 +81,7 @@ Then, using the variable change :math:`\xi = -\frac{\rho}{\mu}`, we get
 
     U_X^c(x) = 
     \frac{\mu^2}{(2\pi)^2} \int_{0}^{\pi}
-    \int_{-\infty}^{+\infty} \mathcal{F}(U_X^c)(-\mu \xi e_theta) \, e^{i \xi 
+    \int_{-\infty}^{+\infty} \mathcal{F}(U_X^c)(-\mu \xi e_\theta) \, e^{i \xi 
     \langle -\mu e_\theta , x \rangle} \, |\xi| \, d\xi d\theta\,.
 
 Using :eq:`fourier_continuous_projection2` and denoting :math:`\gamma_\mu(\theta) = \mu \cdot e_\theta`, we get
