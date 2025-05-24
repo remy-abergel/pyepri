@@ -1191,12 +1191,13 @@ projection operators, leading to
    p_\Gamma = A_\Gamma(u) := \bigg(A_{\gamma_1}(u), A_{\gamma_2}(u),
    \dots, A_{\gamma_N}(u)\bigg)\,.
 
-**PyEPRI implementation** : the :math:`A_{\Gamma}` operator is
-implemented in the :py:mod:`pyepri.spectralspatial` submodule of the
-PyEPRI package, currently for :math:`d = 3` (that is, for 4D
-spectral-spatial images, with :math:`d = 3` spatial dimensions and one
-spectral dimension). More precisely, the discrete projection operator
-:math:`A_\Gamma` is implemented in the
+**PyEPRI implementation** : the spectral-spatial projection operator
+:math:`A_{\Gamma}` is implemented in the
+:py:mod:`pyepri.spectralspatial` submodule of the PyEPRI package,
+currently for :math:`d = 3` (that is, for 4D spectral-spatial images,
+with :math:`d = 3` spatial dimensions and one spectral
+dimension). More precisely, the projection operator :math:`A_\Gamma`
+is implemented in the
 :py:func:`pyepri.spectralspatial.proj4d`. Implementation in the case
 :math:`d = 2` (that is, for 3D spectral-spatial images with
 :math:`d=2` spatial dimensions and one spectral dimension) will be
@@ -1206,9 +1207,173 @@ added in a future release.
 Backprojection operator
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+As done previously, we will call (spectral-spatial) **backprojection**
+operator the adjoint :math:`A_\Gamma^*` of the (spectral-spatial)
+projection operator :math:`A_\Gamma`. Due to the stacked structure of
+:math:`A_\Gamma` (which stacks the :math:`A_{\gamma_j}` operators), we
+easily get that, for any discrete sequence :math:`s_\Gamma := (p_1,
+p_2, \dots, p_N) \in \left(\mathbb{R}^{I_{N_B}}\right)^N`, we have 
 
+.. math::
+   :label: discrete-backprojection-multiproj-spectral-spatial
+	  
+   A_\Gamma^*(s) = \sum_{n = 1}^{N} A_{\gamma_n}^*(p_n)
+
+where :math:`A_{\gamma_n}^*` denotes the adjoint of the
+:math:`A_{\gamma_n}` (spectral-spatial) projection with field gradient
+:math:`\gamma_n` operator. Besides, from
+:eq:`discrete-projection-spectral-spatial` and
+:eq:`approx-dft-A-spectral-spatial`, one can easily prove that, for
+any :math:`n \in \{1, 2, \dots, N\}`, we have
+
+.. math::
+   :label: discrete-backprojection-singleproj-spectral-spatial
+	   
+   \forall k\in \Omega\,,~\forall \ell \in I_{N_B}\,,~~
+   A_{\gamma_n}^*(p_n)(k, \ell) = \frac{\delta^d}{N_B} \sum_{\alpha\in
+   C_{\delta,\delta_B}^{N_B}(\gamma_n)} \mathrm{DFT}(p_n)(\alpha) \,
+   e^{\frac{2 i \pi \alpha}{N_B} \left(\ell -
+   \frac{\delta}{\delta_B}\langle k , \gamma_n \rangle \right)}\,.
+
+Finally, by injecting
+:eq:`discrete-backprojection-singleproj-spectral-spatial` into
+:eq:`discrete-backprojection-multiproj-spectral-spatial` we end up
+with the explicit mathematical description of the spectral-spatial
+backprojection, that is, for all :math:`k\in \Omega` and for all
+:math:`\ell \in I_{N_B}`,
+
+.. math::
+   :label: discrete-backprojection-full-spectral-spatial
+	  
+   A_\Gamma^*(s)(k, \ell) = \frac{\delta^d}{N_B} \sum_{n = 1}^{N}
+   \sum_{\alpha\in C_{\delta,\delta_B}^{N_B}(\gamma_n)}
+   \mathrm{DFT}(p_n)(\alpha) \, e^{\frac{2 i \pi \alpha}{N_B}
+   \left(\ell - \frac{\delta}{\delta_B}\langle k , \gamma_n \rangle
+   \right)}\,.
+
+**PyEPRI implementation** : the spectral-spatial backprojection
+operator :math:`A_{\Gamma}^*` is implemented in the
+:py:mod:`pyepri.spectralspatial` submodule of the PyEPRI package,
+currently for :math:`d = 3` (that is, for 4D spectral-spatial images,
+with :math:`d = 3` spatial dimensions and one spectral
+dimension). More precisely, the backprojection operator
+:math:`A_\Gamma^*` is implemented in the
+:py:func:`pyepri.spectralspatial.backproj4d`. Implementation in the
+case :math:`d = 2` (that is, for 3D spectral-spatial images with
+:math:`d=2` spatial dimensions and one spectral dimension) will be
+added in a future release.
+   
 Fast evaluation of a projection-backprojection operation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+Let :math:`u : \Omega\times I_{N_B}\to \mathbb{R}` be a discrete
+spectral-spatial image, and let :math:`\Gamma = (\gamma_1, \gamma_2,
+\dots, \gamma_N) \in \left(\mathbb{R}^d\right)^N` be a sequence of
+field gradient vectors. We show below that, forall :math:`k\in\Omega`
+and for all :math:`\ell \in I_{N_B}`, we have
+
+.. math::
+   :label: spectral-spatial-projection-backprojection
+   
+   \left(A_\Gamma^* \circ A_\Gamma (u)\right)(k, \ell) = \sum_{(k',
+   \ell')\,\in\,\Omega\,\times\,I_{N_B}} u(k', \ell') \cdot
+   \varphi(k-k', \ell-\ell')\,,
+
+where we have set
+
+.. math::
+   :label: spectral-spatial-toeplitz-kernel
+   
+   \varphi(k^{\prime\prime}, \ell^{\prime\prime}) =
+   \frac{\delta^{2d}}{N_B} \cdot \sum_{n = 1}^{N} \sum_{\alpha \in
+   C_{\delta,\delta_B}^{N_B}(\gamma_n)} e^{\frac{2i\pi
+   \alpha}{N_B}\left(\ell^{\prime\prime} -
+   \frac{\delta}{\delta_B}\langle k^{\prime\prime} , \gamma_n
+   \rangle\right)}\,,
+
+for all :math:`k^{\prime\prime} \in \Upsilon` (recall that
+:math:`\Upsilon = I_{2 N_1} \times I_{2 N_2} \times \dots \times I_{2
+N_d}` represents an augmented spatial domain) and for all
+:math:`\ell^{\prime\prime} \in I_{2N_B}` (augmented spectral domain).
+
+.. raw:: html
+
+    <div class="toggle-container">
+        <input type="checkbox" id="toggle-3">
+        <label for="toggle-3">Show/hide the proof</label>
+        <div class="toggle-content">
+
+Let :math:`k \in \Omega` and let :math:`\ell \in I_{N_B}`, by
+combining :eq:`discrete-backprojection-full-spectral-spatial` and
+:eq:`discrete-sinogram-spectral-spatial`, we get
+    
+.. math::
+
+   \begin{array}{cl}
+   %
+   \left(A_\Gamma^* \circ A_\Gamma (u)\right)(k, \ell)
+   %   
+   &= \displaystyle{\frac{\delta^d}{N_B} \cdot \sum_{n = 1}^{N}
+   \sum_{\alpha\in C_{\delta,\delta_B}^{N_B}(\gamma_n)}
+   \mathrm{DFT}(A_{\gamma_n}(u))(\alpha) \, e^{\frac{2 i \pi
+   \alpha}{N_B} \left(\ell - \frac{\delta}{\delta_B}\langle k ,
+   \gamma_n \rangle \right)}} \\   
+   %   
+   &= \displaystyle{\frac{\delta^{2d}}{N_B} \cdot \sum_{n = 1}^{N}
+   \sum_{\alpha\in C_{\delta,\delta_B}^{N_B}(\gamma_n)}
+   \mathrm{NDFT}(u)(\alpha)\left(-\frac{2i\pi\alpha\delta}{N_B
+   \delta_B} \gamma_n,\frac{2i\pi\alpha}{N_B}\right) \, e^{\frac{2 i
+   \pi \alpha}{N_B} \left(\ell - \frac{\delta}{\delta_B}\langle k ,
+   \gamma_n \rangle \right)}} \\   
+   %   
+   &= \displaystyle{\frac{\delta^{2d}}{N_B} \cdot \sum_{n = 1}^{N}
+   \sum_{\alpha\in C_{\delta,\delta_B}^{N_B}(\gamma_n)} \sum_{(k',
+   \ell') \,\in\, \Omega\,\times\, I_{N_B}} u(k',\ell') \,
+   e^{-\frac{2i\pi\alpha}{N_B} \left(\ell' - \frac{\delta}{\delta_B}
+   \langle k', \gamma_n\rangle\right)} \, e^{\frac{2 i \pi
+   \alpha}{N_B} \left(\ell - \frac{\delta}{\delta_B}\langle k ,
+   \gamma_n \rangle \right)}} \\   
+   %   
+   &= \displaystyle{\sum_{(k', \ell') \,\in\, \Omega\,\times\,
+   I_{N_B}} u(k',\ell') \cdot \left( \frac{\delta^{2d}}{N_B} \cdot
+   \sum_{n = 1}^{N} \sum_{\alpha\in
+   C_{\delta,\delta_B}^{N_B}(\gamma_n)} \, e^{\frac{2i\pi\alpha}{N_B}
+   \left( (\ell - \ell') - \frac{\delta}{\delta_B} \langle k - k',
+   \gamma_n\rangle\right)}\right)} \\   
+   % 
+   &= \displaystyle{\sum_{(k', \ell') \,\in\, \Omega\,\times\,
+   I_{N_B}} u(k',\ell') \cdot \varphi(k-k', \ell-\ell')} \\   
+   %
+   &
+   %
+   \end{array}
+
+.. raw:: html
+	 
+        </div>
+    </div>
+      
+Equation :eq:`spectral-spatial-projection-backprojection` shows that
+:math:`A_\Gamma^* \circ A_\Gamma (u)` corresponds to the convolution
+between the spectral-spatial image :math:`u` and the kernel
+:math:`\varphi` defined in :eq:`spectral-spatial-toeplitz-kernel`. As
+explained earlier, such convolution operation can be evaluated
+efficiently (using circular convolutions) provided by we extend by
+zero the signal image :math:`u_j` over the augmented spectral-spatial
+domain :math:`\Upsilon \times I_{2 N_B}`, allowing finally the fast
+evaluation of :math:`A_{\Gamma}^* \circ A_{\Gamma}(u)` as a product in
+the (discrete) Fourier domain.
+
+**PyEPRI implementation**: the PyEPRI package provides functions to
+compute the spectral-spatial Toeplitz kernel :math:`\varphi`
+(currently for :math:`d = 3`, that is, for 4D spectral-spatial images,
+with :math:`d = 3` spatial dimensions and one spectral dimension). The
+kernel can be computed using the
+:py:func:`pyepri.spectralspatial.compute_4d_toeplitz_kernel`, and,
+once the Toeplitz kernel has been computed, the efficient evaluation
+of the spectral-spatial projection-backprojection operation can be
+done using
+:py:func:`pyepri.spectralspatial.apply_4d_toeplitz_kernel`. Similar
+functions in the case :math:`d = 2` (that is, for 3D spectral-spatial
+images with :math:`d=2` spatial dimensions and one spectral dimension)
+will be added in a future release.
