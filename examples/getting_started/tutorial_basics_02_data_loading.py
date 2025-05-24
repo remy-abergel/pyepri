@@ -471,7 +471,7 @@ print(fgrad[:, :6])
 # Loading datasets stored in Python pickle (.PKL) format
 # ------------------------------------------------------
 #
-# Pythonss pickle module allows you to save dictionaries containing
+# Python's pickle module allows you to save dictionaries containing
 # multiple arrays, making it possible to group all the data into a
 # single file. In this example, we will consider a dataset made of two
 # files:
