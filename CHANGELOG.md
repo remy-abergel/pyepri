@@ -25,10 +25,16 @@
 
 ### Documentation
 
+- added mathematical definitions for spectral-spatial operators
+  [#16](../../pull/16)
+  
+- split mathematical definitions & mathematical processing
+  [#16](../../pull/16)
+  
 - major documentation update (transition to .pkl format for the
   embedded dataset and complete rewrite of the "Getting Started"
-  tutorials) ([#13](../../pull/13), [#15](../../pull/15)).
-
+  tutorials) ([#13](../../pull/13), [#15](../../pull/15))
+  
 - minor docstring improvements ([#15](../../pull/15)).
 
 ## v1.0.4 (March 7th, 2025)
