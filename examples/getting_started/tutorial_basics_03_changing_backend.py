@@ -27,8 +27,8 @@ Learn how to use CPU & GPU backends in your experiments.
 # PyTorch (CPU/GPU) or CuPy (GPU)).
 #
 # Curious users who want to learn more about how the backend system
-# works can take a look at :ref:`this section
-# <tutorial_changing_backend_details>` of the tutorial. However, a
+# works can take a look at the section :ref:`below
+# <tutorial_changing_backend_details>` in the tutorial. However, a
 # deep understanding of the backend mechanism is absolutely not
 # required to use PyEPRI.
 # 

@@ -137,7 +137,7 @@ print(fgrad[:, :6])
 #
 # Now, let us take a look at the ``path_proj`` and ``path_h``
 # variables defined in the previous block. The paths displayed below
-# here will be different on your own machine. They correspond to the
+# will be different on your own machine. They correspond to the
 # location where the example datasets are stored on your system (one
 # dataset containing the reference spectrum and another containing the
 # projections along with their associated field gradients).
@@ -471,7 +471,7 @@ print(fgrad[:, :6])
 # Loading datasets stored in Python pickle (.PKL) format
 # ------------------------------------------------------
 #
-# Pythonss pickle module allows you to save dictionaries containing
+# Python's pickle module allows you to save dictionaries containing
 # multiple arrays, making it possible to group all the data into a
 # single file. In this example, we will consider a dataset made of two
 # files:
