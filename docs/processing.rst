@@ -35,7 +35,10 @@ yields
  .. math ::
    :label: fourier_continuous_projection
  
-   \forall \xi \in \mathbb{R}\,,\quad \mathcal{F}(\mathcal{P}_{X,\gamma}^c)(\xi) = \mathcal{F}(h_X^c)(\xi) \cdot \mathcal{F}(\mathcal{R}_\theta(U_X^c))(-\mu \xi)\,.
+   \forall \xi \in \mathbb{R}\,,\quad
+   \mathcal{F}(\mathcal{P}_{X,\gamma}^c)(\xi) =
+   \mathcal{F}(h_X^c)(\xi) \cdot
+   \mathcal{F}(\mathcal{R}_\theta(U_X^c))(-\mu \xi)\,.
 
 Since the reference spectrum can be modeled the derivative of an
 absorption profile :math:`g_X^c`, we have
@@ -366,7 +369,8 @@ formula
  .. math ::
     :label: fbp3d_discrete
 	    
-    \forall k \in I_{N_1} \times I_{N_2} \times I_{N_3}\,,\quad u_X(k) = \frac{1}{4 N} \sum_{n = 1}^{N} \|\gamma_n\|^3 \cdot
+    \forall k \in I_{N_1} \times I_{N_2} \times I_{N_3}\,,\quad u_X(k)
+    = \frac{1}{4 N} \sum_{n = 1}^{N} \|\gamma_n\|^3 \cdot
     \widetilde{J_n}(k)\,.
 
 **PyEPRI implementation**: the 3D filtered backprojection
@@ -379,21 +383,168 @@ to reconstruct, the frequency cut-off parameter :math:`\tau` to use in
 the :math:`(\widetilde{J_n}(k))_{k \in I_{N_2} \times I_{N_2} \times I_{N_3}}` from
 the :math:`(J_n(\ell))_{\ell \in I_{N_B}}`.
 
-TV-regularized least-squares
-----------------------------
+TV-regularized reconstruction
+-----------------------------
 
-The mathematical optimization problem
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Direct methods for solving inverse problems are generally not robust
+to noise and require a large number of measurements—typically at least
+as many as the number of unknowns (i.e., the number of pixels to
+reconstruct). In contrast, total variation (TV)-regularized approaches
+have proven to be significantly more effective.  They have been
+developed for over 20 years in parallel with the development of
+efficient optimization algorithms. TV-based methods can be interpreted
+as sparse gradient promoting approaches, which enhances robustness to
+noise and enables the reconstruction of high-quality signals from far
+fewer measurements than required by direct models.
 
-Generic (Condat-Vũ) solver
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Given a :math:`d`-dimensional discrete image :math:`u: \Omega \to
+\mathbb{R}` with discrete image domain :math:`\Omega := I_{N_1} \times
+I_{N_2} \times \cdots \times I_{N_d}`, the TV of :math:`u` is defined
+by
 
-TV-regularized EPR imaging
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. math::
+   
+   \mathrm{TV}(u) := \sum_{k \in \Omega} \left\|\big(\nabla u\big) (k) \right\|_2
 
-TODO
+where
+
+.. math::
+   :label: discrete-nabla
+
+   \big(\nabla (u)\big)(k) = \bigg(\big(\nabla_1 (u)\big)(k),
+   \big(\nabla_2 (u)\big)(k), \dots, \big(\nabla_d (u)\big)(k) \bigg)
+   \in \mathbb{R}^d
+
+and
+
+.. math::
+   :label: discrete-partial-nabla
+   
+   \forall i \in \{1, 2, \dots, d\}\,,\quad \big(\nabla_i (u)\big) (k)
+   = \left\{\begin{array}{cl}u(k+\delta_i) - u(k)&\text{if } k +
+   \delta_i \in \Omega\\0&\text{otherwise,}\end{array}\right.
+
+denoting by :math:`\delta_i` the vector of :math:`\mathbb{R}^d` made
+of zero everywhere expect at its :math:`i`-th entry which takes the
+value one.
+
+The term :math:`\big(\nabla (u)\big)(k)` described in
+:eq:`discrete-nabla` represents a discrete gradient (or finite
+differences) of :math:`u` at the pixel position :math:`k \in
+\Omega`. The term :math:`\nabla_i (u)` in :eq:`discrete-partial-nabla`
+represents the discrete (or finite differences) partial derivative of
+:math:`u` along its :math:`i`-th coordinate axis. There exist many
+other finite differences schemes (leading to as many variants of TV),
+but the definition given above is the most commonly used and is the
+one implemented in PyEPRI.
+
+TV-regularized single source EPR imaging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let us place ourselves in the single EPR source framework. As we did
+earlier, we shall denote by :math:`X` the name of the EPR species
+contained into the sample, and by :math:`h_X` its reference
+spectrum. Let :math:`s_{X,\Gamma} = (p_{X,\gamma_1}, p_{X,\gamma_2},
+\dots, p_{X,\gamma_N})` be the sequence of measured projections and
+:math:`\Gamma := (\gamma_1, \gamma_2, \dots, \gamma_N)` be the
+sequence of associated field gradient vectors. We can address the
+image reconstruction problem using TV regularized least-squares
+:cite:p:`Durand_2017, Abergel_2023` by computing
+
+.. math::
+   :label: inverse-problem-monosrc
+   
+   \DeclareMathOperator*{\argmin}{argmin}
+   \widetilde{u}_X \in \argmin_{u_X: \Omega\to \mathbb{R}} \frac{1}{2}
+   \left\| A_{X,\Gamma}(u) - s_{X,\Gamma} \right\|_2^2 + \lambda \cdot
+   \mathrm{TV}(u_X)\,,
+      
+where :math:`A_{X,\Gamma}` denotes the single source projection
+operator defined in the :ref:`Mathematical definitions Section
+<mathematical_definitions_single_source_operators>` (see Equation
+:eq:`Agammabold` therein), and :math:`\lambda > 0` is a parameter that
+can be set by the user to tune the importance of the data-fidelity
+term (the quadratic term) with respect to the regularity term (the TV
+term) in the minimization process.
+
+Such a convex and nonsmooth minimization problem can be efficiently
+handled using the Condat-Vũ solver :cite:`Condat_2013, Vu_2013`
+(generalized by A. Chambolle and T. Pock. in
+:cite:`Chambolle_Pock_2016`). This particular scheme involves
+computing the gradient of the data fidelity term, and thus of
+projection-backprojection term :math:`A_{X,\Gamma}^* \circ
+A_{X,\Gamma}` at each iteration, which can be efficiently computed
+using Toeplitz kernels as explained :ref:`Mathematical definitions
+Section <mathematical_definitions_single_source_projbackproj>`. In
+particular, no evalution of the projection :math:`A_{X, \Gamma}` and
+backprojection :math:`A_{X,\Gamma}^*` is needed along the scheme
+iterations (see the explicit details of the numerical scheme in the
+case of EPR imaging in :cite:`Abergel_2025`).
+
+**PyEPRI implementation**: a generic solver for TV-regularized
+problems is implemented in
+:py:func:`pyepri.optimization.tvsolver_cp2016`. This solver can handle
+more general instances than Equation :eq:`inverse-problem-monosrc`,
+where the data-fidelity term is replaced by :math:`F(u)`, with
+:math:`F` being a Lipschitz-differentiable function. The PyEPRI
+package also provides a *higher-level* function,
+:py:func:`pyepri.processing.tv_monosrc`, which specifically addresses
+the single-source EPR image reconstruction problem defined in Equation
+:eq:`inverse-problem-monosrc`. This function enables non-expert users
+to perform reconstructions more easily, without needing to manage the
+underlying optimization details. Detailed and reproducible 2D and 3D
+usage examples for :py:func:`pyepri.processing.tv_monosrc` are
+available in the :ref:`tutorial gallery
+<example_tv_regularized_imaging>`.
 
 Source separation
 ~~~~~~~~~~~~~~~~~
 
-TODO
+Let us now consider the multisource framework, in which the sample
+contains more than one EPR species, denoted by :math:`\mathcal{X} =
+(X_1, X_2, \dots, X_K)`. We denote by :math:`h_{X_j}` the :math:`j`-th
+reference spectrum. In this multisource framework, we aim at
+reconstructing a sequence of concentration mapping images
+:math:`u_{\mathcal{X}} = (u_{X_1}, u_{X_2}, \dots, u_{X_K})` (one
+concentration mapping for each species) rather than a single one. Let
+:math:`s_{\mathcal{X},\Gamma} = (p_{\mathcal{X}, \gamma_1},
+p_{\mathcal{X}, \gamma_2}, \dots, p_{\mathcal{X}, \gamma_N})` be the
+sequence of measured projections with associated field gradient
+vectors :math:`\Gamma := (\gamma_1, \gamma_2, \dots, \gamma_N)`. The
+multi-image reconstruction was addressed in :cite:`Boussaa_2023` by
+computing
+
+.. math::
+   :label: inverse-problem-multisrc-monoexp
+   
+   \widetilde{u}_{\mathcal{X}} \in \argmin_{u_{\mathcal{X}} =
+   (u_{X_1}, u_{X_2}, \dots, u_{X_K})} \frac{1}{2} \left\|
+   A_{\mathcal{X},\Gamma}(u_\mathcal{X}) - s_{\mathcal{X}, \Gamma}
+   \right\|_2^2 + \lambda \sum_{j = 1}^{K} \mathrm{TV}(u_{X_j})\,,
+
+where :math:`A_{\mathcal{X},\Gamma}` denotes the multisource
+projection operator defined in the :ref:`Mathematical definitions
+Section <mathematical_definitions_multisource_operators>` (see
+Equation :eq:`multisrc-sino-def` therein) and :math:`\lambda > 0` is
+again a regularity parameter that can be set by the user to tune the
+importance of the data-fidelity term (the quadratic term) with respect
+to the regularity term (the sum of TV terms) in the minimization
+process.
+
+**PyEPRI implementation**: we adopted the same development framework
+as in the multisource case; specifically, we provide a generic solver,
+:py:func:`pyepri.optimization.tvsolver_cp2016_multisrc`, which
+addresses a more general instance of problem
+:eq:`inverse-problem-multisrc-monoexp`, where the quadratic
+data-fidelity term can be replaced by a more general term
+:math:`F(u)`, with :math:`F` being a Lipschitz-differentiable
+function. Again, a *higher-level* function,
+:py:func:`pyepri.processing.tv_multisrc`, which specifically addresses
+the multiple EPR images reconstruction problem (a.k.a. the source
+separation problem) defined in Equation
+:eq:`inverse-problem-multisrc-monoexp`. This function enables
+non-expert users to perform reconstructions more easily, without
+needing to manage the underlying optimization details. Detailed and
+reproducible 2D and 3D usage examples for
+:py:func:`pyepri.processing.tv_multisrc` are available in the
+:ref:`tutorial gallery <example_source_separation>`.

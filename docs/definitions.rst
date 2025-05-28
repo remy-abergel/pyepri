@@ -356,6 +356,8 @@ all :math:`\alpha \in I_{N_B}`,
 We are now ready to formally define the projection operator
 implemented in the PyEPRI package.
 
+.. _mathematical_definitions_single_source_operators:
+
 Single source operators
 -----------------------
 
@@ -488,6 +490,8 @@ refer to the two first sections of the :ref:`dedicated tutorial
 <tutorial_backprojection>` for a detailed demonstration of theses
 functions.
 
+.. _mathematical_definitions_single_source_projbackproj:
+
 Fast evaluation of a projection-backprojection operation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -597,6 +601,8 @@ evaluate efficiently the projection-backprojection
 settings. Detailed examples of computation and use of Toeplitz kernels
 are available in the two first sections of :ref:`this tutorial
 <tutorial_toeplitz>`.
+
+.. _mathematical_definitions_multisource_operators:
 
 Multisources operators
 ----------------------
@@ -1040,7 +1046,8 @@ Radon transform of the rescaled image :math:`V^c : (x',B') \mapsto
 \left( \frac{L}{B_\mathrm{sw}} \right)^d \cdot U^c\left(-
 \tfrac{L}{B_\mathrm{sw}} x', B'\right)`. By moving into the Fourier
 domain, we can obtain an even more explicit link between
-:math:`\mathcal{P}_\gamma^c` and :math:`U^c`. Indeed, show below that
+:math:`\mathcal{P}_\gamma^c` and :math:`U^c`. Indeed, we show below
+that
 
 .. math::
    :label: spectral-spatial-fourier
@@ -1054,10 +1061,10 @@ domain, we can obtain an even more explicit link between
         <label for="toggle-2">Show/hide the proof</label>
         <div class="toggle-content">
 
-To prove this result, we shall use Fourier Slice Theorem [TODO
-REF]. In the spectral-spatial framework, it states that, given any
-spectral-spatial function :math:`f:\mathbb{R}^d \times \mathbb{R} \to
-\mathbb{R}`, we have
+To prove this result, we shall use Fourier Slice Theorem (see
+e.g. :cite:p:`Natterer_2001`). In the spectral-spatial framework, it
+states that, given any spectral-spatial function :math:`f:\mathbb{R}^d
+\times \mathbb{R} \to \mathbb{R}`, we have
 
 .. math::
    
@@ -1080,7 +1087,7 @@ Now, ket :math:`\xi \in \mathbb{R}`, based on the above, we have
 using the standard Fourier transform rescaling property
 :math:`\mathcal{F}\left(| a | \cdot g(a\,\cdot)\right)(\xi) =
 \mathcal{F}(g)(\xi/a)` (for any integrable function :math:`g :
-\mathbb{R} \to \mathbb{R}`, for any rescaling parameter :math:`a > 0`,
+\mathbb{R} \to \mathbb{R}`, for any rescaling parameter :math:`a \neq 0`,
 and for any frequency position :math:`\xi \in \mathbb{R}`).
 
 Thus, from Fourier Slice Theorem, we get
@@ -1117,10 +1124,12 @@ Equation :eq:`spectral-spatial-fourier` provides an explicit links in
 the continuous setting between the Fourier transform of the projection
 :math:`\mathcal{P}_\gamma^c` and that of the spectral-spatial image
 :math:`U^c`. Let us now discretize the projection (with step
-:math:`\delta_B`) and the image (with step :math:`\delta`) as we did
-earlier. Let the discrete projection :math:`p_\gamma : I_{N_B} \to
-\mathbb{R}` and the discrete spectral-spatial image :math:`u : \Omega
-\times I_{N_B} \to \mathbb{R}` be the discrete signals defined by
+:math:`\delta_B`) and the spectral-spatial image (with step
+:math:`\delta` along the spatial axes and with step :math:`\delta_B`
+along the spectral axis) as we did earlier. Let the discrete
+projection :math:`p_\gamma : I_{N_B} \to \mathbb{R}` and the discrete
+spectral-spatial image :math:`u : \Omega \times I_{N_B} \to
+\mathbb{R}` be the discrete signals defined by
 
 .. math::
    
@@ -1130,15 +1139,15 @@ earlier. Let the discrete projection :math:`p_\gamma : I_{N_B} \to
    m \delta_B)\,,
 
 where :math:`\widetilde{\mathcal{P}_\gamma^c} = g_{\delta_B} *
-\mathcal{P_\gamma^c}` and :math:`\widetilde{U^c} = f_{\delta} *
-\mathcal{P_\gamma^c}` denote the appropriately filtered (relatively to
-the required sampling steps) versions of the continous projection
-:math:`\mathcal{P}_\gamma^c` and continous spectral-spatial image
-:math:`U^c` (see the cutband filters definitions in
-:eq:`cutband-filter` and :eq:`filtered-image`). Using the same
-discretization framework as in :cite:p:`Abergel_2023`, we can exhibit
-a link between the discrete Fourier coefficients of those two discrete
-signals, that is,
+\mathcal{P_\gamma^c}` and :math:`\widetilde{U^c} = \left((x,B)\mapsto
+f_{\delta}(x) \cdot g_{\delta_B}(B)\right) * \mathcal{U^c}` denote the
+appropriately filtered (relatively to the required sampling steps)
+versions of the continous projection :math:`\mathcal{P}_\gamma^c` and
+continous spectral-spatial image :math:`U^c` (see the cutband filters
+definitions in :eq:`cutband-filter` and :eq:`filtered-image`). Using
+the same discretization framework as in :cite:p:`Abergel_2023`, we can
+exhibit a link between the discrete Fourier coefficients of those two
+discrete signals, that is,
 
 .. math::
    :label: approx-dft-spectral-spatial
@@ -1358,22 +1367,24 @@ Equation :eq:`spectral-spatial-projection-backprojection` shows that
 between the spectral-spatial image :math:`u` and the kernel
 :math:`\varphi` defined in :eq:`spectral-spatial-toeplitz-kernel`. As
 explained earlier, such convolution operation can be evaluated
-efficiently (using circular convolutions) provided by we extend by
-zero the signal image :math:`u_j` over the augmented spectral-spatial
-domain :math:`\Upsilon \times I_{2 N_B}`, allowing finally the fast
+efficiently (using circular convolutions) provided that we extend by
+zero the image :math:`u` over the augmented spectral-spatial domain
+:math:`\Upsilon \times I_{2 N_B}`, allowing finally the fast
 evaluation of :math:`A_{\Gamma}^* \circ A_{\Gamma}(u)` as a product in
 the (discrete) Fourier domain.
 
 **PyEPRI implementation**: the PyEPRI package provides functions to
 compute the spectral-spatial Toeplitz kernel :math:`\varphi`
 (currently for :math:`d = 3`, that is, for 4D spectral-spatial images,
-with :math:`d = 3` spatial dimensions and one spectral dimension). The
-kernel can be computed using the
-:py:func:`pyepri.spectralspatial.compute_4d_toeplitz_kernel`, and,
-once the Toeplitz kernel has been computed, the efficient evaluation
-of the spectral-spatial projection-backprojection operation can be
-done using
-:py:func:`pyepri.spectralspatial.apply_4d_toeplitz_kernel`. Similar
-functions in the case :math:`d = 2` (that is, for 3D spectral-spatial
-images with :math:`d=2` spatial dimensions and one spectral dimension)
-will be added in a future release.
+with :math:`d = 3` spatial dimensions and one spectral
+dimension). More precisely, the spectral-spatial Toeplitz kernel
+:math:`\varphi` can be computed using the
+:py:func:`pyepri.spectralspatial.compute_4d_toeplitz_kernel`
+function. The efficient evaluation of the spectral-spatial
+projection-backprojection operation :math:`A_\Gamma^*\circ
+A_\Gamma(u)` using the precomputed spectral-spatial Toeplitz kernel
+:math:`\varphi` can be done using the
+:py:func:`pyepri.spectralspatial.apply_4d_toeplitz_kernel`
+function. Similar functions in the case :math:`d = 2` (that is, for 3D
+spectral-spatial images with :math:`d=2` spatial dimensions and one
+spectral dimension) will be added in a future release.
