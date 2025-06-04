@@ -1017,7 +1017,7 @@ projection signal measured in presence of the field gradient
         <label for="toggle-1">Show/hide the proof</label>
         <div class="toggle-content">
 
-Let :math:`B \in \mathbb{R}`, we have
+Recall that :math:`\cos(\varphi)\neq 0` because of :eq:`admissible-range-spectral-angle`. Let :math:`B \in \mathbb{R}`, we have
     
 .. math::
       
