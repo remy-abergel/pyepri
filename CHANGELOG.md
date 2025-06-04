@@ -2,7 +2,7 @@
 
 <!--next-version-placeholder-->
 
-## Future v1.1.0 (current main branch)
+## v1.1.0 (June 4th, 2025)
 
 ### Code
 
