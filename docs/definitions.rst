@@ -895,6 +895,7 @@ the 2D and 3D settings. Detailed examples of computation and use of
 Toeplitz kernels are available in the two last sections of :ref:`this
 tutorial <tutorial_toeplitz>`.
 
+.. _mathematical_definitions_spectral_spatial_operators:
 
 Spectral-spatial operators
 --------------------------
