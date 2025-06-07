@@ -2,6 +2,23 @@
 
 <!--next-version-placeholder-->
 
+## Future v1.1.0 (current main branch)
+
+### Code 
+
+- fixed unit test name ``test_proj2d_and_backproj2d_matrices`` -->
+  ``test_proj3d_and_backproj3d_matrices`` [#18](../../pull/18)
+
+### Documentation
+
+- minor improvements [#18](../../pull/18)
+
+### Packaging 
+
+- removed deprecated license classifiers, declare license using SPDX
+  license expression, and require setuptools >= 77
+  [#18](../../pull/18)
+
 ## v1.1.0 (June 4th, 2025)
 
 ### Code

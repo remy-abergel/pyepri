@@ -1,9 +1,10 @@
 [project]
 name = "pyepri"
-version = "1.1.0"
+version = "1.1.1"
 description = "A CPU & GPU compatible Python package for Electron Paramagnetic Resonance Imaging"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.8"
 authors = [
   {name="Rémy Abergel", email="Remy.Abergel@math.cnrs.fr"},
@@ -11,7 +12,6 @@ authors = [
 
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 
@@ -30,7 +30,10 @@ Homepage = "https://github.com/remy-abergel/pyepri"
 Issues = "https://github.com/remy-abergel/pyepri/issues"
 
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = [
+	 "setuptools>=77", # remove deprecated license classifiers 
+	 "wheel",
+]
 build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]
