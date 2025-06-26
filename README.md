@@ -3,7 +3,7 @@
 
 # PyEPRI -- A CPU & GPU compatible Python package for Electron Paramagnetic Resonance Imaging
 
-Welcome to the PyEPRI repository page, the **package documentation and
+Welcome to the PyEPRI repository, the **package documentation and
 tutorials are available [here](https://pyepri.math.cnrs.fr/)**.
 
 If you have any comments, questions, or suggestions regarding this
