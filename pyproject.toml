@@ -20,7 +20,7 @@ dependencies = [
     "scipy",
     "matplotlib",
     "pyvista",
-    "finufft",
+    "finufft>=2.4.0",
     "jupyter",
     "psutil",
 ]
@@ -40,7 +40,7 @@ build-backend = "setuptools.build_meta"
 cupy-cuda12x = [
     "cupy-cuda12x",
 #    "cutensor",
-    "cufinufft",
+    "cufinufft>=2.4.0",
 ]
 cupy-cuda11x = [
     "cupy-cuda11x",
@@ -54,7 +54,7 @@ torch-cpu = [
 torch-cuda = [
     "torch>=2.5.1",
     "torchinterp1d",
-    "cufinufft",
+    "cufinufft>=2.4.0",
 ]
 dev = [
     "pytest",
