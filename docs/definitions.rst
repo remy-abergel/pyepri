@@ -1074,7 +1074,7 @@ states that, given any spectral-spatial function :math:`f:\mathbb{R}^d
    \mathcal{F}(f)(\xi \, e_{\theta,\varphi}) = \mathcal{F}(f)(\xi \,
    \sin(\varphi) \, e_\theta, \xi \, \cos(\varphi))\,.
 
-Now, ket :math:`\xi \in \mathbb{R}`, based on the above, we have
+Now, let :math:`\xi \in \mathbb{R}`, based on the above, we have
     
 .. math::
 
