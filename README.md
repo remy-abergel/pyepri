@@ -15,7 +15,9 @@ If you find PyEPRI useful, please consider citing the following
 [research paper](https://doi.org/10.1016/j.jmr.2025.107891):
 
 ```
-Rémy Abergel, Sylvain Durand, and Yves-Michel Frapart. PyEPRI: a CPU & GPU compatible python package for electron paramagnetic resonance imaging. Journal of Magnetic Resonance, p. 107891, 2025. DOI: 10.1016/j.jmr.2025.107891.
+Rémy Abergel, Sylvain Durand, and Yves-Michel Frapart. PyEPRI: a CPU & GPU compatible python
+package for electron paramagnetic resonance imaging. Journal of Magnetic Resonance, vol 376,
+p. 107891, 2025 (DOI: 10.1016/j.jmr.2025.107891).
 ```
 
 ## Installation
