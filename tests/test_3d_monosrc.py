@@ -38,10 +38,10 @@ def test_proj3d_rfftmode(libname, dtype, nruns, tol):
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
-        # sample random 2D image
+        # sample random 3D image
         x = backend.rand(N1, N2, N3, dtype=dtype)
         
-        # apply proj2d operator (with rfft_mode enabled or not)
+        # apply proj3d operator (with rfft_mode enabled or not)
         Ax1 = monosrc.proj3d(x, delta, B, h, fgrad, backend=backend, rfft_mode=True, eps=eps)
         Ax2 = monosrc.proj3d(x, delta, B, h, fgrad, backend=backend, rfft_mode=False, eps=eps)
         
@@ -85,10 +85,10 @@ def test_backproj3d_rfftmode(libname, dtype, nruns, tol):
         h = backend.rand(Nb, dtype=dtype)
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
-        # sample random 2D projections
+        # sample random 3D projections
         y = backend.rand(Nproj, Nb, dtype=dtype)
         
-        # apply backproj2d operator (with rfft_mode enabled or not)
+        # apply backproj3d operator (with rfft_mode enabled or not)
         out_shape=(N1, N2, N3)
         adjAy1 = monosrc.backproj3d(y, delta, B, h, fgrad, out_shape, backend=backend, rfft_mode=True, eps=eps)
         adjAy2 = monosrc.backproj3d(y, delta, B, h, fgrad, out_shape, backend=backend, rfft_mode=False, eps=eps)
@@ -195,7 +195,7 @@ def test_proj3d_and_backproj3d_adjointness(libname, dtype, nruns, tol):
         assert rel < tol * eps
 
 
-def test_proj2d_and_backproj2d_matrices(libname, dtype, nruns, tol):
+def test_proj3d_and_backproj3d_matrices(libname, dtype, nruns, tol):
     
     # create backend
     if libname == 'numpy':
@@ -211,7 +211,7 @@ def test_proj2d_and_backproj2d_matrices(libname, dtype, nruns, tol):
     #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
     eps = 1e-15 if dtype == 'float64' else 1e-6
     
-    # check adjointness for the monosrc.proj2d and monosrc.backproj2d
+    # check adjointness for the monosrc.proj3d and monosrc.backproj3d
     # via matrix representation over very small datasets
     for id in range(nruns):
         
@@ -229,7 +229,7 @@ def test_proj2d_and_backproj2d_matrices(libname, dtype, nruns, tol):
         h = backend.rand(Nb, dtype=dtype)
         y = backend.rand(Nproj, Nb, dtype=dtype)
         
-        # evaluate adjA(y) using monosrc.backproj2d        
+        # evaluate adjA(y) using monosrc.backproj3d        
         rfft_mode = backend.rand(1)[0] > 0.5
         adjAy1 = monosrc.backproj3d(y, delta, B, h, fgrad, backend=backend, out_shape=(N1, N2, N3), rfft_mode=rfft_mode, eps=eps)
         
@@ -295,17 +295,17 @@ def test_3d_toeplitz_kernel(libname, dtype, nruns, tol):
         
         # apply operators (randomly select whether rfft_mode shall be
         # used or not, and whether nodes must be reused or not
-        #rfft_mode = True
+        # rfft_mode = True
         rfft_mode = backend.rand(1).item() > 0.5
         precompute_nodes = backend.rand(1).item() > 0.5
         nodes = monosrc.compute_3d_frequency_nodes(B, delta, fgrad, backend=backend, rfft_mode=rfft_mode) if precompute_nodes else None
         Au = monosrc.proj3d(u, delta, B, h, fgrad, backend=backend, rfft_mode=rfft_mode, eps=eps)
         adjAAu = monosrc.backproj3d(Au, delta, B, h, fgrad, (N1, N2, N3), backend=backend, rfft_mode=rfft_mode, nodes=nodes, eps=eps)
         
-        # compute 2D Toeplitz kernel
+        # compute 3D Toeplitz kernel
         phi = monosrc.compute_3d_toeplitz_kernel(B, h, h, delta, fgrad, (2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=rfft_mode, nodes=nodes)
         
-        # apply 2D convolution
+        # apply 3D convolution
         out = monosrc.apply_3d_toeplitz_kernel(u, backend.rfftn(phi), backend=backend)
         
         # check that `adjAAu` and `out` are close to each other

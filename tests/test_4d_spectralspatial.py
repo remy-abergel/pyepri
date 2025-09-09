@@ -487,8 +487,7 @@ def test_4d_toeplitz_kernel(libname, dtype, nruns, tol):
         
         # compute 4D Toeplitz kernel
         npb = backends.create_numpy_backend()
-        #phi = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=rfft_mode, nodes=nodes) # not ready
-        phi = backend.from_numpy(ss.compute_4d_toeplitz_kernel(backend.to_numpy(B), delta, backend.to_numpy(fgrad), [2*Nb, 2*N1, 2*N2, 2*N3], backend=npb, eps=eps, rfft_mode=True))
+        phi = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=rfft_mode, nodes=nodes) # fixed since cufinufft 2.4.0
         
         # apply 4D convolution
         out = ss.apply_4d_toeplitz_kernel(u, backend.rfftn(phi), backend=backend)

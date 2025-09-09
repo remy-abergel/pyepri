@@ -1,6 +1,10 @@
-"""This module contains low-level operators related to **spectral-spatial
-EPR imaging** (projection, backprojection, projection-backprojection
-using Toeplitz kernels). 
+"""This module contains low-level operators related to
+**spectral-spatial EPR imaging** (projection, backprojection,
+projection-backprojection using Toeplitz kernels). Detailed
+mathematical definitions of the operators are provided in the
+:ref:`Mathematical definitions
+<mathematical_definitions_spectral_spatial_operators>` section of the
+PyEPRI documentation.
 
 """
 

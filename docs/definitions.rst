@@ -895,6 +895,7 @@ the 2D and 3D settings. Detailed examples of computation and use of
 Toeplitz kernels are available in the two last sections of :ref:`this
 tutorial <tutorial_toeplitz>`.
 
+.. _mathematical_definitions_spectral_spatial_operators:
 
 Spectral-spatial operators
 --------------------------
@@ -1073,7 +1074,7 @@ states that, given any spectral-spatial function :math:`f:\mathbb{R}^d
    \mathcal{F}(f)(\xi \, e_{\theta,\varphi}) = \mathcal{F}(f)(\xi \,
    \sin(\varphi) \, e_\theta, \xi \, \cos(\varphi))\,.
 
-Now, ket :math:`\xi \in \mathbb{R}`, based on the above, we have
+Now, let :math:`\xi \in \mathbb{R}`, based on the above, we have
     
 .. math::
 

@@ -13,8 +13,7 @@ System requirements
 
 PyEPRI can be installed on all plateforms (Linux, MacOs or
 Windows). However, GPU support is currently only available for systems
-equipped with an NVIDIA graphics card and a working installation of
-the CUDA drivers (which excludes MAC systems).
+equipped with an NVIDIA graphics card (which excludes MAC systems).
 
 
 .. tabs::
