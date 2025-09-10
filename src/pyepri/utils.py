@@ -374,7 +374,7 @@ def _relerr_(u, v, backend=None, nrm=None, notest=False):
         (useful to avoid underflow or overflow issues in the
         computation of the relative error). If not given, ``nrm`` will
         be taken equal to one over the infinite norm of ``u``, i.e.,
-        ``nrm = 1. / ||u||_inf``.
+        ``nrm = 1. / max(||u||_inf, ||v||_inf)``.
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
@@ -384,7 +384,8 @@ def _relerr_(u, v, backend=None, nrm=None, notest=False):
     
     rel : float
         The relative error ``||nrm * u - nrm * v|| / ||nrm * u||``
-        where ``||.||`` denotes the l2 norm.
+        (where ``||.||`` denotes the l2 norm), or 0 when u and v are
+        full of 0.
 
     """   
     # backend inference (if necessary)
@@ -397,9 +398,16 @@ def _relerr_(u, v, backend=None, nrm=None, notest=False):
         checks._check_dtype_(u.dtype, v=v)
         checks._check_ndim_(u.ndim, v=v)
     
+    # deal with u and v full of zero case (return 0)
+    uinf = backend.abs(u).max().item()
+    vinf = backend.abs(v).max().item()
+    denom = max(uinf, vinf)
+    if denom == 0:
+        return 0
+    
     # deal with nrm default value
     if nrm is None:
-        nrm = 1. / backend.abs(u).max().item()
+        nrm = 1. / denom
         
     # compute & return relative error between nrm * u and nrm * v
     rel = backend.sqrt((backend.abs(nrm * u - nrm * v)**2).sum() / (backend.abs(nrm * u)**2).sum()).item()
