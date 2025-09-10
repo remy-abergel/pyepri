@@ -4,6 +4,13 @@
 
 ## Future v1.1.1
 
+### New features 
+
+- added support for 4D spectral spatial images with integrated
+  spectrum along the spectral dimension, that is, images in which each
+  voxel contains an EPR absorption profile instead of an EPR spectrum
+  [#19](../../pull/19)
+
 ### Code 
 
 - fixed unit test name ``test_proj2d_and_backproj2d_matrices`` -->

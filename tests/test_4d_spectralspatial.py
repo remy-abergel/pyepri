@@ -24,11 +24,11 @@ def test_proj4d_rfftmode(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10 * backend.rand(1)[0])
-        N2 = 1 + int(10 * backend.rand(1)[0])
-        N3 = 1 + int(10 * backend.rand(1)[0])
-        Nproj = 1 + int(10 * backend.rand(1)[0])
-        Nb = 2 + int(10 * backend.rand(1)[0])
+        N1 = 10 + int(10 * backend.rand(1)[0])
+        N2 = 10 + int(10 * backend.rand(1)[0])
+        N3 = 10 + int(10 * backend.rand(1)[0])
+        Nproj = 10 + int(10 * backend.rand(1)[0])
+        Nb = 50 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
@@ -39,10 +39,13 @@ def test_proj4d_rfftmode(libname, dtype, nruns, tol):
         
         # sample random 4D image
         x = backend.rand(Nb, N1, N2, N3, dtype=dtype)
+
+        # randomly activate/deactivate absorption_mode
+        absorption_mode = backend.rand(1)[0] > 0.5
         
         # apply proj4d operator (with rfft_mode enabled or not)
-        Ax1 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=True, eps=eps)
-        Ax2 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=False, eps=eps)
+        Ax1 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=True, absorption_mode=absorption_mode, eps=eps)
+        Ax2 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=False, absorption_mode=absorption_mode, eps=eps)
         
         # compare results
         rel = utils._relerr_(Ax1, Ax2, backend=backend, notest=True)
@@ -70,11 +73,11 @@ def test_proj4d_memory_usage(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10 * backend.rand(1)[0])
-        N2 = 1 + int(10 * backend.rand(1)[0])
-        N3 = 1 + int(10 * backend.rand(1)[0])
-        Nproj = 1 + int(10 * backend.rand(1)[0])
-        Nb = 2 + int(10 * backend.rand(1)[0])
+        N1 = 10 + int(10 * backend.rand(1)[0])
+        N2 = 10 + int(10 * backend.rand(1)[0])
+        N3 = 10 + int(10 * backend.rand(1)[0])
+        Nproj = 10 + int(10 * backend.rand(1)[0])
+        Nb = 50 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
@@ -86,13 +89,15 @@ def test_proj4d_memory_usage(libname, dtype, nruns, tol):
         # sample random 4D image
         x = backend.rand(Nb, N1, N2, N3, dtype=dtype)
         
+        # randomly activate/deactivate absorption_mode
+        absorption_mode = backend.rand(1)[0] > 0.5
+        
         # apply proj4d operator
-        Ax0 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=(backend.rand(1)[0] > 0.5), eps=eps, memory_usage=0)
-        Ax1 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=(backend.rand(1)[0] > 0.5), eps=eps, memory_usage=1)
-        Ax2 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=(backend.rand(1)[0] > 0.5), eps=eps, memory_usage=2)
+        Ax0 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=(backend.rand(1)[0] > 0.5), absorption_mode=absorption_mode, eps=eps, memory_usage=0)
+        Ax1 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=(backend.rand(1)[0] > 0.5), absorption_mode=absorption_mode, eps=eps, memory_usage=1)
+        Ax2 = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=(backend.rand(1)[0] > 0.5), absorption_mode=absorption_mode, eps=eps, memory_usage=2)
         
         # compare results
-        nrm = 1. / backend.abs(Ax0).max()
         rel1 = utils._relerr_(Ax0, Ax1, backend=backend, notest=True)
         rel2 = utils._relerr_(Ax0, Ax2, backend=backend, notest=True)
         rel = max(rel1, rel2)
@@ -120,11 +125,11 @@ def test_backproj4d_rfftmode(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10 * backend.rand(1)[0])
-        N2 = 1 + int(10 * backend.rand(1)[0])
-        N3 = 1 + int(10 * backend.rand(1)[0])
-        Nproj = 1 + int(10 * backend.rand(1)[0])
-        Nb = 2 + int(10 * backend.rand(1)[0])
+        N1 = 10 + int(10 * backend.rand(1)[0])
+        N2 = 10 + int(10 * backend.rand(1)[0])
+        N3 = 10 + int(10 * backend.rand(1)[0])
+        Nproj = 10 + int(10 * backend.rand(1)[0])
+        Nb = 50 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
@@ -136,10 +141,13 @@ def test_backproj4d_rfftmode(libname, dtype, nruns, tol):
         # sample random 4D projections
         y = backend.rand(Nproj, Nb, dtype=dtype)
         
+        # randomly activate/deactivate absorption_mode
+        absorption_mode = backend.rand(1)[0] > 0.5
+        
         # apply backproj4d operator (with rfft_mode enabled or not)
         out_shape=(Nb, N1, N2, N3)
-        adjAy1 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, rfft_mode=True, eps=eps)
-        adjAy2 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, rfft_mode=False, eps=eps)
+        adjAy1 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, absorption_mode=absorption_mode, eps=eps, rfft_mode=True)
+        adjAy2 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, absorption_mode=absorption_mode, eps=eps, rfft_mode=False)
         
         # compare results
         rel = utils._relerr_(adjAy1, adjAy2, backend=backend, notest=True)
@@ -167,11 +175,11 @@ def test_backproj4d_memory_usage(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10 * backend.rand(1)[0])
-        N2 = 1 + int(10 * backend.rand(1)[0])
-        N3 = 1 + int(10 * backend.rand(1)[0])
-        Nproj = 1 + int(10 * backend.rand(1)[0])
-        Nb = 2 + int(10 * backend.rand(1)[0])
+        N1 = 10 + int(10 * backend.rand(1)[0])
+        N2 = 10 + int(10 * backend.rand(1)[0])
+        N3 = 10 + int(10 * backend.rand(1)[0])
+        Nproj = 10 + int(10 * backend.rand(1)[0])
+        Nb = 50 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
@@ -183,11 +191,14 @@ def test_backproj4d_memory_usage(libname, dtype, nruns, tol):
         # sample random 4D projections
         y = backend.rand(Nproj, Nb, dtype=dtype)
         
+        # randomly activate/deactivate absorption_mode
+        absorption_mode = backend.rand(1)[0] > 0.5
+        
         # apply backproj4d operator (with rfft_mode enabled or not)
         out_shape=(Nb, N1, N2, N3)
-        adjAy0 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, rfft_mode=(backend.rand(1)[0] > 0.5), eps=eps, memory_usage=0)
-        adjAy1 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, rfft_mode=(backend.rand(1)[0] > 0.5), eps=eps, memory_usage=1)
-        adjAy2 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, rfft_mode=(backend.rand(1)[0] > 0.5), eps=eps, memory_usage=2)
+        adjAy0 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, absorption_mode=absorption_mode, rfft_mode=(backend.rand(1)[0] > 0.5), eps=eps, memory_usage=0)
+        adjAy1 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, absorption_mode=absorption_mode, rfft_mode=(backend.rand(1)[0] > 0.5), eps=eps, memory_usage=1)
+        adjAy2 = ss.backproj4d(y, delta, B, fgrad, out_shape, backend=backend, absorption_mode=absorption_mode, rfft_mode=(backend.rand(1)[0] > 0.5), eps=eps, memory_usage=2)
         
         # compare results
         rel1 = utils._relerr_(adjAy0, adjAy1, backend=backend, notest=True)
@@ -221,11 +232,11 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10 * backend.rand(1)[0])
-        N2 = 1 + int(10 * backend.rand(1)[0])
-        N3 = 1 + int(10 * backend.rand(1)[0])
-        Nproj = 1 + int(10 * backend.rand(1)[0])
-        Nb = 2 + int(10 * backend.rand(1)[0])
+        N1 = 10 + int(10 * backend.rand(1)[0])
+        N2 = 10 + int(10 * backend.rand(1)[0])
+        N3 = 10 + int(10 * backend.rand(1)[0])
+        Nproj = 10 + int(10 * backend.rand(1)[0])
+        Nb = 50 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
@@ -234,12 +245,15 @@ def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
         B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
+        # randomly activate/deactivate absorption_mode
+        absorption_mode = backend.rand(1)[0] > 0.5
+        
         # compute Toeplitz kernel (with rfft_mode enabled or not)
-        phi1 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=True)
-        phi2 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=False)
+        phi1 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, absorption_mode=absorption_mode, eps=eps, rfft_mode=True)
+        phi2 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, absorption_mode=absorption_mode, eps=eps, rfft_mode=False)
         
         # compare results
-        rel = backend._relerr_(phi1, phi2, backend=backend, notest=True)
+        rel = utils._relerr_(phi1, phi2, backend=backend, notest=True)
         assert rel < tol * eps
 
 
@@ -264,11 +278,11 @@ def test_proj4d_and_backproj4d_adjointness(libname, dtype, nruns, tol):
     for id in range(nruns):
         
         # sample random dimensions 
-        N1 = 1 + int(10 * backend.rand(1)[0])
-        N2 = 1 + int(10 * backend.rand(1)[0])
-        N3 = 1 + int(10 * backend.rand(1)[0])
-        Nproj = 1 + int(10 * backend.rand(1)[0])
-        Nb = 2 + int(10 * backend.rand(1)[0])
+        N1 = 10 + int(10 * backend.rand(1)[0])
+        N2 = 10 + int(10 * backend.rand(1)[0])
+        N3 = 10 + int(10 * backend.rand(1)[0])
+        Nproj = 10 + int(10 * backend.rand(1)[0])
+        Nb = 50 + int(10 * backend.rand(1)[0])
         
         # sample random inputs 
         B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
@@ -281,16 +295,24 @@ def test_proj4d_and_backproj4d_adjointness(libname, dtype, nruns, tol):
         x = backend.rand(Nb, N1, N2, N3, dtype=dtype)
         y = backend.rand(Nproj, Nb, dtype=dtype)
         
+        # randomly activate/deactivate absorption_mode
+        absorption_mode = backend.rand(1)[0] > 0.5
+        
         # apply operators (randomly select whether rfft_mode shall be
         # used or not
         rfft_mode = backend.rand(1)[0] > 0.5
-        Ax = ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=rfft_mode, eps=eps)
-        adjAy = ss.backproj4d(y, delta, B, fgrad, (Nb, N1, N2, N3), backend=backend, rfft_mode=rfft_mode, eps=eps)
+        Ax = ss.proj4d(x, delta, B, fgrad, backend=backend, absorption_mode=absorption_mode, rfft_mode=rfft_mode, eps=eps)
+        adjAy = ss.backproj4d(y, delta, B, fgrad, (Nb, N1, N2, N3), backend=backend, absorption_mode=absorption_mode, rfft_mode=rfft_mode, eps=eps)
         
         # compute inner products
         inprod1 = (Ax * y).sum()
         inprod2 = (x * adjAy).sum()
-        rel = abs(1 - inprod1 / inprod2)
+        if inprod1 == 0 and inprod2 == 0:
+            rel = 0
+        elif inprod2 == 0:
+            rel = abs(1 - inprod2 / inprod1)
+        else:
+            rel = abs(1 - inprod1 / inprod2)
         assert rel < tol * eps
 
 
@@ -328,8 +350,11 @@ def test_proj4d_and_backproj4d_matrices(libname, dtype, nruns, tol):
         x = backend.rand(Nb, N1, N2, N3, dtype=dtype)
         y = backend.rand(Nproj, Nb, dtype=dtype)
         
+        # randomly activate/deactivate absorption_mode
+        absorption_mode = backend.rand(1)[0] > 0.5
+        
         # compute matricial representation of A and its adjoint over this dataset
-        A = lambda x : ss.proj4d(x, delta, B, fgrad, backend=backend, rfft_mode=True, eps=eps)
+        A = lambda x : ss.proj4d(x, delta, B, fgrad, backend=backend, absorption_mode=absorption_mode, rfft_mode=True, eps=eps)
         arr_to_vec = lambda arr : arr.reshape((-1,))
         vec_to_arr = lambda vec, shape: vec.reshape(shape)
         m = Nproj * Nb
@@ -343,54 +368,11 @@ def test_proj4d_and_backproj4d_matrices(libname, dtype, nruns, tol):
         
         # evaluate adjA(y) by matrix-vector multiplication
         Mt = backend.transpose(M)
-        adjAy = ss.backproj4d(y, delta, B, fgrad, (Nb, N1, N2, N3), backend=backend, rfft_mode=True, eps=eps)
+        adjAy = ss.backproj4d(y, delta, B, fgrad, (Nb, N1, N2, N3), backend=backend, absorption_mode=absorption_mode, rfft_mode=True, eps=eps)
         adjAy2 = vec_to_arr(Mt @ arr_to_vec(y), (Nb, N1, N2, N3))
 
         # check relative error
         rel = utils._relerr_(adjAy, adjAy2, backend=backend, notest=True)
-        assert rel < tol * eps
-
-
-def test_4d_toeplitz_kernel_rfftmode(libname, dtype, nruns, tol):
-    
-    # create backend
-    if libname == 'numpy':
-        backend = backends.create_numpy_backend()
-    elif libname == 'torch-cpu': 
-        backend = backends.create_torch_backend('cpu')
-    elif libname == 'torch-cuda': 
-        backend = backends.create_torch_backend('cuda')
-    elif libname == 'cupy': 
-        backend = backends.create_cupy_backend()
-    
-    # retrieve machine epsilon
-    #eps = backend.lib.finfo(backend.str_to_lib_dtypes[dtype]).eps
-    eps = 1e-15 if dtype == 'float64' else 1e-6
-    
-    # check that monosrc.compute_3d_toeplitz_kernel returns the same
-    # results whenever rfft_mode parameter is True or False
-    for id in range(nruns):
-        
-        # sample random dimensions 
-        N1 = 1 + int(10 * backend.rand(1)[0])
-        N2 = 1 + int(10 * backend.rand(1)[0])
-        N3 = 1 + int(10 * backend.rand(1)[0])
-        Nproj = 1 + int(10 * backend.rand(1)[0])
-        Nb = 2 + int(10 * backend.rand(1)[0])
-        
-        # sample random inputs 
-        B0 = backend.cast(200 + 100 * backend.rand(1)[0], dtype)
-        dB = 10. * B0 * eps + backend.rand(1, dtype=dtype)[0]
-        delta = float(10. * eps + backend.rand(1)[0])
-        B = B0 + backend.arange(Nb, dtype=dtype) * dB
-        fgrad = backend.rand(3, Nproj, dtype=dtype)
-        
-        # compute Toeplitz kernel (with rfft_mode enabled or not)
-        phi1 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=True)
-        phi2 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=False)
-        
-        # compare results
-        rel = utils._relerr_(phi1, phi2, backend=backend, notest=True)
         assert rel < tol * eps
 
 
@@ -428,9 +410,20 @@ def test_4d_toeplitz_kernel_memory_usage(libname, dtype, nruns, tol):
         B = B0 + backend.arange(Nb, dtype=dtype) * dB
         fgrad = backend.rand(3, Nproj, dtype=dtype)
         
+        # randomly activate/deactivate absorption_mode
+        absorption_mode = backend.rand(1)[0] > 0.5
+        
         # compute Toeplitz kernel (with rfft_mode enabled or not)
-        phi0 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=(backend.rand(1)[0] > 0.5), memory_usage=0)
-        phi2 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=(backend.rand(1)[0] > 0.5), memory_usage=2)
+        phi0 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3),
+                                             backend=backend,
+                                             absorption_mode=absorption_mode, eps=eps,
+                                             rfft_mode=(backend.rand(1)[0] > 0.5),
+                                             memory_usage=0)
+        phi2 = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3),
+                                             backend=backend,
+                                             absorption_mode=absorption_mode, eps=eps,
+                                             rfft_mode=(backend.rand(1)[0] > 0.5),
+                                             memory_usage=2)
         
         # compare results
         rel = utils._relerr_(phi0, phi2, backend=backend, notest=True)
@@ -476,18 +469,23 @@ def test_4d_toeplitz_kernel(libname, dtype, nruns, tol):
         # sample random image
         u = backend.rand(Nb, N1, N2, N3, dtype=dtype)
         
+        # randomly activate/deactivate absorption_mode
+        absorption_mode = backend.rand(1)[0] > 0.5
+        
         # apply operators (randomly select whether rfft_mode shall be
         # used or not, and whether nodes must be reused or not
         #rfft_mode = True
         rfft_mode = backend.rand(1).item() > 0.5
         precompute_nodes = backend.rand(1).item() > 0.5
         nodes = ss.compute_4d_frequency_nodes(B, delta, fgrad, backend=backend, rfft_mode=rfft_mode) if precompute_nodes else None
-        Au = ss.proj4d(u, delta, B, fgrad, backend=backend, rfft_mode=rfft_mode, eps=eps)
-        adjAAu = ss.backproj4d(Au, delta, B, fgrad, (Nb, N1, N2, N3), backend=backend, rfft_mode=rfft_mode, nodes=nodes, eps=eps)
+        Au = ss.proj4d(u, delta, B, fgrad, backend=backend, absorption_mode=absorption_mode, rfft_mode=rfft_mode, eps=eps)
+        adjAAu = ss.backproj4d(Au, delta, B, fgrad, (Nb, N1, N2, N3), backend=backend, absorption_mode=absorption_mode, rfft_mode=rfft_mode, nodes=nodes, eps=eps)
         
         # compute 4D Toeplitz kernel
         npb = backends.create_numpy_backend()
-        phi = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3), backend=backend, eps=eps, rfft_mode=rfft_mode, nodes=nodes) # fixed since cufinufft 2.4.0
+        phi = ss.compute_4d_toeplitz_kernel(B, delta, fgrad, (2*Nb, 2*N1, 2*N2, 2*N3),
+                                            backend=backend, absorption_mode=absorption_mode,
+                                            eps=eps, rfft_mode=rfft_mode, nodes=nodes) # fixed since cufinufft 2.4.0
         
         # apply 4D convolution
         out = ss.apply_4d_toeplitz_kernel(u, backend.rfftn(phi), backend=backend)
