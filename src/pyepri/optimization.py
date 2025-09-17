@@ -584,7 +584,7 @@ def tvsolver_cp2016(init, gradf, Lf, lbda, grad, div, Lgrad,
     # initialize dual variable p
     ushape = u.shape
     udim = len(u.shape)    
-    p = backend.zeros((udim,)+ushape, dtype=dtype) if p_init is None else backend.copy(p_init)
+    p = backend.zeros(grad(ubar).shape, dtype=dtype) if p_init is None else backend.copy(p_init)
     
     # compute primal and dual time steps
     tau = .5 / Lf
