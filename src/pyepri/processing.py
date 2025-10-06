@@ -14,10 +14,11 @@ import pyepri.optimization as optimization
 import pyepri.utils as utils
 
 def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
-               backend=None, init=None, tol=1e-5, nitermax=1000000,
-               eval_energy=False, verbose=False, video=False,
-               displayer=None, Ndisplay=20, eps=1e-6,
-               disable_toeplitz_kernel=False, notest=False):
+               backend=None, init=None, positivity=False, mask=None,
+               tol=1e-5, nitermax=1000000, eval_energy=False,
+               verbose=False, video=False, displayer=None,
+               Ndisplay=20, eps=1e-6, disable_toeplitz_kernel=False,
+               notest=False):
     r"""EPR single source image reconstruction using TV-regularized least-squares.
     
     This functions performs EPR image reconstruction by minimization
@@ -64,7 +65,7 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
         The physical unit of the field gradient should be consistent
         with that of `B` and delta, i.e., `fgrad` must be provided in
         `[B-unit] / [length-unit]` (e.g., `G/cm`, `mT/cm`, ...).
-        
+    
     delta : float 
         Pixel size for the reconstruction, given in a length unit
         denoted as `[length-unit]` (can be `centimeter (cm)`,
@@ -85,7 +86,7 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
         >>> cof2 = fgrad.shape[1] / (2.**(ndim - 1) * math.pi) 
         >>> cof3 = (len(B) / Bsw) 
         >>> lbda_unrm = cof1 * cof2 * cof3 * delta**(ndim-1) * lbda
-        
+    
     out_shape : tuple or list of int with length 2 or 3
         Shape of the output image.    
     
@@ -100,6 +101,16 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
         Initializer for the numerical optimization scheme
         (:py:func:`pyepri.optimization.tvsolver_cp2016`).
     
+    positivity : bool, optional
+        Use ``positivity=True`` to impose a positivity constraint for
+        ``u`` in the TV-regularized inverse problem defined above.
+    
+    mask : array_like, optional
+        If set, impose a support contraint for ``u`` in the
+        TV-regularized inverse problem defined above. More
+        specifically, ``u`` should be zero at locations where ``mask``
+        is less or equal to zero (or False).
+    
     tol : float, optional
         A tolerance parameter used to stop the iterations of the
         numerical optimization scheme.
@@ -111,17 +122,17 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
     eval_energy : bool, optional 
         Enable / disable energy evaluation during the iterations of
         the numerical optimization scheme.
-    
+        
         When ``eval_energy is True``, the TV-regularized least-squares
         energy to be minimized will be computed each ``Ndisplay``
         iteration of the scheme. The computed energy values are
         displayed when ``verbose`` or ``video`` modes are enabled (see
         below). 
-    
+        
         The computed energy values are not returned by this function
         (to retrieve the energy value, the user can directly use the
         :py:func:`pyepri.optimization.tvsolver_cp2016` function).
-    
+        
         Enabling energy computation will increase computation time.
     
     verbose : bool, optional 
@@ -136,11 +147,11 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
         Image displayer used to display the latent image during the
         scheme iteration. When not given (``displayer is None``), a
         default displayer is instantiated.
-    
+        
         Enabling video is definitely helpful but also slows-down the
         execution (it is recommended to use the ``Ndisplay`` parameter
         to control the image refreshing rate).
-        
+    
     Ndisplay : int, optional
         Can be used to limit energy evaluation, image display, and
         verbose mode to the iteration indexes ``k`` that are multiples
@@ -157,11 +168,11 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
         (i.e., when ``disable_toeplitz_kernel is False``), this
         operation is done by means of a circular convolution using a
         Toeplitz kernel (which can be evaluated efficiently using FFT).
-    
+        
         When ``disable_toeplitz_kernel is True``, the Toeplitz kernel is
         not used and the evaluation is down sequentially (compute
         projection and then backprojection).
-    
+        
         The setting of this parameter should not affect the returned
         image, but only the computation time (the default setting
         should be the faster).
@@ -184,7 +195,7 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
     
     pyepri.optimization.tvsolver_cp2016
     tv_multisrc
-
+    
     """
     
     # backend inference (if necessary)
@@ -200,7 +211,8 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
                        disable_toeplitz_kernel=disable_toeplitz_kernel,
                        verbose=verbose, video=video,
                        displayer=displayer, eps=eps,
-                       Ndisplay=Ndisplay)
+                       Ndisplay=Ndisplay, mask=mask,
+                       positivity=positivity)
     
     # retrieve number of dimensions (2D/3D)
     ndim = fgrad.shape[0]
@@ -237,7 +249,7 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
                                backend=backend, eps=eps,
                                rfft_mode=True, nodes=nodes,
                                return_rfft2=True)
-        Lf = backend.abs(rfft2_phi).max()
+        Lf = backend.abs(rfft2_phi).max() / 2**ndim
         rfft2 = backend.rfft2 # improve readability in gradf
         irfft2 = backend.irfft2 # improve readability in gradf
         gradf = lambda u : irfft2(rfft2(u, s=s) * rfft2_phi,
@@ -249,7 +261,7 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
                                backend=backend, eps=eps,
                                rfft_mode=True, nodes=nodes,
                                return_rfft3=True)
-        Lf = backend.abs(rfft3_phi).max()
+        Lf = backend.abs(rfft3_phi).max() / 2**ndim
         rfftn = backend.rfftn # improve readability in gradf
         irfftn = backend.irfftn # improve readability in gradf
         gradf = lambda u : irfftn(rfftn(u, s=s) * rfft3_phi,
@@ -268,12 +280,14 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
     
     # prepare generic tv solver configuration
     if 2 == ndim:
-        grad = lambda u : utils.grad2d(u, backend=backend, notest=True)
-        div = lambda g : utils.div2d(g, backend=backend, notest=True)
+        masks = utils.compute_2d_gradient_masks(mask, backend=backend, notest=True)
+        grad = lambda u : utils.grad2d(u, masks=masks, backend=backend, notest=True)
+        div = lambda g : utils.div2d(g, masks=masks, backend=backend, notest=True)
         Lgrad = math.sqrt(8.)
     else:
-        grad = lambda u : utils.grad3d(u, backend=backend, notest=True)
-        div = lambda g : utils.div3d(g, backend=backend, notest=True)
+        masks = utils.compute_3d_gradient_masks(mask, backend=backend, notest=True)
+        grad = lambda u : utils.grad3d(u, masks=masks, backend=backend, notest=True)
+        div = lambda g : utils.div3d(g, masks=masks, backend=backend, notest=True)
         Lgrad = math.sqrt(12.)
     if eval_energy:
         tv = lambda u : (backend.sqrt((grad(u)**2).sum(axis=0))).sum()
@@ -282,12 +296,16 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
         evalE = None
     if init is None:
         init = v / (delta**ndim * v.sum())
+        if positivity:
+            init = backend.maximum(0, init)
     
     # run generic TV solver
     out = optimization.tvsolver_cp2016(init, gradf, Lf, lbda_unrm,
                                        grad, div, Lgrad, tol=tol,
                                        backend=backend,
-                                       nitermax=nitermax, evalE=evalE,
+                                       nitermax=nitermax,
+                                       positivity=positivity,
+                                       mask=mask, evalE=evalE,
                                        verbose=verbose, video=video,
                                        Ndisplay=Ndisplay,
                                        displayer=displayer)
@@ -555,7 +573,7 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
         for j in range(K):
             s += backend.abs(rfftn_phi[k][j]).max().item()**2
         Lf = max([Lf, s])        
-    Lf = math.sqrt(Lf)
+    Lf = math.sqrt(Lf) / 2**ndim
     
     # define gradf
     def gradf(u):
@@ -1184,7 +1202,8 @@ def _check_inputs_(caller, backend, proj=None, B=None, fgrad=None,
                    eval_energy=None, disable_toeplitz_kernel=None,
                    verbose=None, video=None, displayer=None, eps=None,
                    Ndisplay=None, xgrid=None, ygrid=None, zgrid=None,
-                   interp1=None, frequency_cutoff=None, shuffle=None):
+                   interp1=None, frequency_cutoff=None, shuffle=None,
+                   positivity=None, mask=None):
     """Factorized consistency checks for functions in the :py:mod:`pyepri.processing` submodule."""
     
     ##################
@@ -1202,7 +1221,8 @@ def _check_inputs_(caller, backend, proj=None, B=None, fgrad=None,
     checks._check_dtype_(dtype, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid)
     checks._check_type_(bool, eval_energy=eval_energy,
                         disable_toeplitz_kernel=disable_toeplitz_kernel,
-                        verbose=verbose, video=video, shuffle=shuffle)
+                        verbose=verbose, video=video, shuffle=shuffle,
+                        positivity=positivity)
     checks._check_type_(float, delta=delta, tol=tol, eps=eps)
     checks._check_type_(int, Ndisplay=Ndisplay, nitermax=nitermax)
     checks._check_ndim_(1, B=B, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid)
@@ -1286,6 +1306,12 @@ def _check_inputs_(caller, backend, proj=None, B=None, fgrad=None,
         if init is not None and (dim != init.ndim or init.shape != tuple(out_shape)):
             raise RuntimeError(
                 "Parameter ``init`` shape must be ``out_shape``."
+            )
+    
+        # check mask shape (if provided)
+        if mask is not None and (dim != mask.ndim or mask.shape != tuple(out_shape)):
+            raise RuntimeError(
+                "Parameter ``mask`` shape must be ``out_shape``."
             )
     
     elif "eprfbp2d" == caller:
