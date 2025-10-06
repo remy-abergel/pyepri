@@ -227,6 +227,7 @@ def tvsolver_cp2011(y, lbda, A, adjA, LA, grad, div, Lgrad,
     tvsolver_cp2016
 
     """
+    
     # backend inference (if necessary)
     if backend is None:
         backend = checks._backend_inference_(y=y)
@@ -310,7 +311,7 @@ def tvsolver_cp2011(y, lbda, A, adjA, LA, grad, div, Lgrad,
         # ubar = 2*u^{iter+1} - u^{iter})
         deltasquare = ((ubar - u)**2).sum().item()
         usquare = (u**2).sum().item()
-
+        
         # update stopping criterion
         iter += 1
         stop = (iter >= nitermax) or (deltasquare < tol**2 * usquare)
@@ -589,7 +590,7 @@ def tvsolver_cp2016(init, gradf, Lf, lbda, grad, div, Lgrad,
     # compute primal and dual time steps
     tau = .5 / Lf
     sigma = Lf / ((Lgrad * lbda)**2)
-
+    
     # deal with mask option
     mask_fp = backend.cast(mask > 0, dtype) if mask is not None else 1.
     
@@ -723,7 +724,7 @@ def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
     backend : <class 'pyepri.backends.Backend'> or None, optional
         A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
         module).
-
+        
         When backend is None, a default backend is inferred from the
         input array ``init[0]``.
     
@@ -756,7 +757,7 @@ def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
         and ``displayer.update_display`` will be used to display the
         latent array_like ``u`` along the iteration of the numerical
         scheme.
-    
+        
         When not given (``displayer=None``), a default displayer will
         be instantiated (supported signals are sequences of 2D or 3D
         array_like). In this situation, the appropriate signal
@@ -771,7 +772,7 @@ def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
     
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
-        
+    
     
     Return
     ------
@@ -779,11 +780,11 @@ def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
     out : dict 
         A dictionary with content ``{'u': u, 'ubar': ubar, 'p': p,
         'E': E, 'iter': iter}`` where
-    
+        
         + ``u``: (array_like with type `backend.cls`) is the output
           signal :math:`u` involved in the optimization scheme (when
           convergence is reached, this is a minimizer of :math:`E`).
-    
+        
         + ``ubar``: (array_like with type `backend.cls`) is the output
           signal :math:`\overline{u}` involved in the optimization
           scheme (when convergence is reached, ``ubar`` is the same as
@@ -793,7 +794,7 @@ def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
           signal :math:`p` involved in the optimization scheme (when
           convergence is reached, ``p`` is a solution of a dual
           formulation of the initial problem).
-    
+        
         + ``E``: (array_like with type `backend.cls`) is, when
           ``evalE`` is given, a one dimensional array containing the
           energy values computed each ``Ndisplay`` iterations,
@@ -810,13 +811,13 @@ def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
     
     pyepri.displayers
     tvsolver_cp2016_multisrc
-
+    
     """
     
     # backend inference (if necessary)
     if backend is None:
         backend = checks._backend_inference_(init=init[0])
-
+    
     # consistency checks
     if not notest:
         _check_nd_inputs_(False, init=init, gradf=gradf, Lf=Lf,
@@ -855,7 +856,7 @@ def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
             displayer = displayers.create(u_np)
         fg = displayer.init_display(u_np)
         fgnum = displayer.get_number(fg)
-
+    
     # precompute gradf(u)
     gfu = gradf(u)
     
@@ -978,7 +979,7 @@ def _check_nd_inputs_(is_monosrc, backend, y=None, lbda=None, A=None,
     
     # A, adjA, grad, div, gradf: must be some functions
     checks._check_type_(types.FunctionType, A=A, adjA=adjA, grad=grad, div=div, gradf=gradf, evalE=evalE)
-
+    
     # verbose, video, positivity: must be bool
     checks._check_type_(bool, verbose=verbose, video=video, positivity=positivity)
     
@@ -992,7 +993,7 @@ def _check_nd_inputs_(is_monosrc, backend, y=None, lbda=None, A=None,
         raise RuntimeError(            
             "Parameter `nitermax` must be finite when energy computation is required."
         )
-
+    
     # mask: must have same shape as y or init    
     if mask is not None:
         if y is not None:
@@ -1005,7 +1006,7 @@ def _check_nd_inputs_(is_monosrc, backend, y=None, lbda=None, A=None,
             raise RuntimeError(
                 "Inconsistent shape for input array `mask` (must have the same shape as the `%s` input array)" % ref_nme
             )
-
+    
     # TODO: add checks for p_init, ubar_init, etc
     
     return True
