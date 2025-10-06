@@ -32,7 +32,7 @@
 
 ### Documentation
 
-- minor improvements [#18](../../pull/18) and ([#19](../../pull/19))
+- minor improvements ([#18](../../pull/18) and [#19](../../pull/19))
 
 - added reference to the recently published paper presenting the
   PyEPRI package ([#18](../../pull/18))
