@@ -24,7 +24,7 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
         magnetic field sampling grid, with unit denoted below as
         `[B-unit]` (can be `Gauss (G)`, `millitesla (mT)`, ...), to
         use to compute the projections.
-
+    
     delta : float 
         Pixel size given in a length unit denoted below as
         `[length-unit]` (can be `centimeter (cm)`, `millimeter (mm)`,
@@ -100,7 +100,7 @@ def compute_4d_frequency_nodes(B, delta, fgrad, backend=None,
     pyepri.monosrc.compute_3d_frequency_nodes
     proj4d
     backproj4d
-
+    
     """
     # backend inference (if necessary)
     if backend is None:
@@ -168,7 +168,7 @@ def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
         
         When backend is None, a default backend is inferred from the
         input arrays stored into ``nodes``.
-        
+    
     nrm : complex, optional
         Normalization parameter involved in the weights definition
         (see below).
@@ -207,7 +207,7 @@ def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
     backproj4d
     backproj4d_fft
     backproj4d_rfft
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -233,7 +233,8 @@ def compute_4d_weights(nodes, backend=None, nrm=(1 + 0j), isign=1,
 
 
 def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
-           rfft_mode=True, nodes=None, memory_usage=1, notest=False):
+           rfft_mode=True, absorption_mode=False, nodes=None,
+           memory_usage=1, notest=False):
     """Compute EPR projections of a 4D image (adjoint of the backproj4d operation).
     
     Parameters
@@ -289,6 +290,13 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
     eps : float, optional
         Precision requested (>1e-16).
     
+    absorption_mode : bool, optional    
+        If set to True, u is assumed to be a 4D spectral-spatial image
+        integrated along its spectral direction (i.e., an image in
+        which each voxel contains an EPR absorption profile) instead
+        of a standard 4D spectral-spatial image (i.e., an image in
+        which each voxel contains an EPR spectrum).
+    
     rfft_mode : bool, optional 
         The EPR projections are evaluated in the frequency domain
         (through their discrete Fourier coefficients) before being
@@ -337,7 +345,7 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
     compute_4d_frequency_nodes
     compute_4d_weights
     backproj4d
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -354,12 +362,14 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
     if rfft_mode:
         proj_rfft = proj4d_rfft(u, delta, B, fgrad, backend=backend,
                                 weights=weights, eps=eps, nodes=nodes,
+                                absorption_mode=absorption_mode,
                                 memory_usage=memory_usage,
                                 notest=True)
         out = backend.irfft(proj_rfft, n=len(B), dim=-1)
     else:
         proj_fft = proj4d_fft(u, delta, B, fgrad, backend=backend,
                               weights=weights, eps=eps, nodes=nodes,
+                              absorption_mode=absorption_mode,
                               memory_usage=memory_usage, notest=True)
         out = backend.ifft(proj_fft, n=len(B), dim=-1).real
     
@@ -367,8 +377,8 @@ def proj4d(u, delta, B, fgrad, backend=None, weights=None, eps=1e-06,
 
 
 def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
-               eps=1e-06, out=None, nodes=None, memory_usage=1,
-               notest=False):
+               eps=1e-06, absorption_mode=False, out=None, nodes=None,
+               memory_usage=1, notest=False):
     """Compute EPR projections of a 4D image (output in Fourier domain).
     
     Parameters
@@ -379,7 +389,7 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
         spectral-spatial 4D image to be projected (axis 0 is the
         spectral axis, axes 1, 2 and 3 correspond to the Y, X and Z
         spatial axes).
-        
+    
     delta : float 
         Pixel size given in a length unit denoted below as
         `[length-unit]` (can be `centimeter (cm)`, `millimeter (mm)`,
@@ -423,6 +433,13 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
     eps : float, optional
         Precision requested (>1e-16).
     
+    absorption_mode : bool, optional    
+        If set to True, u is assumed to be a 4D spectral-spatial image
+        integrated along its spectral direction (i.e., an image in
+        which each voxel contains an EPR absorption profile) instead
+        of a standard 4D spectral-spatial image (i.e., an image in
+        which each voxel contains an EPR spectrum).
+    
     out : array_like (with type `backend.cls`), optional 
         Preallocated output complex array with shape
         ``(fgrad.shape[1], len(B))``.
@@ -444,7 +461,7 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
         
         + ``memory_usage = 2``: slow computation but very light memory
           usage
-        
+    
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
     
@@ -516,28 +533,39 @@ def proj4d_fft(u, delta, B, fgrad, backend=None, weights=None,
                                          make_contiguous=False,
                                          notest=True)
         out.reshape((-1,))[indexes] = (backend.nufft_execute(plan, u_cplx) * weights).sum(0)
+        #if absorption_mode:
+        #    print("absorption_mode = True with memory_usage = 0 is not possible yet")
     elif 1 == memory_usage:
         plan = backend.nufft_plan(2, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         uhat = backend.nufft_execute(plan, u_cplx)
         nrm = complex(delta**3)
+        #if absorption_mode:
+        #    nrm *= - 1j * t / (B[1] - B[0]) # integration in Fourier domain
+        #print(nrm)
         for l in range(Nb):
             #w = nrm * backend.exp(1j * l * t) # slow and memory consuming
             w = nrm * (backend.cos(t * l) + 1j * backend.sin(t * l)) 
             out.reshape((-1,))[indexes] += uhat[l, :] * w[idt]
     else:
         nrm = complex(delta**3)
+        #if absorption_mode:
+        #    nrm *= - 1j * t / (B[1] - B[0]) # integration in Fourier domain
         for l in range(Nb):
             #w = delta**3 * backend.exp(1j * l * t) # slow and memory consuming
             w = nrm * (backend.cos(t * l) + 1j * backend.sin(t * l))
             out.reshape((-1,))[indexes] += backend.nufft3d(y, x, z, u_cplx[l, :, :, :], eps=eps) * w[idt]
     
+    # deal with absorption_mode option
+    if absorption_mode:
+        out *= 1j * nodes['xi'] / (B[1] - B[0])
+    
     return out
 
 
 def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
-                eps=1e-06, out=None, nodes=None, memory_usage=1,
-                notest=False):
+                eps=1e-06, absorption_mode=False, out=None, nodes=None,
+                memory_usage=1, notest=False):
     """Compute EPR projections of a 4D image (output in Fourier domain, half of the full spectrum).
     
     Parameters
@@ -591,6 +619,13 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
     
     eps : float, optional
         Precision requested (>1e-16).
+    
+    absorption_mode : bool, optional    
+        If set to True, u is assumed to be a 4D spectral-spatial image
+        integrated along its spectral direction (i.e., an image in
+        which each voxel contains an EPR absorption profile) instead
+        of a standard 4D spectral-spatial image (i.e., an image in
+        which each voxel contains an EPR spectrum).
     
     out : array_like (with type `backend.cls`), optional
         Preallocated output array with shape ``(fgrad.shape[1], 1 +
@@ -685,28 +720,39 @@ def proj4d_rfft(u, delta, B, fgrad, backend=None, weights=None,
                                          make_contiguous=False,
                                          notest=True)
         out.reshape((-1,))[indexes] = (backend.nufft_execute(plan, u_cplx) * weights).sum(0)
+        #if absorption_mode:
+        #    print("absorption_mode = True with memory_usage = 0 is not possible yet")
     elif 1 == memory_usage:
         plan = backend.nufft_plan(2, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
         backend.nufft_setpts(plan, y, x, z)
         uhat = backend.nufft_execute(plan, u_cplx)
         nrm = complex(delta**3)
+        #if absorption_mode:
+        #    nrm *= - 1j * t / (B[1] - B[0]) # integration in Fourier domain
         for l in range(Nb):
             #w = nrm * backend.exp(1j * l * t) # slow & memory consuming
             w = nrm * (backend.cos(t * l) + 1j * backend.sin(t * l))
             out.reshape((-1,))[indexes] += uhat[l, :] * w[idt]
     else:
         nrm = complex(delta**3)
+        #if absorption_mode:
+        #    nrm *= - 1j * t / (B[1] - B[0]) # integration in Fourier domain
         for l in range(Nb):
             #w = nrm * backend.exp(1j * l * t) # slow and memory consuming
             w = nrm * (backend.cos(t * l) + 1j * backend.sin(t * l))
             out.reshape((-1,))[indexes] += backend.nufft3d(y, x, z, u_cplx[l, :, :, :], eps=eps) * w[idt]
     
+    # deal with absorption_mode option
+    if absorption_mode:
+        out *= 1j * nodes['xi'] / (B[1] - B[0])
+    
     return out
 
 
 def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
-               weights=None, eps=1e-06, rfft_mode=True, nodes=None,
-               memory_usage=1, notest=False):
+               weights=None, eps=1e-06, absorption_mode=False,
+               rfft_mode=True, nodes=None, memory_usage=1,
+               notest=False):
     """Perform EPR backprojection from 4D EPR projections (adjoint of the proj4d operation).
     
     Parameters
@@ -762,6 +808,12 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
     eps : float, optional
         Precision requested (>1e-16).
     
+    absorption_mode : bool, optional    
+        If set to True, integration is performed along the spectral
+        dimension of the output image, so that each voxel in the
+        backprojected 4D output image contains a (filtered) EPR
+        absorption profile instead of a (filtered) EPR spectrum.
+    
     rfft_mode : bool, optional 
         The backprojection process involves the computation of
         discrete Fourier coefficients of the input projections. Set
@@ -807,7 +859,7 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
     compute_4d_frequency_nodes
     compute_4d_weights
     proj4d
-    
+
     """
     # backend inference (if necessary)
     if backend is None:
@@ -827,22 +879,26 @@ def backproj4d(proj, delta, B, fgrad, out_shape, backend=None,
         out = backproj4d_rfft(rfft_proj, delta, B, fgrad,
                               backend=backend, weights=weights,
                               eps=eps, out_shape=out_shape,
-                              nodes=nodes, memory_usage=memory_usage,
+                              nodes=nodes,
+                              absorption_mode=absorption_mode,
+                              memory_usage=memory_usage,
                               preserve_input=False, notest=True).real
     else:
         fft_proj = backend.fft(proj)
         out = backproj4d_fft(fft_proj, delta, B, fgrad,
                              backend=backend, weights=weights,
                              eps=eps, out_shape=out_shape,
-                             nodes=nodes, memory_usage=memory_usage,
-                             notest=True).real
+                             nodes=nodes,
+                             absorption_mode=absorption_mode,
+                             memory_usage=memory_usage, notest=True).real
     
     return out
 
 
 def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
-                   out_shape=None, out=None, weights=None, eps=1e-06,
-                   nodes=None, memory_usage=1, notest=False):
+                   out_shape=None, out=None, weights=None,
+                   absorption_mode=False, eps=1e-06, nodes=None,
+                   preserve_input=False, memory_usage=1, notest=False):
     """Perform EPR backprojection from 4D EPR projections provided in Fourier domain.
     
     Parameters
@@ -905,6 +961,12 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
         must match (i.e., we must have ``out.shape == out_shape``),
         otherwise, `out_shape` is inferred from `out`.
     
+    absorption_mode : bool, optional    
+        If set to True, integration is performed along the spectral
+        dimension of the output image, so that each voxel in the
+        backprojected 4D output image contains a (filtered) EPR
+        absorption profile instead of a (filtered) EPR spectrum.
+    
     eps : float, optional
         Precision requested (>1e-16).
     
@@ -913,6 +975,10 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
         projections. If not given, `nodes` will be automatically
         inferred from `B`, `delta` and `fgrad` using
         :py:func:`compute_4d_frequency_nodes`.
+    
+    preserve_input: bool, optional    
+        If set to true, the first input will remain preserved on exit,
+        otherwise, it will be changed.
     
     memory_usage : int, optional
         Specify the computation strategy (depending on your available
@@ -944,7 +1010,7 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     compute_4d_frequency_nodes
     compute_4d_weights
     backproj4d
-    
+
     """    
     # backend inference (if necessary)
     if backend is None:
@@ -978,6 +1044,10 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
     x, y, z, indexes = nodes['x'], nodes['y'], nodes['z'], nodes['indexes']
     t, idt = nodes['t'], nodes['idt']
     
+    # deal with absorption_mode option
+    if absorption_mode:
+        fft_proj *= - 1j * nodes['xi'].reshape((1, -1)) / (B[1] - B[0])
+    
     # compute adjoint nufft
     if 0 == memory_usage:
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
@@ -1010,12 +1080,17 @@ def backproj4d_fft(fft_proj, delta, B, fgrad, backend=None,
             w = nrm * (backend.cos(tl) - 1j * backend.sin(tl)).reshape((-1,))
             out[l, :, :, :] = backend.nufft3d_adjoint(y, x, z, fft_proj.reshape((-1))[indexes] * w, n_modes=(Ny, Nx, Nz), eps=eps, out=out[l, :, :, :])
     
+    # deal with preserve_input option
+    if preserve_input and absorption_mode:
+        fft_proj /= - 1j * nodes['xi'].reshape((1, -1)) / (B[1] - B[0])
+    
     return out
 
 
 def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
-                    out_shape=None, out=None, weights=None, eps=1e-06,
-                    nodes=None, preserve_input=False, memory_usage=1,
+                    out_shape=None, out=None, weights=None,
+                    absorption_mode=False, eps=1e-06, nodes=None,
+                    preserve_input=False, memory_usage=1,
                     notest=False):
     """Perform EPR backprojection from 4D EPR projections provided in Fourier domain (half of the full spectrum).
     
@@ -1082,12 +1157,22 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
     eps : float, optional
         Precision requested (>1e-16).
     
+    absorption_mode : bool, optional    
+        If set to True, integration is performed along the spectral
+        dimension of the output image, so that each voxel in the
+        backprojected 4D output image contains a (filtered) EPR
+        absorption profile instead of a (filtered) EPR spectrum.
+    
     nodes : dict, optional 
         Precomputed frequency nodes associated to the input
         projections. If not given, `nodes` will be automatically
         inferred from `B`, `delta` and `fgrad` using
         :py:func:`compute_4d_frequency_nodes`.
     
+    preserve_input: bool, optional    
+        If set to true, the first input will remain preserved on exit,
+        otherwise, it will be changed.
+        
     memory_usage : int, optional
         Specify the computation strategy (depending on your available
         memory budget).
@@ -1158,6 +1243,10 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
     # backprojected signal)
     rfft_proj[:, 1::] *= 2.
     
+    # deal with absorption_mode option
+    if absorption_mode:
+        rfft_proj *= - 1j * nodes['xi'].reshape((1, -1)) / (B[1] - B[0])
+    
     # compute adjoint nufft
     if 0 == memory_usage:
         plan = backend.nufft_plan(1, (Ny, Nx, Nz), n_trans=Nb, dtype=cdtype, eps=eps)
@@ -1190,14 +1279,17 @@ def backproj4d_rfft(rfft_proj, delta, B, fgrad, backend=None,
             w = nrm * (backend.cos(tl) - 1j * backend.sin(tl)).reshape((-1,))
             out[l, :, :, :] = backend.nufft3d_adjoint(y, x, z, rfft_proj.reshape((-1))[indexes] * w, n_modes=(Ny, Nx, Nz), eps=eps, out=out[l, :, :, :])
     
+    # deal with preserve_input option
     if preserve_input:
         rfft_proj[:, 1::] /= 2.
+        if absorption_mode:
+            rfft_proj /= - 1j * nodes['xi'].reshape((1, -1)) / (B[1] - B[0])
     
     return out
 
 def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
-                               backend=None, eps=1e-06,
-                               rfft_mode=True, nodes=None,
+                               backend=None, absorption_mode=False,
+                               eps=1e-06, rfft_mode=True, nodes=None,
                                return_rfft4=False, notest=False,
                                memory_usage=1):
     """Compute 4D Toeplitz kernel allowing fast computation of a ``proj4d`` followed by a ``backproj4d`` operation.
@@ -1239,6 +1331,12 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
         
         When backend is None, a default backend is inferred from the
         input arrays ``(B, fgrad)``.
+    
+    absorption_mode : bool, optional    
+        If set to True, integration is performed along the spectral
+        dimension of the output image, so that each voxel in the
+        backprojected 4D output image contains a (filtered) EPR
+        absorption profile instead of a (filtered) EPR spectrum.
     
     eps : float, optional
         Precision requested (>1e-16).
@@ -1327,11 +1425,13 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
     x, y, z = nodes['x'], nodes['y'], nodes['z']
     t, idt = nodes['t'], nodes['idt']
     
-    # compute kernel (recall that t is of the type -2*i*pi*alf/Nb
+    # compute kernel (recall that t is of the type -2*pi*alf/Nb
     # ----> this explains the - sign in cof and w below)
     if memory_usage in (0, 1):
         lt2 = backend.arange(2 * Nb, dtype=dtype).reshape((-1, 1)) * t.reshape((1, -1))
         cof = (delta**6 / float(Nb)) * (backend.cos(lt2) - 1j * backend.sin(lt2))
+        if absorption_mode:
+            cof *= (t / (B[1] - B[0]))**2
         idt0 = nodes['idt0'] # location of the alf = 0 frequency index in t
         if rfft_mode:
             nrm = 2. 
@@ -1345,6 +1445,8 @@ def compute_4d_toeplitz_kernel(B, delta, fgrad, out_shape,
     else:
         nrm = complex(delta**6 / float(Nb))
         phi = backend.zeros(out_shape, dtype=dtype)
+        if absorption_mode:
+            nrm *= (t / (B[1] - B[0]))**2
         if rfft_mode:
             nrm *= 2.
             idt0 = nodes['idt0'] # location of the alf = 0 frequency index in t

@@ -1141,7 +1141,7 @@ spectral-spatial image :math:`u : \Omega \times I_{N_B} \to
 
 where :math:`\widetilde{\mathcal{P}_\gamma^c} = g_{\delta_B} *
 \mathcal{P_\gamma^c}` and :math:`\widetilde{U^c} = \left((x,B)\mapsto
-f_{\delta}(x) \cdot g_{\delta_B}(B)\right) * \mathcal{U^c}` denote the
+f_{\delta}(x) \cdot g_{\delta_B}(B)\right) * U^c` denote the
 appropriately filtered (relatively to the required sampling steps)
 versions of the continous projection :math:`\mathcal{P}_\gamma^c` and
 continous spectral-spatial image :math:`U^c` (see the cutband filters
