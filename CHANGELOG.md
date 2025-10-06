@@ -4,14 +4,23 @@
 
 ## Future v1.1.1
 
-### New features 
+### New features & improvements
 
 - added support for 4D spectral spatial images with integrated
   spectrum along the spectral dimension, that is, images in which each
   voxel contains an EPR absorption profile instead of an EPR spectrum
   [#19](../../pull/19)
 
-### Code 
+- speed-up single source and multisources EPR image reconstruction
+  (thanks to the use of a tight Lipschitz constant for the gradient of
+  the least-squares data-fidelity term involved in the minimization
+  process) [#19](../../pull/19)
+
+### Code
+
+- added mask and positivity options to the ``tv_monosrc`` function in
+  [processing.py](src/pyepri/processing.py) (undocumented yet)
+  [#19](../../pull/19)
 
 - fixed unit test name ``test_proj2d_and_backproj2d_matrices`` -->
   ``test_proj3d_and_backproj3d_matrices`` [#18](../../pull/18)
@@ -23,7 +32,7 @@
 
 ### Documentation
 
-- minor improvements [#18](../../pull/18)
+- minor improvements [#18](../../pull/18) and [#19](../../pull/19)
 
 - added reference to the recently published paper presenting the
   PyEPRI package [#18](../../pull/18)
