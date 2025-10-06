@@ -151,7 +151,7 @@ def create_torch_backend(device):
     ---------
 
     device : str
-        One of {'cpu', 'cuda', 'cuda:X'} with X = device index.
+        One of {'cpu', 'cuda', 'cuda:X', 'mps'} with X = device index.
 
     Return
     ------
@@ -167,6 +167,10 @@ def create_torch_backend(device):
     This function will raise an error if torch library is not
     installed or if the input device argument is not available on your
     system.
+    
+    The support of MPS device was added in PyEPRI v 1.1.1, it is still
+    experimental and the choice of a MPS device remains less efficient
+    than a CUDA one.
 
     See also 
     --------
@@ -244,14 +248,14 @@ def create_torch_backend(device):
 
     
     # check device validity
-    if not isinstance(device,str) or re.match('cpu$|cuda$|(cuda:[0-9]+)$',device) is None:
+    if not isinstance(device, str) or re.match('cpu$|cuda$|(cuda:[0-9]+)$|mps$', device) is None:
         raise ValueError(
-            "Torch device must be one of {'cpu', 'cuda', 'cuda:X'} with X = device index\n"
+            "Torch device must be one of {'cpu', 'cuda', 'cuda:X', 'mps'} with X = device index\n"
             "(e.g. 'cuda:0'). Other kinds of Torch devices are not supported yet. Please use a\n"
             "supported Torch device or ask support to the developper of this package."
         )
     
-    # check device availability
+    # check device availability (cuda)
     if device.startswith('cuda'):
         if not torch.cuda.is_available():
             raise RuntimeError(
@@ -269,6 +273,20 @@ def create_torch_backend(device):
                     "This error is likely caused by an invalid device choice. Please fix\n"
                     "this issue and try again."
                 ) from e
+
+    # check device availability (mps)
+    if device.startswith("mps") and not torch.backends.mps.is_available():
+        if not torch.backends.mps.is_built():
+            raise RuntimeError(
+                "MPS not available because the current PyTorch install\n"
+                "was not built with MPS enabled.\n"
+            )
+        else:
+            raise RuntimeError(
+                "MPS not available because the current MacOS version\n"
+                "is not 12.3+ and/or you do not have an MPS-enabled \n"
+                "device on this machine."
+            )
     
     # instanciate and return Backend object
     return Backend(lib=torch, device=device)
@@ -276,11 +294,11 @@ def create_torch_backend(device):
 
 class Backend:
     """Class for mapping our standardized data types and methods to the specified library (numpy, torch, cupy).
-
-   
+    
+    
     Type correspondences
     --------------------
-
+    
     This package relies on data types specified with a str from which
     the library dependent data types will be inferred. The
     correspondence between the different data types is provided in the
@@ -311,10 +329,10 @@ class Backend:
     The mapping between the data types in str format and those of the
     targeted library can be done using the dtypes and invdtypes
     dictionary attributes described below.
-
+    
     We also provide a str to str mapping towards complex data types
     (non invertible mapping) :
-
+    
     +-------------------+---------------------------+
     | data type         | complex data type         |
     +===================+===========================+
@@ -334,7 +352,7 @@ class Backend:
     +-------------------+---------------------------+
     | ``'complex128'``  | ``'complex128'``          |
     +-------------------+---------------------------+
-
+    
     The above mapping can be used to infer the data type of a complex
     array computed from another (non necessarily complex) input array
     (e.g., infer the data type of the discrete Fourier transform of an
@@ -342,17 +360,17 @@ class Backend:
     
     Contextual attributes 
     ---------------------
-
+    
     lib : <class 'module'>
         One of {numpy, cupy, torch}.
-
+    
     device : str 
         Device identifier (see constructor documentation below).
-
+    
     cls : <class 'type'>
         Native array data type in the backend library, as
         described below.
-
+    
         +-------+-------------------------+
         | lib   | cls                     |
         +=======+=========================+
@@ -362,35 +380,35 @@ class Backend:
         +-------+-------------------------+
         | torch | <class 'torch.Tensor'>  |
         +-------+-------------------------+
-
+    
     Data type mapping attributes
     ----------------------------
     
     str_to_lib_dtypes : dict
         Mapping data types in standardized str format -> lib dependent
         data types (see above).
-
+    
     lib_to_str_dtypes : dict
         Invert of the str_to_lib_dtypes mapping (lib dependent data
         types -> data types in standardized str format).
-
+    
     mapping_to_complex_dtypes : dict 
         Mapping from data type in standardized str format -> complex
         data type in standardized str format (see above).
-
+    
     Other attributes (library-dependent methods)
     --------------------------------------------
-
+    
     An instance ``backend`` with class ``pyepri.backends.Backend``
     remaps library dependent methods to basically the same methods
     coming from ``backend.lib`` but with standardized usage
     (e.g. ``backend.meshgrid`` can remap to ``{numpy or cupy or
     torch}.meshgrid`` depending on ``backend.lib``).
-
+    
     A mini documentation is provided for each standardized method and
     can be displayed using the ``help()`` function, as illustrated
     below.
-
+    
     >>> import pyepri.backends as backends
     >>> backend = backends.create_numpy_backend()
     >>> help(backend.meshgrid)
@@ -400,7 +418,7 @@ class Backend:
     ...    return numpy.meshgrid(*xi, indexing=indexing)
 
     """
-
+    
     def __init__(self, lib, device):
         """Backend object constructor from the specified library and device.
         
@@ -415,16 +433,16 @@ class Backend:
             Device identifier, possible values depends on the lib
             parameters, as described below
         
-            +-------+------------------------------------+
-            | lib   | possible values for device         |
-            +=======+====================================+
-            | numpy | ``'cpu'``                          |
-            +-------+------------------------------------+
-            | cupy  | ``'cuda'``                         |
-            +-------+------------------------------------+
-            | torch | ``'cuda'`` or ``'cuda:X'``         |
-            |       | (where X = available device index) |
-            +-------+------------------------------------+
+            +-------+-------------------------------------+
+            | lib   | possible values for device          |
+            +=======+=====================================+
+            | numpy | ``'cpu'``                           |
+            +-------+-------------------------------------+
+            | cupy  | ``'cuda'``                          |
+            +-------+-------------------------------------+
+            | torch | ``'cuda'`, ``'cuda:X'`` or `'mps'`` |
+            |       | (X = available device index)        |
+            +-------+-------------------------------------+
         
         Returns 
         -------
@@ -451,13 +469,13 @@ class Backend:
         elif 'torch' == lib.__name__:
             self.device = device
             self.cls = lib.Tensor
-        else:
+        else: # cupy
             self.device = 'cuda'
             self.cls = lib.ndarray
-
+        
         # add backend compliance verification method
         self.is_backend_compliant = lambda *args : all([isinstance(arg, self.cls) for arg in args])
-
+        
         # set mapping str data type -> lib data type
         if lib.__name__ in ['numpy','cupy']: # lib = numpy or cupy
             
@@ -486,7 +504,7 @@ class Backend:
                 'complex128' : lib.complex128,
                 None         : None,
             }
-
+        
         # mapping to complex datatype (non invertible mapping)
         self.mapping_to_complex_dtypes = {
             'int8'       : None,
@@ -498,7 +516,7 @@ class Backend:
             'float64'    : 'complex128',
             'complex128' : 'complex128',
         }
-
+        
         # set invert mapping : lib data type -> str data type
         self.lib_to_str_dtypes = {value: key for key, value in self.str_to_lib_dtypes.items()}
         
@@ -517,11 +535,11 @@ class Backend:
         self.tile = lib.tile
         self.meshgrid = lambda *xi, indexing='xy' : lib.meshgrid(*xi, indexing=indexing)
         self.exp = lambda arr, out=None : lib.exp(arr, out=out)
-
+        
         # set minimal doc for the above defined lambda functions
         self.meshgrid.__doc__ = "return " + lib.__name__ + ".meshgrid(*xi, indexing=indexing)\n"
         self.exp.__doc__ = "return " + lib.__name__ + ".exp(arr, out=out)"
-
+        
         # prepare decorator for temporary fix for FINUFFT issue #596
         def assign_finufft_nthreads(func):
             omp_num_threads = os.environ.get("OMP_NUM_THREADS")
@@ -529,7 +547,7 @@ class Backend:
             def assigned_func(*args, **kwargs):
                 return func(*args, nthreads=nthreads, **kwargs) if 'nthreads' not in kwargs.keys() else func(*args, **kwargs)
             return assigned_func
-
+        
         # prepare function to unify default setting for axes/dim inputs of (r)fftn functions
         def set_fftn_dim(u, s):
             """Specify axes/dim along which to apply (i)(r)fftn transformation
@@ -556,7 +574,7 @@ class Backend:
                 return tuple(k for k in range(-u.ndim, 0, 1))
             else: # return the first len(s) dim
                 return tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1))
-            
+        
         # set lib-dependent backends methods
         if lib.__name__ in ['numpy', 'cupy']: 
             
@@ -587,7 +605,7 @@ class Backend:
             else :
                 self.to_numpy = lambda x : lib.asnumpy(x)
                 self.from_numpy = lambda x : lib.asarray(x)
-
+            
             # set minimal doc for the above defined lambda functions
             self.zeros.__doc__ = "return " + lib.__name__ + ".zeros(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
             self.ones.__doc__ = "return " + lib.__name__ + ".ones(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
@@ -688,7 +706,7 @@ class Backend:
                 self.nufft_plan = cufinufft.Plan
                 self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
                 self.nufft_execute = lambda plan, arr, out=None : plan.execute(arr, out=out)
-                        
+        
         else: # lib == torch
             
             # remap some lib-dependant methods using lambda functions
@@ -799,7 +817,7 @@ class Backend:
             
             # nufft support (use finufft for CPU device and cufinufft
             # for GPU device)
-            if device == "cpu" :
+            if device in ("cpu", "mps") :
                 import finufft
                 
                 # define decorator for finufft functions (those
@@ -849,7 +867,7 @@ class Backend:
                     "and output is cast into torch.Tensor. Type `help(finufft.nufft3d1)`\n"
                     "for more details."                    
                 )
-                
+            
             else:
                 import cufinufft
                 self.nufft2d = cufinufft.nufft2d2
@@ -859,3 +877,4 @@ class Backend:
                 self.nufft_plan = cufinufft.Plan                
                 self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
                 self.nufft_execute = lambda plan, arr, out=None : plan.execute(arr, out=out)
+            
