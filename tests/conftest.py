@@ -1,6 +1,5 @@
 import importlib.util
 
-
 def pytest_addoption(parser):
     parser.addoption("--nruns",
                      action="store",
@@ -31,7 +30,7 @@ def pytest_generate_tests(metafunc):
     if 'nruns' in metafunc.fixturenames:
         nruns = metafunc.config.getoption('nruns')
         metafunc.parametrize('nruns', [nruns])
-        
+    
     # deal with tol option
     if 'tol' in metafunc.fixturenames:
         tol = metafunc.config.getoption('tol')
