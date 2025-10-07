@@ -819,6 +819,9 @@ class Backend:
             # for GPU device)
             if device in ("cpu", "mps") :
                 import finufft
+
+                # macro for CPU copy of torch tensor
+                g = (lambda a : a) if device == "cpu" else (lambda a: a.cpu())
                 
                 # define decorator for finufft functions (those
                 # function do not natively accept torch.Tensor input
@@ -828,12 +831,12 @@ class Backend:
                     '''Decorator to cast torch.Tensor inputs of func into numpy.ndarray
                     and the numpy.ndarray output of func into
                     torch.Tensor.
-
+                    
                     '''
                     def numpyfied_func(*args, **kwargs):
-                        args2 = (a.numpy() if isinstance(a, lib.Tensor) else a for a in args)
+                        args2 = (g(a).numpy() if isinstance(a, lib.Tensor) else a for a in args)
                         kwargs2 = {key: val.numpy() if isinstance(val, lib.Tensor) else val for key, val in kwargs.items()}
-                        return lib.from_numpy(func(*args2, **kwargs2))
+                        return lib.from_numpy(func(*args2, **kwargs2)).to(device)
                     return numpyfied_func
                 
                 # decorate finufft functions 
@@ -849,23 +852,23 @@ class Backend:
                 # add short documentation
                 self.nufft2d.__doc__ = (
                     "same as finufft.nufft2d2 but torch.Tensor inputs are cast into numpy.ndarray\n"                    
-                    "and output is cast into torch.Tensor. Type `help(finufft.nufft2d2)`\n"
-                    "for more details."                    
+                    "and output is cast into torch.Tensor (on " + device + " device). Type\n"
+                    "`help(finufft.nufft2d2)` for more details."
                 )
                 self.nufft3d.__doc__ = (
                     "same as finufft.nufft3d2 but torch.Tensor inputs are cast into numpy.ndarray\n"                    
-                    "and output is cast into torch.Tensor. Type `help(finufft.nufft3d2)`\n"
-                    "for more details."                    
+                    "and output is cast into torch.Tensor (on " + device + " device). Type\n"
+                    "`help(finufft.nufft3d2)` for more details."
                 )
                 self.nufft2d_adjoint.__doc__ = (
                     "same as finufft.nufft2d1 but torch.Tensor inputs are cast into numpy.ndarray\n"                    
-                    "and output is cast into torch.Tensor. Type `help(finufft.nufft2d1)`\n"
-                    "for more details."                    
+                    "and output is cast into torch.Tensor (on " + device + " device). Type\n"
+                    "`help(finufft.nufft2d1)` for more details."
                 )
                 self.nufft3d_adjoint.__doc__ = (
                     "same as finufft.nufft3d1 but torch.Tensor inputs are cast into numpy.ndarray\n"                    
-                    "and output is cast into torch.Tensor. Type `help(finufft.nufft3d1)`\n"
-                    "for more details."                    
+                    "and output is cast into torch.Tensor (on " + device + " device). Type\n"
+                    "`help(finufft.nufft3d1)` for more details."
                 )
             
             else:
