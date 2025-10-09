@@ -18,7 +18,7 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
                tol=1e-5, nitermax=1000000, eval_energy=False,
                verbose=False, video=False, displayer=None,
                Ndisplay=20, eps=1e-6, disable_toeplitz_kernel=False,
-               notest=False):
+               lipschitz_const="auto", notest=False):
     r"""EPR single source image reconstruction using TV-regularized least-squares.
     
     This functions performs EPR image reconstruction by minimization
@@ -176,7 +176,27 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
         The setting of this parameter should not affect the returned
         image, but only the computation time (the default setting
         should be the faster).
-    
+
+    lipschitz_const : float or str, optional
+        This parameter specifies how the Lipschitz constant of the
+        gradient of the data fidelity term (also equal to the l2
+        induced norm of the "projection-backprojection" operator) will
+        be computed (the minimization scheme's parameters are set
+        according to this constant to ensure convergence towards a
+        minimizer of E)
+        
+        If lipschitz_const is a float number, this number will be used
+        as the Lipschitz constant.
+        
+        If lipschitz_const == "upper-bound" a formal (but non tight)
+        upper bound of the Lipschitz constant will be used (this
+        choice is only allowed when ``disable_toeplitz_kernel`` is
+        ``False``).
+        
+        Otherwise, if lipschitz_const == "auto", the Lipschitz
+        constant will be estimated by applying the power iteration
+        algorithm to the "projection-backprojection" operator.
+        
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
     
@@ -195,7 +215,7 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
     
     pyepri.optimization.tvsolver_cp2016
     tv_multisrc
-    
+
     """
     
     # backend inference (if necessary)
@@ -212,7 +232,8 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
                        verbose=verbose, video=video,
                        displayer=displayer, eps=eps,
                        Ndisplay=Ndisplay, mask=mask,
-                       positivity=positivity)
+                       positivity=positivity,
+                       lipschitz_const=lipschitz_const)
     
     # retrieve number of dimensions (2D/3D)
     ndim = fgrad.shape[0]
@@ -238,38 +259,35 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
     
     # compute v = adjA(proj), define the mapping gradf corresponding
     # to the gradient of the quadratic data-fidelity term (gradf = u
-    # -> adjA(A(u)) - v), and compute a Lipschitz constant (Lf) of
-    # gradf
+    # -> adjA(A(u)) - v)
     v = adjA(proj)
     s = tuple(2*s for s in out_shape)
-    if 2 == ndim:
+    if disable_toeplitz_kernel:
+        AsA = lambda u : adjA(A(u))
+        gradf = lambda u : AsA(u) - v
+    elif 2 == ndim:
         M1, M2 = out_shape
         gen_kernel = monosrc.compute_2d_toeplitz_kernel
-        rfft2_phi = gen_kernel(B, h, h, delta, fgrad, s,
-                               backend=backend, eps=eps,
-                               rfft_mode=True, nodes=nodes,
-                               return_rfft2=True)
-        Lf = backend.abs(rfft2_phi).max() / 2**ndim
+        phi_hat = gen_kernel(B, h, h, delta, fgrad, s,
+                             backend=backend, eps=eps, rfft_mode=True,
+                             nodes=nodes, return_rfft2=True)
         rfft2 = backend.rfft2 # improve readability in gradf
         irfft2 = backend.irfft2 # improve readability in gradf
-        gradf = lambda u : irfft2(rfft2(u, s=s) * rfft2_phi,
-                                  s=s)[M1:, M2:] - v
+        AsA = lambda u : irfft2(rfft2(u, s=s) * phi_hat, s=s)[M1:, M2:]
+        gradf = lambda u : AsA(u) - v
     else:
         M1, M2, M3 = out_shape
         gen_kernel = monosrc.compute_3d_toeplitz_kernel
-        rfft3_phi = gen_kernel(B, h, h, delta, fgrad, s,
-                               backend=backend, eps=eps,
-                               rfft_mode=True, nodes=nodes,
-                               return_rfft3=True)
-        Lf = backend.abs(rfft3_phi).max() / 2**ndim
+        phi_hat = gen_kernel(B, h, h, delta, fgrad, s,
+                             backend=backend, eps=eps,
+                             rfft_mode=True, nodes=nodes,
+                             return_rfft3=True)
         rfftn = backend.rfftn # improve readability in gradf
         irfftn = backend.irfftn # improve readability in gradf
-        gradf = lambda u : irfftn(rfftn(u, s=s) * rfft3_phi,
-                                      s=s)[M1:, M2:, M3:] - v
-    
-    # deal with disable_toeplitz_kernel option
-    if disable_toeplitz_kernel:
-        gradf = lambda u : adjA(A(u)) - v
+        AsA = lambda u : irfftn(rfftn(u, s=s) * phi_hat, s=s)[M1:,
+                                                              M2:,
+                                                              M3:]
+        gradf = lambda u : AsA(u) - v
     
     # compute unnormalized regularity parameter
     Bsw = (B[-1] - B[0]).item()
@@ -299,6 +317,27 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
         if positivity:
             init = backend.maximum(0, init)
     
+    # compute a Lipschitz constant (Lf) of gradf
+    if lipschitz_const == "upper-bound":
+        Lf = Lf = backend.abs(phi_hat).max()
+    elif lipschitz_const == "auto":
+        _, Lf = utils.powerit(init, AsA, backend=backend,
+                              nitermax=1000, tol=tol, verbose=False,
+                              notest=True)
+        Lf *= 1.05 # security margin
+    else:
+        Lf = lipschitz_const
+    
+    # deal with verbose mode
+    if verbose:
+        print("Precomputed parameters")
+        print("======================")
+        print("Unnormalized TV weight (actual lambda parameter): %.10e" % lbda_unrm)
+        print("Lipschitz constant (Lf) : %.10e" % Lf)
+        print(" ")
+        print("Starting minimization scheme (tvsolver_cp2016)")
+        print("==============================================")
+    
     # run generic TV solver
     out = optimization.tvsolver_cp2016(init, gradf, Lf, lbda_unrm,
                                        grad, div, Lgrad, tol=tol,
@@ -316,7 +355,8 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
                 backend=None, init=None, tol=1e-5, nitermax=1000000,
                 eval_energy=False, disable_toeplitz_kernel=False,
                 verbose=False, video=False, Ndisplay=20,
-                displayer=None, eps=1e-6, notest=False):
+                displayer=None, eps=1e-6, lipschitz_const="auto",
+                notest=False):
     r"""EPR source separation using TV-regularized least-squares.
     
     This function implements the multi-sources EPR image
@@ -487,6 +527,26 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
         images, but only the computation time (the default setting
         should be the faster).
     
+    lipschitz_const : float or str, optional
+        This parameter specifies how the Lipschitz constant of the
+        gradient of the data fidelity term (also equal to the l2
+        induced norm of the "projection-backprojection" operator) will
+        be computed (the minimization scheme's parameters are set
+        according to this constant to ensure convergence towards a
+        minimizer of E)
+        
+        If lipschitz_const is a float number, this number will be used
+        as the Lipschitz constant.
+        
+        If lipschitz_const == "upper-bound" a formal (but non tight)
+        upper bound of the Lipschitz constant will be used (this
+        choice is only allowed when ``disable_toeplitz_kernel`` is
+        ``False``).
+        
+        Otherwise, if lipschitz_const == "auto", the Lipschitz
+        constant will be estimated by applying the power iteration
+        algorithm to the "projection-backprojection" operator.
+    
     notest : bool, optional
         Set ``notest=True`` to disable consistency checks.
     
@@ -521,7 +581,8 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
                        disable_toeplitz_kernel=disable_toeplitz_kernel,
                        verbose=verbose, video=video,
                        displayer=displayer, eps=eps,
-                       Ndisplay=Ndisplay)
+                       Ndisplay=Ndisplay,
+                       lipschitz_const=lipschitz_const)
     
     # retrieve number of dimensions (2D/3D)
     ndim = fgrad[0].shape[0]
@@ -547,44 +608,32 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
     
     # compute v = adjA(proj), define the mapping gradf corresponding
     # to the gradient of the quadratic data-fidelity term (gradf = u
-    # -> adjA(A(u)) - v), and compute a Lipschitz constant (Lf) of
-    # gradf
+    # -> adjA(A(u)) - v)
     v = adjA(proj)
 
     # compute Toeplitz kernels
-    if 2 == ndim:
-        gen_kernel = multisrc.compute_2d_toeplitz_kernels
-        apply_kernel = multisrc.apply_2d_toeplitz_kernels
-        rfftn = backend.rfft2
+    if disable_toeplitz_kernel:
+        AsA = lambda u : adjA(A(u))
     else:
-        gen_kernel = multisrc.compute_3d_toeplitz_kernels
-        apply_kernel = multisrc.apply_3d_toeplitz_kernels
-        rfftn = backend.rfftn
-    rfftn_phi = [[rfftn(phi_kj) for phi_kj in phi_k] for phi_k in
-                 gen_kernel(B, h, delta, fgrad, out_shape,
-                            backend=backend, eps=eps, nodes=nodes,
-                            rfft_mode=True, notest=True)]
-    
-    # compute Lf
-    K = len(rfftn_phi)
-    Lf = 0.
-    for k in range(K):
-        s = 0.
-        for j in range(K):
-            s += backend.abs(rfftn_phi[k][j]).max().item()**2
-        Lf = max([Lf, s])        
-    Lf = math.sqrt(Lf) / 2**ndim
+        if 2 == ndim:
+            gen_kernel = multisrc.compute_2d_toeplitz_kernels
+            apply_kernel = multisrc.apply_2d_toeplitz_kernels
+            rfftn = backend.rfft2
+        else:
+            gen_kernel = multisrc.compute_3d_toeplitz_kernels
+            apply_kernel = multisrc.apply_3d_toeplitz_kernels
+            rfftn = backend.rfftn
+        rfftn_phi = [[rfftn(phi_kj) for phi_kj in phi_k] for phi_k in
+                     gen_kernel(B, h, delta, fgrad, out_shape,
+                                backend=backend, eps=eps, nodes=nodes,
+                                rfft_mode=True, notest=True)]
+        AsA = lambda u : apply_kernel(u, rfftn_phi, backend=backend,
+                                      notest=True)
     
     # define gradf
     def gradf(u):
-        adjAAu = apply_kernel(u, rfftn_phi, backend=backend, notest=True)
+        adjAAu = AsA(u)
         return tuple(adjAAu[j] - v[j] for j in range(len(u)))
-    
-    # deal with disable_toeplitz_kernel option
-    if disable_toeplitz_kernel:
-        def gradf(u):
-            adjAAu = adjA(A(u))
-            return tuple(adjAAu[j] - v[j] for j in range(len(u)))
     
     # compute total number of projections
     Nproj = 0.
@@ -621,6 +670,34 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
         evalE = None
     if init is None:
         init = [im / (delta**ndim * im.sum()) for im in v]
+    
+    # compute a Lipschitz constant (Lf) of gradf
+    if lipschitz_const == "upper-bound":
+        K = len(rfftn_phi)
+        Lf = 0.
+        for k in range(K):
+            s = 0.
+            for j in range(K):
+                s += backend.abs(rfftn_phi[k][j]).max().item()**2
+            Lf = max([Lf, s])        
+        Lf = math.sqrt(Lf)
+    elif lipschitz_const == "auto":
+        _, Lf = utils.powerit(init, AsA, backend=backend,
+                              nitermax=1000, tol=tol, verbose=False,
+                              notest=True)
+        Lf *= 1.05 # security margin
+    else:
+        Lf = lipschitz_const
+    
+    # deal with verbose mode
+    if verbose:
+        print("Precomputed parameters")
+        print("======================")
+        print("Unnormalized TV weight (actual lambda parameter): %.10e" % lbda_unrm)
+        print("Lipschitz constant (Lf) : %.10e" % Lf)
+        print(" ")
+        print("Starting minimization scheme (tvsolver_cp2016)")
+        print("==============================================")
     
     # run generic TV solver
     solver = optimization.tvsolver_cp2016_multisrc
@@ -1203,7 +1280,7 @@ def _check_inputs_(caller, backend, proj=None, B=None, fgrad=None,
                    verbose=None, video=None, displayer=None, eps=None,
                    Ndisplay=None, xgrid=None, ygrid=None, zgrid=None,
                    interp1=None, frequency_cutoff=None, shuffle=None,
-                   positivity=None, mask=None):
+                   positivity=None, mask=None, lipschitz_const=None):
     """Factorized consistency checks for functions in the :py:mod:`pyepri.processing` submodule."""
     
     ##################
@@ -1245,13 +1322,17 @@ def _check_inputs_(caller, backend, proj=None, B=None, fgrad=None,
     # check nitermax >= 0 (if not None)
     if nitermax is not None and nitermax < 1:
         raise RuntimeError("Parameter ``Ndisplay`` must be >= 1")
-
+    
     # check interp1 (if not None)
     if (interp1 is not None) and (not isinstance(interp1, (types.FunctionType, types.MethodType))):
         raise RuntimeError(
             "Parameter ``interp1`` must have type %s or %s." % (types.FunctionType, types.MethodType)
         )
-
+    
+    # check lipschitz_const (if not None)
+    if (lipschitz_const is not None) and (not isinstance(lipschitz_const, float)) and (lipschitz_const not in ("upper-bound", "auto")):
+        raise RuntimeError("Parameter ``lipschitz_const`` must be either a float number or a str in ('upper-bound', 'auto')")
+    
     ###########################
     # Caller dependent checks #
     ###########################
