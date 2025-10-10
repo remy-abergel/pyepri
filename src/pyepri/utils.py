@@ -603,19 +603,27 @@ def powerit(x0, A, backend=None, tol=1e-7, verbose=False, nitermax=None, notest=
     
     '''
     
-    # TODO consistency checks
-    if not notest:
-        pass
-    
     # deal with array_like / sequence of array_like inputs
-    monosrc = not isinstance(x0, (list, tuple))
+    multisrc = isinstance(x0, (list, tuple))
+    monosrc = not multisrc and hasattr(x0, "ndim")
     l2snrm = (lambda x : (x**2).sum().item()) if monosrc else (lambda x : sum([(xj**2).sum().item() for xj in x]))
     copy = (lambda x : backend.copy(x)) if monosrc else (lambda x : [backend.copy(xj) for xj in x])
     ratio = (lambda x, scal : x / scal) if monosrc else (lambda x, scal : [xj / scal for xj in x])
     
     # backend inference (if necessary)
-    if backend is None:
+    if backend is None and (monosrc or multisrc):
         backend = checks._backend_inference_(x0=x0 if monosrc else x0[0])
+        
+    # consistency checks
+    if not notest:
+        if not (monosrc or multisrc):            
+            raise RuntimeError("Input ``x0`` must be either an array_like or a sequence of array_like")
+        if monosrc:
+            checks._check_backend_(backend, x0=x0)
+        else:
+            ndim = x0[0].ndim
+            dtype = x0[0].dtype
+            checks._check_seq_(t=backend.cls, dtype=dtype, ndim=ndim, x0=x0)
     
     # prepare loop iterations
     x = copy(x0)
@@ -626,7 +634,7 @@ def powerit(x0, A, backend=None, tol=1e-7, verbose=False, nitermax=None, notest=
         nitermax = math.inf
     
     # main loop (compute eigen vector)
-    while backend.abs(l-lprev) > backend.abs(l) * tol and iter < nitermax :
+    while abs(l-lprev) > abs(l) * tol and iter < nitermax :
         x = A(x)
         lprev = l
         l = math.sqrt(l2snrm(x))
