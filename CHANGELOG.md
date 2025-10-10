@@ -11,10 +11,10 @@
   voxel contains an EPR absorption profile instead of an EPR spectrum
   ([#19](../../pull/19))
 
-- introduce lipschitz constant estimation using the power-iteration
-  method to speed-up single source and multisources EPR image
-  reconstruction ([#20](../../pull/20) in replacement of a mistaken
-  Lipschitz-constant update introduced in [#19](../../pull/19))
+- introduced Lipschitz constant estimation using the power iteration
+  method to accelerate both single-source and multi-source EPR image
+  reconstruction ([#20](../../pull/20)), replacing an incorrect
+  Lipschitz constant update introduced in [#19](../../pull/19)
 
 ### Code
 
