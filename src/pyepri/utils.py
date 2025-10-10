@@ -2,6 +2,7 @@
 operators usually involved in signal or image processing.
 
 """
+import math
 import pyepri.checks as checks
 
 # ------------------------- #
@@ -554,6 +555,98 @@ def div3d(P, masks=None, backend=None, notest=False):
 # ----- #
 # Other #
 # ----- #
+
+def powerit(x0, A, backend=None, tol=1e-7, verbose=False, nitermax=None, notest=False):
+    '''Estimation of the largest eigen value of a symmetric linear
+    operator using the power iteration method
+    
+    Parameters
+    ----------
+    
+    x0 : array_like or sequence or array_like
+        Initializer for the power iteration scheme
+    
+    A : <class 'function'>
+        Function with prototype y = A(x) corresponding to a symmetric
+        linear operator
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``x0``.
+    
+    tol : float, optional    
+        Tolerance parameter used to stop the power iteration scheme
+        (see below)
+    
+    verbose : boolean, optional
+        Set verbose = True to display the current largest eigen value
+        estimate at each iteration
+    
+    nitermax : integer, optional    
+        Maximal number of iterations (setting ``nitermax`` to ``None``
+        is equivalent to setting ``nitermax`` equal to infinity)
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    Return 
+    ------
+    
+    x : array_like or sequence or array_like
+        Output eigen vector estimate.
+    
+    l : float
+        Output estimate of the maximal eigen value of A.
+    
+    '''
+    
+    # deal with array_like / sequence of array_like inputs
+    multisrc = isinstance(x0, (list, tuple))
+    monosrc = not multisrc and hasattr(x0, "ndim")
+    l2snrm = (lambda x : (x**2).sum().item()) if monosrc else (lambda x : sum([(xj**2).sum().item() for xj in x]))
+    copy = (lambda x : backend.copy(x)) if monosrc else (lambda x : [backend.copy(xj) for xj in x])
+    ratio = (lambda x, scal : x / scal) if monosrc else (lambda x, scal : [xj / scal for xj in x])
+    
+    # backend inference (if necessary)
+    if backend is None and (monosrc or multisrc):
+        backend = checks._backend_inference_(x0=x0 if monosrc else x0[0])
+        
+    # consistency checks
+    if not notest:
+        if not (monosrc or multisrc):            
+            raise RuntimeError("Input ``x0`` must be either an array_like or a sequence of array_like")
+        if monosrc:
+            checks._check_backend_(backend, x0=x0)
+        else:
+            ndim = x0[0].ndim
+            dtype = x0[0].dtype
+            checks._check_seq_(t=backend.cls, dtype=dtype, ndim=ndim, x0=x0)
+    
+    # prepare loop iterations
+    x = copy(x0)
+    l = math.sqrt(l2snrm(x))
+    lprev = l * (2 + 2 * tol)
+    iter = 1
+    if nitermax is None :
+        nitermax = math.inf
+    
+    # main loop (compute eigen vector)
+    while abs(l-lprev) > abs(l) * tol and iter < nitermax :
+        x = A(x)
+        lprev = l
+        l = math.sqrt(l2snrm(x))
+        x = ratio(x, l)
+        if(verbose):
+            print("iteration %d : current largest eigen value estimate = %.17e" % (iter, l))
+        iter += 1
+    
+    # compute eigen value
+    l = math.sqrt(l2snrm(A(x)) / l2snrm(x))
+    
+    return x, l
 
 def _relerr_(u, v, backend=None, nrm=None, notest=False):
     """Compute relative error between two arrays.    
