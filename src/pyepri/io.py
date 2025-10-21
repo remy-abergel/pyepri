@@ -299,7 +299,7 @@ def read_bruker_bes3t_dataset(name, squeeze=True, stack=True, dtype=None, backen
     minimum = float(parDESC[str('XMIN')])
     width = float(parDESC[str('XWID')])
     npts = int(parDESC[str('XPTS')])
-    B = backend.from_numpy(backend.linspace(minimum, minimum + width, npts, dtype=dtype))
+    B = backend.linspace(minimum, minimum + width, npts, dtype=dtype)
     
     # Read data matrix (real format only)
     dt_data = dt_spc
