@@ -29,6 +29,9 @@
   can now perform kernel computations directly on the GPU device
   (cuFINUFFT issues encountered before were fixed in release 2.4.0)
   ([#18](../../pull/18))
+  
+- fix BES3T dataset loading with non-numpy backends
+  ([#22](../../pull/22))
 
 ### Documentation
 
