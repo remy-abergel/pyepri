@@ -58,6 +58,517 @@ def is_notebook() -> bool:
     except NameError:
         return False     # Probably standard Python interpreter
 
+def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, spatial_unit='',
+             figsize=None, valfmt='%0.3g', show_colorbar=True,
+             cmap=None, origin='lower', aspect='equal',
+             boundaries='same', interpolation='nearest',
+             sx_color=None, sy_color=None, sz_color=None, xlim=None,
+             ylim=None, zlim=None):
+    """Interactive displayer for 3D images.
+    
+    Display slices of a 3D image, and explore its content through many
+    interactive commands (once the figure is displayed, press the `h`
+    key of your keyboard to display the list of interactive commands,
+    also listed below).
+    
+    Parameters
+    ----------
+    
+    u : ndarray
+        Three dimensional array containing the values of the
+        3D image ordered as follows:
+        
+        + axis 0 = spatial vertical axis (or Y-axis);
+        + axis 1 = spatial horizontal axis (or X-axis);
+        + axis 2 = saptial depth axis (or Z-axis).
+    
+    xgrid : ndarray, optional
+        Monodimensional ndarray with length ``u.shape[1]`` containing
+        the sampling nodes associated to the X-axis (axis 1) of the
+        3D image ``u``.
+    
+    ygrid : ndarray, optional
+        Monodimensional ndarray with length ``u.shape[0]`` containing
+        the sampling nodes associated to the Y-axis (axis 0) of the
+        3D image ``u``.
+    
+    zgrid : ndarray, optional
+        Monodimensional ndarray with length ``u.shape[2]`` containing
+        the sampling nodes associated to the Z-axis (axis 2) of the
+        3D image ``u``.
+    
+    spatial_unit : str, optional
+        Units associated to the X, Y and Z axes (handling of different
+        axes units is not provided).
+    
+    figsize : (float, float), optional
+        When given, figsize must be a tuple with length two and such
+        that ``figsize[0]`` and ``figsize[1]`` are the width and
+        height in inches of the figure to be displayed. When not
+        given, the default setting is that of `matplotlib` (see key
+        'figure.figsize' of the matplotlib configuration parameter
+        ``rcParams``).
+    
+    valfmt : str, optional
+        %-format string used to format the slider values.
+    
+    show_colorbar : bool, optional
+        Specify whether a colorbar should be displayed next to each
+        slice image.
+    
+    cmap : str, optional
+        The registered colormap name used to map scalar data to colors
+        in `matplotlib.imshow`.
+    
+    origin : str in {'upper', 'lower'}, optional 
+        Place the [0, 0] index of the array in the upper left or lower
+        left corner of the Axes. When not given, the default setting
+        is that of `matplotlib` (see key 'image.origin' of the
+        matplotlib configuration parameter ``rcParams``).
+    
+    aspect : str in {'equal', 'auto'} or float or None, optional
+        The aspect ratio of the Axes. This parameter is particularly
+        relevant for images since it determines whether data pixels
+        are square (see `matplotlib.imshow` documentation).
+    
+        When not given, the default setting is that of `matplotlib`
+        (see key 'image.aspect' of the matplotlib configuration
+        parameter ``rcParams``).
+    
+    boundaries : str in {'auto', 'same'}
+        Use ``boundaries = 'same'`` to give all subplots the same axes
+        boundaries (in particular, this ensures that all slice images
+        will be displayed on the screen using the same pixel
+        size). Otherwise, a tight extent is used for each displayed
+        slice image.
+    
+    interpolation : str, optional
+        The interpolation method used (see ``matplotlib``
+        documentation for the possible choices).
+    
+    sx_color : str or None, optional    
+        The name of a matplotlib color for the X-slice slider progress
+        bar (the default color is used when this optionnal input is
+        set to ``None``).
+    
+    sy_color : str or None, optional    
+        The name of a matplotlib color for the Y-slice slider progress
+        bar (the default color is used when this optionnal input is
+        set to ``None``).
+    
+    sz_color : str or None, optional    
+        The name of a matplotlib color for the Z-slice slider progress
+        bar (the default color is used when this optionnal input is
+        set to ``None``).
+    
+    xlim : tuple of float, optional    
+        Limits for the x-axis as a tuple ``(xmin, xmax)``. If
+        provided, sets the visible range of the x-axis. If None, the
+        limits are determined automatically based on the data. Note
+        that the use of this option jointly with ``boundaries='same'``
+        is discouraged and may lead to unexpected behavior.
+    
+    ylim : tuple of float, optional
+        Limits for the y-axis as a tuple ``(ymin, ymax)``. If
+        provided, sets the visible range of the y-axis. If None, the
+        limits are determined automatically based on the data. Note
+        that the use of this option jointly with ``boundaries='same'``
+        is discouraged and may lead to unexpected behavior.
+    
+    zlim : tuple of float, optional
+        Limits for the z-axis as a tuple ``(zmin, zmax)``. If
+        provided, sets the visible range of the z-axis. If None, the
+        limits are determined automatically based on the data. Note
+        that the use of this option jointly with ``boundaries='same'``
+        is discouraged and may lead to unexpected behavior.
+    
+    Return
+    ------
+    
+    params : dict
+        A dictionary containing all graphical objects and state
+        parameters.
+
+    
+    Mouse and keyboard Interactive commands
+    ---------------------------------------
+    
+    - x : select the X-slice slider
+    - y : select the Y-slice slider
+    - z : select the Z-slice slider
+    - left : move the active slider back by one step
+    - right : move the active slider forward by one step
+    - ctrl + left : move the active slider back by 10% of its range
+    - ctrl + right : move the active slider forward by 10% of its
+      range
+    - shift + left : move the active slider back by 5% of its range
+    - shift + right : move the active slider forward by 5% of its
+      range
+    - up : toogle forward the slider selection (X -> Y -> Z)
+    - down : toogle back the slider selection (Z -> Y -> X)
+    - c : maximize the contrast among the three displayed slices
+    - h : display help
+    
+    """
+
+    # local functions to handle interactions
+    def slider_update(params, dim, id):
+        
+        # retrieve slider, grid & unit
+        slider = params['s' + dim]
+        if slider.is_updating:
+            return
+        slider.is_updating = True
+        strunit = params[dim + 'unit']
+        
+        # update label
+        val = params[dim + 'grid'][id]
+        str = slider.valfmt + ' %s'
+        slider.valtext.set_text(str % (val, strunit))
+        
+        # update displayed slice
+        u = params["u"]
+        if slider == params['sx']:
+            im = params["im_uyz"]
+            im.set_data(u[:, slider.val, :])
+        elif slider == params['sy']:
+            im = params["im_uxz"]
+            im.set_data(u[slider.val, :, :])
+        elif slider == params['sz']:
+            im = params["im_uyx"]
+            im.set_data(u[:, :, slider.val])
+        params['fig'].canvas.draw_idle()
+        slider.is_updating = False
+    
+    def keypressed(params, event):
+        
+        # deal with key events
+        if event.key in ('x', 'y', 'z'): # toogle selected slider
+            dim = params['active_dim']
+            r = params['r' + event.key]
+            s = params['s' + event.key]
+            params['r' + dim].set_visible(False)
+            r.set_visible(True)
+            params['active_dim'] = event.key
+            plt.draw()
+            params['fig'].canvas.draw_idle()
+        elif event.key == 'left': # 1 step decrease for the active slider
+            dim = params['active_dim']
+            s = params['s' + dim]
+            newval = s.val - 1
+            if newval >= 0:
+                s.set_val(newval)
+                slider_update(params, dim, s.val)
+        elif event.key == 'right': # 1 step increase for the active slider
+            dim = params['active_dim']
+            s = params['s' + dim]
+            newval = s.val + 1
+            if newval < s.nval:
+                s.set_val(newval)
+                slider_update(params, dim, s.val)
+        elif event.key in ('ctrl+right', 'shift+right'): # 10% or 5% increase for the active slider
+            dim = params['active_dim']
+            s = params['s' + dim]
+            val = s.val
+            step = s.nval//(10 if event.key == 'ctrl+right' else 20)
+            newval = min(s.nval -1, s.val + step)
+            if newval != val:
+                s.set_val(newval)
+                slider_update(params, dim, s.val)
+        elif event.key in ('ctrl+left', 'shift+left'): # 10% or 5% decrease for the active slider
+            dim = params['active_dim']
+            s = params['s' + dim]
+            val = s.val
+            step = s.nval//(10 if event.key == 'ctrl+left' else 20)
+            newval = max(0, s.val - step)
+            if newval != val:
+                s.set_val(newval)
+                slider_update(params, dim, s.val)
+        elif event.key == 'up': # forward cycling for the selected slider
+            dim = params['active_dim']
+            params['r' + dim].set_visible(False)
+            dim = params['next_dim'][dim]
+            params['r' + dim].set_visible(True)
+            params['active_dim'] = dim
+            plt.draw()
+            params['fig'].canvas.draw_idle()
+        elif event.key == 'down': # backward cycling for the selected slider
+            dim = params['active_dim']
+            params['r' + dim].set_visible(False)
+            dim = params['prev_dim'][dim]
+            params['r' + dim].set_visible(True)
+            params['active_dim'] = dim
+            plt.draw()
+            params['fig'].canvas.draw_idle()
+        elif event.key == 'c': # maximize contrast among the displayed slices
+            u = params['u']
+            u_yz = u[:, params['sx'].val, :]
+            u_xz = u[params['sy'].val, :, :]
+            u_yx = u[:, :, params['sz'].val]
+            cmin = min((u_yz.min(), u_xz.min(), u_yx.min()))
+            cmax = max((u_yz.max(), u_xz.max(), u_yx.max()))
+            params['im_uyz'].set_clim(cmin, cmax)
+            params['im_uxz'].set_clim(cmin, cmax)
+            params['im_uyx'].set_clim(cmin, cmax)
+        elif event.key == 'h': # print interactive help
+            print("")
+            print("Interactive controls (3D image displayer)")
+            print("=========================================\n")
+            print("Keyboard")
+            print("--------\n")
+            print("  - x : select the X-slice slider")
+            print("  - y : select the Y-slice slider")
+            print("  - z : select the Z-slice slider")
+            print("  - left : move the active slider back by one step")
+            print("  - right : move the active slider forward by one step")
+            print("  - ctrl + left : move the active slider back by 10% of its range")
+            print("  - ctrl + right : move the active slider forward by 10% of its range")
+            print("  - shift + left : move the active slider back by 5% of its range")
+            print("  - shift + right : move the active slider forward by 5% of its range")
+            print("  - up : toogle forward the slider selection (X -> Y -> Z)")
+            print("  - down : toogle back the slider selection (Z -> Y -> X)")
+            print("  - c : maximize the contrast among the three displayed slices")
+            print("  - h : display help")
+            print("")
+    
+    def get_k(params, event):
+        
+        # if the mouse pointer lies within a displayed slice, retrieve
+        # the corresponding voxel indexes
+        kx = ky = kz = -1
+        ax = event.inaxes
+        if ax == params['ax_uyz']:
+            z = params['zgrid']
+            y = params['ygrid']
+            dz = params['dz']
+            dy = params['dy']            
+            kz = math.floor(.5 + (event.xdata - z[0]) / dz)
+            ky = math.floor(.5 + (event.ydata - y[0]) / dy)
+            kx = params['sx'].val
+        elif ax == params['ax_uxz']:
+            z = params['zgrid']
+            x = params['xgrid']
+            dz = params['dz']
+            dx = params['dx']
+            kz = math.floor(.5 + (event.xdata - z[0]) / dz)
+            kx = math.floor(.5 + (event.ydata - x[0]) / dx)
+            ky = params['sy'].val
+        elif ax == params['ax_uyx']:
+            y = params['ygrid']
+            x = params['xgrid']
+            dy = params['dy']
+            dx = params['dx']
+            kx = math.floor(.5 + (event.xdata - x[0]) / dx)
+            ky = math.floor(.5 + (event.ydata - y[0]) / dy)
+            kz = params['sz'].val
+        
+        # check whether the indexes are within the image domain or not
+        valid_x = (0 <= kx < params['xgrid'].size)
+        valid_y = (0 <= ky < params['ygrid'].size)
+        valid_z = (0 <= kz < params['zgrid'].size)
+        valid = all([valid_x, valid_y, valid_z])
+        
+        return kx, ky, kz, valid
+    
+    # retrieve image dimensions
+    Ny, Nx, Nz = u.shape
+    
+    # create discrete indexes
+    idx = np.arange(Nx, dtype='int32')
+    idy = np.arange(Ny, dtype='int32')
+    idz = np.arange(Nz, dtype='int32')
+    
+    # set default grids (if not provided)
+    if xgrid is None:
+        xgrid = idx
+    if ygrid is None:
+        ygrid = idy
+    if zgrid is None:
+        zgrid = idz
+    
+    # retrieve sampling steps
+    dx = xgrid[1] - xgrid[0]
+    dy = ygrid[1] - ygrid[0]
+    dz = zgrid[1] - zgrid[0]
+    
+    # get central slices
+    x0, y0, z0 = Nx//2, Ny//2, Nz//2
+    u_yz = u[:, x0, :] #02
+    u_xz = u[y0, :, :] #12
+    u_yx = u[:, :, z0] #01
+    if origin == 'lower':
+        extent_yx = (xgrid[0] - .5 * dx, xgrid[-1] + .5 * dx, ygrid[0] - .5 * dy, ygrid[-1] + .5 * dy)
+        extent_yz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, ygrid[0] - .5 * dy, ygrid[-1] + .5 * dy)
+        extent_xz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, xgrid[0] - .5 * dx, xgrid[-1] + .5 * dx)
+    else:
+        extent_yx = (xgrid[0] - .5 * dx, xgrid[-1] + .5 * dx, ygrid[-1] + .5 * dy, ygrid[0] - .5 * dy)
+        extent_yz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, ygrid[-1] + .5 * dy, ygrid[0] - .5 * dy)
+        extent_xz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, xgrid[-1] + .5 * dx, xgrid[0] - .5 * dx)
+    
+    # prepare figure & axes
+    fig = plt.figure(figsize=figsize)
+    gs = GridSpec(2, 3, width_ratios=[1, 1, 1], height_ratios=[1, 5], hspace=0)
+    ax_sx = fig.add_subplot(gs[0, 0])
+    ax_sy = fig.add_subplot(gs[0, 1])
+    ax_sz = fig.add_subplot(gs[0, 2])
+    ax_uyz = fig.add_subplot(gs[1, 0])
+    ax_uxz = fig.add_subplot(gs[1, 1])
+    ax_uyx = fig.add_subplot(gs[1, 2])
+    
+    # display YZ-slice
+    im_uyz = ax_uyz.imshow(u_yz, extent=extent_yz, origin=origin,
+                           aspect=aspect, cmap=cmap,
+                           interpolation=interpolation)
+    ax_uyz.set_xlabel("Z")
+    ax_uyz.set_ylabel("Y")
+    
+    # display XZ-slice
+    im_uxz = ax_uxz.imshow(u_xz, extent=extent_xz, origin=origin,
+                           aspect=aspect, cmap=cmap,
+                           interpolation=interpolation)
+    ax_uxz.set_xlabel("Z")
+    ax_uxz.set_ylabel("X")
+    
+    # display YX-slice
+    im_uyx = ax_uyx.imshow(u_yx, extent=extent_yx, origin=origin,
+                           aspect=aspect, cmap=cmap,
+                           interpolation=interpolation)
+    ax_uyx.set_xlabel("X")
+    ax_uyx.set_ylabel("Y")
+    
+    # deal with boundaries (if same pixel size is needed, give to all
+    # subplots the same axes boundaries)
+    if boundaries == 'same':
+        Dxlim = max(xgrid[-1] + .5 * dx, zgrid[-1] + .5 * dz) - min(xgrid[0] - .5 * dx, zgrid[0] - .5 * dx)
+        Dylim = max(xgrid[-1] + .5 * dx, ygrid[-1] + .5 * dy) - min(xgrid[0] - .5 * dx, ygrid[0] - .5 * dy)
+        Dx = xgrid[-1] - xgrid[0]
+        Dy = ygrid[-1] - ygrid[0]
+        Dz = zgrid[-1] - zgrid[0]
+        xlim_uyz = (zgrid[0] - .5 * (Dxlim - Dz), zgrid[-1] + .5 * (Dxlim - Dz))
+        ylim_uyz = (ygrid[0] - .5 * (Dylim - Dy), ygrid[-1] + .5 * (Dylim - Dy))
+        xlim_uxz = (zgrid[0] - .5 * (Dxlim - Dz), zgrid[-1] + .5 * (Dxlim - Dz))
+        ylim_uxz = (xgrid[0] - .5 * (Dylim - Dx), xgrid[-1] + .5 * (Dylim - Dx))
+        xlim_uyx = (xgrid[0] - .5 * (Dxlim - Dx), xgrid[-1] + .5 * (Dxlim - Dx))
+        ylim_uyx = (ygrid[0] - .5 * (Dylim - Dy), ygrid[-1] + .5 * (Dylim - Dy))
+        if origin != 'lower':
+            ylim_uyz = (ylim_uyz[-1], ylim_uyz[-2])
+            ylim_uxz = (ylim_uxz[-1], ylim_uxz[-2])
+            ylim_uyx = (ylim_uyx[-1], ylim_uyx[-2])
+        ax_uyz.set_xlim(xlim_uyz)
+        ax_uxz.set_xlim(xlim_uxz)
+        ax_uyx.set_xlim(xlim_uyx)
+        ax_uyz.set_ylim(ylim_uyz)
+        ax_uxz.set_ylim(ylim_uxz)
+        ax_uyx.set_ylim(ylim_uyx)
+    
+    # deal with xlim/ylim/zlim options
+    if xlim is not None:
+        ax_uxz.set_ylim(xlim)
+        ax_uyx.set_xlim(xlim)
+    if ylim is not None:
+        ax_uyz.set_ylim(ylim)
+        ax_uyx.set_ylim(ylim)
+    if zlim is not None:
+        ax_uyz.set_xlim(zlim)
+        ax_uxz.set_xlim(zlim)
+    
+    # add sliders
+    plt.subplots_adjust(top=.95, bottom=0.05, left=0.07, right=0.93)
+    sx = Slider(ax_sx, "X", idx[0], idx[-1], valinit=idx[x0], valstep=idx, color=sx_color, valfmt=valfmt)
+    sy = Slider(ax_sy, "Y", idy[0], idy[-1], valinit=idy[y0], valstep=idy, color=sy_color, valfmt=valfmt)
+    sz = Slider(ax_sz, "Z", idz[0], idz[-1], valinit=idz[z0], valstep=idz, color=sz_color, valfmt=valfmt)
+    sx.nval = Nx
+    sy.nval = Ny
+    sz.nval = Nz
+    sx.is_updating = sy.is_updating = sz.is_updating = False
+    sx.valtext.set_text((valfmt + ' %s') % (xgrid[x0], spatial_unit))
+    sy.valtext.set_text((valfmt + ' %s') % (ygrid[y0], spatial_unit))
+    sz.valtext.set_text((valfmt + ' %s') % (zgrid[z0], spatial_unit))
+    ax_sx.set_title('X-slice', pad=0, y=0.93)
+    ax_sy.set_title('Y-slice', pad=0, y=0.93)
+    ax_sz.set_title('Z-slice', pad=0, y=0.93)
+    
+    # add slider rectangles
+    r = []
+    for ax in [ax_sx, ax_sy, ax_sz]:
+        x, y, ww, hh = ax.get_position().bounds
+        cof = .5
+        rect = patches.Rectangle((x, y + hh * (1 - cof) / 2),
+                                 width=ww, height=hh*cof, linewidth=2,
+                                 edgecolor='black', facecolor='none',
+                                 visible=False)
+        fig.add_artist(rect)
+        r.append(rect)
+    rx, ry, rz = r
+    rx.set_visible(True)
+    plt.draw()
+    
+    # deal with colorbar display
+    if show_colorbar:
+        #
+        # usual color bar may move the figure (this typically happens
+        # when the image width is smaller than the image height),
+        # leading to unaesthetic uncentered display
+        #
+        #plt.colorbar(im_uyz, ax=ax_uyz)
+        #plt.colorbar(im_uxz, ax=ax_uxz)
+        #plt.colorbar(im_uyx, ax=ax_uyx)
+        #
+        # this fixes the issue presented above
+        d_uyz = make_axes_locatable(ax_uyz)
+        d_uxz = make_axes_locatable(ax_uxz)
+        d_uyx = make_axes_locatable(ax_uyx)
+        cax_uyz = d_uyz.append_axes("right", size="7%", pad=0.05)
+        cax_uxz = d_uxz.append_axes("right", size="7%", pad=0.05)
+        cax_uyx = d_uyx.append_axes("right", size="7%", pad=0.05)
+        plt.colorbar(im_uyz, cax=cax_uyz)
+        plt.colorbar(im_uxz, cax=cax_uxz)
+        plt.colorbar(im_uyx, cax=cax_uyx)
+    
+    # gather parameters
+    params = {
+        'fig': fig,
+        'ax_sx': ax_sx,
+        'ax_sy': ax_sy,
+        'ax_sz': ax_sz,
+        'ax_uyz': ax_uyz,
+        'ax_uxz': ax_uxz,
+        'ax_uyx': ax_uyx,
+        'cax_uyz': cax_uyz,
+        'cax_uxz': cax_uxz,
+        'cax_uyx': cax_uyx,
+        'rx': rx,
+        'ry': ry,
+        'rz': rz,
+        'im_uyz': im_uyz,
+        'im_uxz': im_uxz,
+        'im_uyx': im_uyx,
+        'sx': sx,
+        'sy': sy,
+        'sz': sz,
+        'u': u,
+        'xgrid': xgrid,
+        'ygrid': ygrid,
+        'zgrid': zgrid,
+        'active_dim': 'x',
+        'xunit': spatial_unit,
+        'yunit': spatial_unit,
+        'zunit': spatial_unit,
+        'next_dim' : {'x': 'y', 'y': 'z', 'z': 'x'},
+        'prev_dim' : {'z': 'y', 'y': 'x', 'x': 'z'},
+        'dx': dx,
+        'dy': dy,
+        'dz': dz,
+        'ready_to_follow': False,
+    }
+    
+    # set callback functions
+    sx.on_changed(functools.partial(slider_update, params, 'x'))
+    sy.on_changed(functools.partial(slider_update, params, 'y'))
+    sz.on_changed(functools.partial(slider_update, params, 'z'))
+    fig.canvas.mpl_connect('key_press_event', functools.partial(keypressed, params))
+    
+    return params
 
 def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
              spatial_unit='', B_unit='', figsize=None, valfmt='%0.3g',
@@ -68,8 +579,8 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
              sz_color=None, sb_color='g', xlim=None, ylim=None,
              zlim=None):
     """Interactive displayer for 4D spectral-spatial images.
-
-    Display slices & spectra of a 4D spectral-sptatial image, and
+    
+    Display slices & spectra of a 4D spectral-spatial image, and
     explore its content through many interactive commands (once the
     figure is displayed, press the `h` key of your keyboard to display
     the list of interactive commands, also listed below).
@@ -79,7 +590,7 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     
     u : ndarray
         Four dimensional array containing the values of the 4D
-        spectral-sptial image ordered as follows:
+        spectral-spatial image ordered as follows:
         
         + axis 0 = homogeneous magnetic field intensity axis (or B-axis);
         + axis 1 = spatial vertical axis (or Y-axis);
@@ -193,21 +704,21 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
         Limits for the x-axis as a tuple ``(xmin, xmax)``. If
         provided, sets the visible range of the x-axis. If None, the
         limits are determined automatically based on the data. Note
-        that the use of this option jointly with ``boudnaries='same'``
+        that the use of this option jointly with ``boundaries='same'``
         is discouraged and may lead to unexpected behavior.
     
     ylim : tuple of float, optional
         Limits for the y-axis as a tuple ``(ymin, ymax)``. If
         provided, sets the visible range of the y-axis. If None, the
         limits are determined automatically based on the data. Note
-        that the use of this option jointly with ``boudnaries='same'``
+        that the use of this option jointly with ``boundaries='same'``
         is discouraged and may lead to unexpected behavior.
     
     zlim : tuple of float, optional
         Limits for the z-axis as a tuple ``(zmin, zmax)``. If
         provided, sets the visible range of the z-axis. If None, the
         limits are determined automatically based on the data. Note
-        that the use of this option jointly with ``boudnaries='same'``
+        that the use of this option jointly with ``boundaries='same'``
         is discouraged and may lead to unexpected behavior.
     
     Return
@@ -216,8 +727,8 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
     params : dict
         A dictionary containing all graphical objects and state
         parameters.
-
-
+    
+    
     Mouse and keyboard Interactive commands
     ---------------------------------------
     
