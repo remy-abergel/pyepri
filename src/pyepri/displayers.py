@@ -36,6 +36,7 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.widgets import Slider
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pylab as pl
+import pyvista as pv
 from IPython import display, get_ipython
 import time
 import types
@@ -58,13 +59,192 @@ def is_notebook() -> bool:
     except NameError:
         return False     # Probably standard Python interpreter
 
+def isosurf3d(u, xgrid=None, ygrid=None, zgrid=None, isovalue=None,
+              opacity=1, color='#f7fe00', cpos=None, show_grid=True,
+              show_slider=True, xlabel='X', ylabel='Y', zlabel='Z',
+              xlim=None, ylim=None, zlim=None, slider_params=None):
+    """Interactive isosurface displayer for 3D images.
+    
+    Parameters
+    ----------
+    
+    u : ndarray
+        Three dimensional array containing the values of the
+        3D image ordered as follows:
+        
+        + axis 0 = spatial vertical axis (or Y-axis);
+        + axis 1 = spatial horizontal axis (or X-axis);
+        + axis 2 = saptial depth axis (or Z-axis).
+    
+    xgrid : ndarray, optional
+        Monodimensional ndarray with length ``u.shape[1]`` containing
+        the sampling nodes associated to the X-axis (axis 1) of the
+        3D image ``u``.
+    
+    ygrid : ndarray, optional
+        Monodimensional ndarray with length ``u.shape[0]`` containing
+        the sampling nodes associated to the Y-axis (axis 0) of the
+        3D image ``u``.
+    
+    zgrid : ndarray, optional
+        Monodimensional ndarray with length ``u.shape[2]`` containing
+        the sampling nodes associated to the Z-axis (axis 2) of the
+        3D image ``u``.
+    
+    isovalue : float, optional
+        Isovalue to display (default setting is the median value of
+        ``u``).
+    
+    opacity : float, optional
+        Isosurface opacity.
+    
+    color : str or RBG tuple or RGBA tuple, optional    
+        Isosurface color, provided in PyVista compatible format, see
+        several examples below:
+        
+        + predefined color names : "red", "green", "blue", "yellow",
+          "magenta", "cyan", "orange", "purple", "black", "white", ...
+        
+        + hexadecimal color: '#F7FE00', "#FF5733", ...
+        
+        + RGB tuple : for instance (1.0, 0.5, 0.0)
+        
+        + RGBA tuple : for instance (0.2, 0.4, 0.6, 0.8)
+        
+        See PyVista documentation for more details.
+    
+    cpos : sequence of float, optional
+        Camera position (see PyVista documentation)
+    
+    show_grid : bool, optional
+        Enable or disable grid display
+    
+    show_slider : bool, optional
+        Enable or disable slider for interactive isovalue selection
+    
+    xlabel : str, optional
+        Label for the X axis
+    
+    ylabel : str, optional
+        Label for the Y axis
+    
+    zlabel : str, optional
+        Label for the Z axis
+    
+    xlim : tuple of float, optional
+        Limits for the x-axis as a tuple ``(xmin, xmax)``. If
+        provided, sets the visible range of the X-axis. If None, the
+        limits are determined automatically based on the data.
+    
+    ylim : tuple of float, optional
+        Limits for the x-axis as a tuple ``(ymin, ymax)``. If
+        provided, sets the visible range of the Y-axis. If None, the
+        limits are determined automatically based on the data.
+    
+    zlim : tuple of float, optional
+        Limits for the x-axis as a tuple ``(zmin, zmax)``. If
+        provided, sets the visible range of the Z-axis. If None, the
+        limits are determined automatically based on the data.
+    
+    slider_params : dict, optional
+    
+        Dictionary containing custom settings for the PyVista Slider
+        widget. The following keys may be used:
+        
+        + 'rng' : tuple with length 2, admissible range of values for
+          the slider
+        
+        + 'title' : slider title (or label)
+        
+        + 'pointa' and 'pointb' : pointa and pointb are 2-tuples ``(x,
+          y)`` specifying the slider's start and end positions in
+          normalized viewport coordinates, where ``(0, 0)`` is the
+          lower-left corner and ``(1, 1)`` is the upper-right corner
+          of the PyVista render window. The slider will be placed
+          along the segment connecting ``pointa`` to ``pointb``, which
+          also defines its orientation (horizontal, vertical, or
+          diagonal).
+        
+        Specifying only a subset of them is allowed.
+    
+    
+    Return
+    ------
+    
+    plotter : pyvista.Plotter
+        The plotter instance containing the rendered scene.
+
+    """
+    
+    # prepare isosurface display
+    ny, nx, nz = u.shape
+    xgrid = np.arange(nx, dtype='float32') if xgrid is None else xgrid
+    ygrid = np.arange(ny, dtype='float32') if ygrid is None else ygrid
+    zgrid = np.arange(nz, dtype='float32') if zgrid is None else zgrid
+    x, y, z = np.meshgrid(xgrid, ygrid, zgrid, indexing='xy')
+    grid = pv.StructuredGrid(x, y, z)
+    
+    # compute isosurface
+    isoval = np.median(u) if isovalue is None else isovalue
+    grid["vol"] = np.moveaxis(u, (0, 1, 2), (2, 1, 0)).flatten()
+    contour = grid.contour([isoval])
+    
+    # display isosurface
+    p = pv.Plotter()
+    if cpos is not None:
+        p.camera_position = cpos
+    actor = p.add_mesh(contour, color=color, opacity=opacity)
+    
+    # deal with show_grid option
+    if show_grid:
+        labels = dict(xtitle=xlabel, ytitle=ylabel, ztitle=zlabel)
+        xlim = xlim if xlim is not None else [xgrid[0], xgrid[-1]]
+        ylim = ylim if ylim is not None else [ygrid[0], ygrid[-1]]
+        zlim = zlim if zlim is not None else [zgrid[0], zgrid[-1]]
+        bounds = [*xlim, *ylim, *zlim]
+        p.show_grid(**labels, bounds=bounds)
+    
+    # deal with show_slider option
+    if show_slider:
+        
+        # prepare slider callback
+        def update_iso(value):
+            new_contour = grid.contour([value])
+            actor.mapper.SetInputData(new_contour) 
+            p.render()        
+        
+        # prepare slider parameters
+        rng = title = pointa = pointb = None
+        if slider_params is not None:
+            rng = slider_params.get('rng')
+            title = slider_params.get('title')
+            pointa = slider_params.get('pointa')
+            pointb = slider_params.get('pointb')
+        rng = [u.min(), u.max()] if rng is None else rng
+        title = "isovalue" if title is None else title
+        pointa = (.2, .075) if pointa is None else pointa
+        pointb = (.8, .075) if pointb is None else pointb
+        
+        # create slider
+        slider_iso = p.add_slider_widget(
+            callback=update_iso,
+            rng=rng,
+            value=isoval,
+            title=title,
+            pointa=pointa,
+            pointb=pointb,
+        )
+    
+    p.show()
+    return p
+
 def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, spatial_unit='',
              figsize=None, valfmt='%0.3g', show_colorbar=True,
              cmap=None, origin='lower', aspect='equal',
              boundaries='same', interpolation='nearest',
              sx_color=None, sy_color=None, sz_color=None, xlim=None,
              ylim=None, zlim=None):
-    """Interactive displayer for 3D images.
+    """Interactive slice displayer for 3D images.
     
     Display slices of a 3D image, and explore its content through many
     interactive commands (once the figure is displayed, press the `h`
