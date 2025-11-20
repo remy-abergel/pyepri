@@ -233,12 +233,12 @@ def isosurf3d(u, xgrid=None, ygrid=None, zgrid=None, isovalue=None,
     p.show()
     return p
 
-def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, spatial_unit='',
-             figsize=None, valfmt='%0.3g', show_colorbar=True,
-             cmap=None, origin='lower', aspect='equal',
-             boundaries='same', interpolation='nearest',
-             sx_color=None, sy_color=None, sz_color=None, xlim=None,
-             ylim=None, zlim=None):
+def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, indexes=None,
+             units='', figsize=None, valfmt='%0.3g',
+             show_colorbar=True, cmap=None, origin='lower',
+             aspect='equal', boundaries='same',
+             interpolation='nearest', sx_color=None, sy_color=None,
+             sz_color=None, xlim=None, ylim=None, zlim=None):
     """Interactive slice displayer for 3D images.
     
     Display slices of a 3D image, and explore its content through many
@@ -272,7 +272,17 @@ def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, spatial_unit='',
         the sampling nodes associated to the Z-axis (axis 2) of the
         3D image ``u``.
     
-    spatial_unit : str, optional
+    indexes : sequence of int, optional    
+        When given, indexes must be a sequence of three int, ``indexes
+        = (id0, id1, id2)``, such that `id0`, `id1` and `id2`
+        correspond to the indexes used along each axis of the 3D
+        volume to extract the slices to be displayed (using ``None``
+        to keep a particular index to its default value is possible).
+        
+        The default setting is ``indexes = (u.shape[0]//2,
+        u.shape[1]//2, u.shape[2]//2)``.
+    
+    units : str, optional
         Units associated to the X, Y and Z axes (handling of different
         axes units is not provided).
     
@@ -383,7 +393,7 @@ def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, spatial_unit='',
     - down : toogle back the slider selection (Z -> Y -> X)
     - c : maximize the contrast among the three displayed slices
     - h : display help
-    
+
     """
 
     # local functions to handle interactions
@@ -566,11 +576,22 @@ def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, spatial_unit='',
     dy = ygrid[1] - ygrid[0]
     dz = zgrid[1] - zgrid[0]
     
-    # get central slices
-    x0, y0, z0 = Nx//2, Ny//2, Nz//2
+    # get slices indexes
+    if indexes is not None:
+        x0 = u.shape[1]//2 if indexes[1] is None else indexes[1]
+        y0 = u.shape[0]//2 if indexes[0] is None else indexes[0]
+        z0 = u.shape[2]//2 if indexes[2] is None else indexes[2]
+    else:
+        x0 = u.shape[1]//2
+        y0 = u.shape[0]//2
+        z0 = u.shape[2]//2
+    
+    # retrieve slices
     u_yz = u[:, x0, :] #02
     u_xz = u[y0, :, :] #12
     u_yx = u[:, :, z0] #01
+    
+    # retrieve slices extents
     if origin == 'lower':
         extent_yx = (xgrid[0] - .5 * dx, xgrid[-1] + .5 * dx, ygrid[0] - .5 * dy, ygrid[-1] + .5 * dy)
         extent_yz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, ygrid[0] - .5 * dy, ygrid[-1] + .5 * dy)
@@ -656,9 +677,9 @@ def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, spatial_unit='',
     sy.nval = Ny
     sz.nval = Nz
     sx.is_updating = sy.is_updating = sz.is_updating = False
-    sx.valtext.set_text((valfmt + ' %s') % (xgrid[x0], spatial_unit))
-    sy.valtext.set_text((valfmt + ' %s') % (ygrid[y0], spatial_unit))
-    sz.valtext.set_text((valfmt + ' %s') % (zgrid[z0], spatial_unit))
+    sx.valtext.set_text((valfmt + ' %s') % (xgrid[x0], units))
+    sy.valtext.set_text((valfmt + ' %s') % (ygrid[y0], units))
+    sz.valtext.set_text((valfmt + ' %s') % (zgrid[z0], units))
     ax_sx.set_title('X-slice', pad=0, y=0.93)
     ax_sy.set_title('Y-slice', pad=0, y=0.93)
     ax_sz.set_title('Z-slice', pad=0, y=0.93)
@@ -726,9 +747,9 @@ def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, spatial_unit='',
         'ygrid': ygrid,
         'zgrid': zgrid,
         'active_dim': 'x',
-        'xunit': spatial_unit,
-        'yunit': spatial_unit,
-        'zunit': spatial_unit,
+        'xunit': units,
+        'yunit': units,
+        'zunit': units,
         'next_dim' : {'x': 'y', 'y': 'z', 'z': 'x'},
         'prev_dim' : {'z': 'y', 'y': 'x', 'x': 'z'},
         'dx': dx,
@@ -1458,7 +1479,7 @@ def init_display_monosrc_2d(u, newfig=True, figsize=None,
     
     u : ndarray
         Two-dimensional array
-
+    
     newfig : bool, optional
         Specify whether the display must be done into a new figure or
         not.
@@ -1470,7 +1491,7 @@ def init_display_monosrc_2d(u, newfig=True, figsize=None,
         given, the default setting is that of `matplotlib` (see key
         'figure.figsize' of the matplotlib configuration parameter
         ``rcParams``).
-
+    
     time_sleep : float, optional 
         Duration in seconds of pause or sleep (depending on the
         running environment) to perform after image drawing.
@@ -1720,21 +1741,21 @@ def init_display_monosrc_3d(u, newfig=True, figsize=None,
         Use ``boundaries = 'same'`` to give all subplots the same axes
         boundaries (in particular, this ensures that all slice images
         will be displayed on the screen using the same pixel size).
-
+    
         Otherwise, set ``boundaries = 'auto'`` to use tight extent for
         each displayed slice image.
-
+    
     is_notebook : bool, optional
         Indicate whether the running environment is an interactive
         notebook (``is_notebook = True``) or not (``is_notebook =
         False``).
     
     indexes : sequence of int, optional
-        When given, indexes must be a sequence of three int,
-        ``index[j] = (id0, id1, id2)``, such that `id0`, `id1` and
-        `id2` correspond to the indexes used along each axis of the 3D
-        volume to extract the slices to be displayed (using ``None``
-        to keep a particular index to its default value is possible).
+        When given, indexes must be a sequence of three int, ``index =
+        (id0, id1, id2)``, such that `id0`, `id1` and `id2` correspond
+        to the indexes used along each axis of the 3D volume to
+        extract the slices to be displayed (using ``None`` to keep a
+        particular index to its default value is possible).
         
         The default setting is ``indexes = (u.shape[0]//2,
         u.shape[1]//2, u.shape[2]//2)``.
