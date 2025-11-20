@@ -41,6 +41,7 @@ from IPython import display, get_ipython
 import time
 import types
 import pyepri.checks as checks
+import pyepri.utils as utils
 
 __EMPTY_ARRAY__ = np.empty(0)
 
@@ -59,6 +60,7 @@ def is_notebook() -> bool:
     except NameError:
         return False     # Probably standard Python interpreter
 
+    
 def isosurf3d(u, xgrid=None, ygrid=None, zgrid=None, isovalue=None,
               opacity=1, color='#f7fe00', cpos=None, show_grid=True,
               show_slider=True, xlabel='X', ylabel='Y', zlabel='Z',
@@ -92,8 +94,9 @@ def isosurf3d(u, xgrid=None, ygrid=None, zgrid=None, isovalue=None,
         3D image ``u``.
     
     isovalue : float, optional
-        Isovalue to display (default setting is the median value of
-        ``u``).
+        Isovalue to display (default setting corresponds to Otsu's
+        threshold which maximizes the inter-class variance between
+        background and foreground).
     
     opacity : float, optional
         Isosurface opacity.
@@ -185,7 +188,7 @@ def isosurf3d(u, xgrid=None, ygrid=None, zgrid=None, isovalue=None,
     grid = pv.StructuredGrid(x, y, z)
     
     # compute isosurface
-    isoval = np.median(u) if isovalue is None else isovalue
+    isoval = utils.otsu_threshold(u) if isovalue is None else isovalue
     grid["vol"] = np.moveaxis(u, (0, 1, 2), (2, 1, 0)).flatten()
     contour = grid.contour([isoval])
     
