@@ -16,6 +16,9 @@
   reconstruction ([#20](../../pull/20)), replacing an incorrect
   Lipschitz constant update introduced in [#19](../../pull/19)
 
+- added interactive 3D image displayers ``imshow3d`` and ``isosurf3d``
+  in [displayers.py](src/pyepri/displayers.py) ([#23](../../pull/23))
+
 ### Code
 
 - added mask and positivity options to the ``tv_monosrc`` function in
@@ -35,17 +38,21 @@
 
 ### Documentation
 
-- minor improvements ([#18](../../pull/18) and [#19](../../pull/19))
+- minor improvements ([#18](../../pull/18), [#19](../../pull/19) and
+  [#23](../../pull/23))
 
 - added reference to the recently published paper presenting the
   PyEPRI package ([#18](../../pull/18))
 
-### Packaging 
+### Packaging
 
+- require pyvista >= 0.44.0 (due to internal updates of PyVista's
+  class ``StructuredGrid``)
+  
 - removed deprecated license classifiers, declare license using SPDX
   license expression, and require setuptools >= 77
   ([#18](../../pull/18))
-
+  
 - require (cu)finufft>=2.4.0 (fixes several CUDA issues, such that
   [FINUFFT issue
   #648](https://github.com/flatironinstitute/finufft/issues/648))
