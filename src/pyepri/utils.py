@@ -649,8 +649,8 @@ def powerit(x0, A, backend=None, tol=1e-7, verbose=False, nitermax=None, notest=
     
     return x, l
 
-def otsu_threshold(u, backend=None, bins=256):
-    """Compute Otsu's threshold for a (N-D) signal using only NumPy.
+def otsu_threshold(u, bins=256):
+    """Compute Otsu's threshold for a (N-D) signal.
     
     This function computes the optimal threshold that maximizes the
     inter-class variance between background and foreground, following
