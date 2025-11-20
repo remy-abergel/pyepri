@@ -3,8 +3,8 @@
 Interactive image displayers
 ----------------------------
 
-Tools for displaying images (currently only 4D spectral-spatial
-images) and interacting with the display through mouse and keyboard
+Tools for displaying images (3D images & 4D spectral-spatial images)
+and interacting with the display through mouse and keyboard
 interactive commands (interactions are not available using notebooks).
 
 
@@ -16,15 +16,7 @@ images (2D & 3D, mono & multisource images) in different execution
 environments (console & notebooks).
 
 They come with the possibility to update the displayed image at any
-moment (useful in an iterative framework). 
-
-
-Interactive image displayers
-----------------------------
-
-Tools for displaying images (currently only 4D spectral-spatial
-images) and interacting with the display through mouse and keyboard
-interactive commands (interactions are not available using notebooks).
+moment (useful in an iterative framework).
 
 """
 import math

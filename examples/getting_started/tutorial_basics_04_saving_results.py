@@ -69,7 +69,7 @@ out = processing.tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape, backend=b
 #
 
 # %%
-# Exporting results in Python Pickel (.PKL) format
+# Exporting results in Python Pickle (.PKL) format
 # ------------------------------------------------
 #
 # Exporting in Python Pickle format (.pkl) is the most suitable method
