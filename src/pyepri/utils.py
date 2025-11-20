@@ -3,6 +3,7 @@ operators usually involved in signal or image processing.
 
 """
 import math
+import numpy as np
 import pyepri.checks as checks
 
 # ------------------------- #
@@ -647,6 +648,79 @@ def powerit(x0, A, backend=None, tol=1e-7, verbose=False, nitermax=None, notest=
     l = math.sqrt(l2snrm(A(x)) / l2snrm(x))
     
     return x, l
+
+def otsu_threshold(u, backend=None, bins=256):
+    """Compute Otsu's threshold for a (N-D) signal using only NumPy.
+    
+    This function computes the optimal threshold that maximizes the
+    inter-class variance between background and foreground, following
+    Otsu's method. It works for arbitrary intensity ranges by using
+    histogram bin centers instead of assuming 8-bit data.
+    
+    
+    Parameters
+    ----------
+    
+    u : np.ndarray
+        Input N-D array. The function will flatten it to compute the
+        histogram. Must contain numeric intensity values.
+    
+    bins : int, optional
+        Number of histogram bins. Default is 256. Increase this value
+        if your data has a large dynamic range.
+    
+    
+    Returns
+    -------
+    
+    float
+        The optimal threshold value according to Otsu's criterion, based 
+        on the intensity distribution of the input volume.
+    
+    
+    Notes
+    -----
+    
+    - This implementation works for arbitrary intensity ranges
+      (integer or floating-point).
+    
+    - The threshold corresponds to the histogram bin center that
+      maximizes the inter-class variance.
+    
+    
+    Examples
+    --------
+    
+    >>> import numpy as np
+    >>> vol = np.random.rand(50, 50, 50)  # example data
+    >>> t = otsu_threshold(vol)
+    >>> print(t)
+    
+    """
+    
+    # Histogram
+    data = u.ravel().astype(np.float64)
+    hist, bin_edges = np.histogram(data, bins=bins)
+    
+    # Probabilities
+    p = hist / hist.sum()
+    
+    # Cumulative sums
+    omega = np.cumsum(p)  # class probabilities
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    mu = np.cumsum(p * bin_centers)  # cumulative class means
+    
+    # Total mean
+    mu_t = mu[-1]
+    
+    # Between-class variance
+    sigma_b2 = (mu_t * omega - mu)**2 / (omega * (1 - omega) + 1e-12)
+    sigma_b2 = np.nan_to_num(sigma_b2)
+    
+    # Optimal threshold
+    threshold = bin_centers[np.argmax(sigma_b2)]
+    
+    return threshold
 
 def _relerr_(u, v, backend=None, nrm=None, notest=False):
     """Compute relative error between two arrays.    
