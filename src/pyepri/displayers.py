@@ -53,10 +53,10 @@ def is_notebook() -> bool:
         return False     # Probably standard Python interpreter
 
     
-def isosurf3d(u, xgrid=None, ygrid=None, zgrid=None, isovalue=None,
-              opacity=1, color='#f7fe00', cpos=None, show_grid=True,
-              show_slider=True, xlabel='X', ylabel='Y', zlabel='Z',
-              xlim=None, ylim=None, zlim=None, slider_params=None):
+def isosurf3d(u, isovalue=None, color='#f7fe00', cmap=None,
+              show_grid=True, xlabel='X',
+              ylabel='Y', zlabel='Z', xlim=None, ylim=None, zlim=None,
+              config=None):
     """Interactive isosurface displayer for 3D images.
     
     Parameters
@@ -70,28 +70,10 @@ def isosurf3d(u, xgrid=None, ygrid=None, zgrid=None, isovalue=None,
         + axis 1 = spatial horizontal axis (or X-axis);
         + axis 2 = saptial depth axis (or Z-axis).
     
-    xgrid : ndarray, optional
-        Monodimensional ndarray with length ``u.shape[1]`` containing
-        the sampling nodes associated to the X-axis (axis 1) of the
-        3D image ``u``.
-    
-    ygrid : ndarray, optional
-        Monodimensional ndarray with length ``u.shape[0]`` containing
-        the sampling nodes associated to the Y-axis (axis 0) of the
-        3D image ``u``.
-    
-    zgrid : ndarray, optional
-        Monodimensional ndarray with length ``u.shape[2]`` containing
-        the sampling nodes associated to the Z-axis (axis 2) of the
-        3D image ``u``.
-    
     isovalue : float, optional
         Isovalue to display (default setting corresponds to Otsu's
         threshold which maximizes the inter-class variance between
         background and foreground).
-    
-    opacity : float, optional
-        Isosurface opacity.
     
     color : str or RBG tuple or RGBA tuple, optional    
         Isosurface color, provided in PyVista compatible format, see
@@ -108,14 +90,17 @@ def isosurf3d(u, xgrid=None, ygrid=None, zgrid=None, isovalue=None,
         
         See PyVista documentation for more details.
     
-    cpos : sequence of float, optional
-        Camera position (see PyVista documentation)
+    cmap : str or pyvista.LookupTable, optional
+    
+        Colormap to apply when rendering scalar values on the slices.
+        
+        - If `None`, the default colormap is used.
+        - Can be any string recognized by Matplotlib, e.g., 'viridis',
+          'jet', 'coolwarm', ...    
+        - Can also be a `pyvista.LookupTable` for custom color mapping.
     
     show_grid : bool, optional
-        Enable or disable grid display
-    
-    show_slider : bool, optional
-        Enable or disable slider for interactive isovalue selection
+        Grid visibility at startup (toogle visibility using key 'g')
     
     xlabel : str, optional
         Label for the X axis
@@ -141,24 +126,23 @@ def isosurf3d(u, xgrid=None, ygrid=None, zgrid=None, isovalue=None,
         provided, sets the visible range of the Z-axis. If None, the
         limits are determined automatically based on the data.
     
-    slider_params : dict, optional
-    
-        Dictionary containing custom settings for the PyVista Slider
-        widget. The following keys may be used:
+    config : dict, optional        
+        Dictionary containing custom settings. The following keys may
+        be used:
         
-        + 'rng' : tuple with length 2, admissible range of values for
-          the slider
+        + 'surface_opacity' : float, initial value for the isosurface
+          opacity slider
         
-        + 'title' : slider title (or label)
+        + 'slices_opacity' : float, initial value for the slices
+          opacity slider
         
-        + 'pointa' and 'pointb' : pointa and pointb are 2-tuples ``(x,
-          y)`` specifying the slider's start and end positions in
-          normalized viewport coordinates, where ``(0, 0)`` is the
-          lower-left corner and ``(1, 1)`` is the upper-right corner
-          of the PyVista render window. The slider will be placed
-          along the segment connecting ``pointa`` to ``pointb``, which
-          also defines its orientation (horizontal, vertical, or
-          diagonal).
+        + 'step1' : float, proportion of the slider range to use at
+          slider increment/decrement when the keys 'right' and 'left'
+          are pressed
+        
+        + 'step2' : float, proportion of the slider range to use at
+          slider increment/decrement when the keys 'ctrl+right' and
+          'ctrl+left' are pressed
         
         Specifying only a subset of them is allowed.
     
@@ -168,70 +152,287 @@ def isosurf3d(u, xgrid=None, ygrid=None, zgrid=None, isovalue=None,
     
     plotter : pyvista.Plotter
         The plotter instance containing the rendered scene.
-
+    
     """
     
-    # prepare isosurface display
-    ny, nx, nz = u.shape
-    xgrid = np.arange(nx, dtype='float32') if xgrid is None else xgrid
-    ygrid = np.arange(ny, dtype='float32') if ygrid is None else ygrid
-    zgrid = np.arange(nz, dtype='float32') if zgrid is None else zgrid
-    x, y, z = np.meshgrid(xgrid, ygrid, zgrid, indexing='xy')
-    grid = pv.StructuredGrid(x, y, z)
+    # retrieve config if given, or set default config otherwise
+    surface_opacity = slices_opacity = step1 = step2 = None    
+    if config is not None:
+        surface_opacity = config.get('surface_opacity')
+        slices_opacity = config.get('surface_opacity')
+        step1 = config.get('step1')
+        step2 = config.get('step2')
+    surface_opacity = 1 if surface_opacity is None else surface_opacity
+    slices_opacity = 1 if slices_opacity is None else slices_opacity
+    step1 = .05 if step1 is None else step1
+    step2 = .1 if step2 is None else step2
     
-    # compute isosurface
+    # prepare PyVista plotter
+    grid = pv.ImageData()
+    grid.dimensions = u.shape
+    grid.point_data["values"] = u.flatten(order="F")
+    plotter = pv.Plotter()
+    
+    # compute initial isosurface
     isoval = utils.otsu_threshold(u) if isovalue is None else isovalue
-    grid["vol"] = np.moveaxis(u, (0, 1, 2), (2, 1, 0)).flatten()
     contour = grid.contour([isoval])
+    surface_actor = plotter.add_mesh(contour, name="isosurface",
+                                     opacity=surface_opacity,
+                                     color=color)
     
-    # display isosurface
-    p = pv.Plotter()
-    if cpos is not None:
-        p.camera_position = cpos
-    actor = p.add_mesh(contour, color=color, opacity=opacity)
+    # add slices (recall that dimensions (0, 1, 2) represent the (Y, X, Z) axes)
+    n0, n1, n2 = grid.dimensions
+    slice_0 = grid.slice(normal='x', origin=(n0//2, 0, 0))
+    slice_1 = grid.slice(normal='y', origin=(0, n1//2, 0))
+    slice_2 = grid.slice(normal='z', origin=(0, 0, n2//2))    
+    slice_x_actor = plotter.add_mesh(slice_1, name="slice_x",
+                                     opacity=slices_opacity,
+                                     cmap=cmap)
+    slice_y_actor = plotter.add_mesh(slice_0, name="slice_y",
+                                     opacity=slices_opacity,
+                                     cmap=cmap)
+    slice_z_actor = plotter.add_mesh(slice_2, name="slice_z",
+                                     opacity=slices_opacity,
+                                     cmap=cmap)
     
-    # deal with show_grid option
-    if show_grid:
-        labels = dict(xtitle=xlabel, ytitle=ylabel, ztitle=zlabel)
-        xlim = xlim if xlim is not None else [xgrid[0], xgrid[-1]]
-        ylim = ylim if ylim is not None else [ygrid[0], ygrid[-1]]
-        zlim = zlim if zlim is not None else [zgrid[0], zgrid[-1]]
-        bounds = [*xlim, *ylim, *zlim]
-        p.show_grid(**labels, bounds=bounds)
+    # compute grid
+    labels = dict(xtitle=ylabel, ytitle=xlabel, ztitle=zlabel)
+    xlim = [0, n1 - 1]
+    ylim = [0, n0 - 1]
+    zlim = [0, n2 - 1]
+    bounds = [*ylim, *xlim, *zlim]
+    ax = plotter.show_grid(**labels, bounds=bounds)
+    ax.SetVisibility(show_grid)
     
-    # deal with show_slider option
-    if show_slider:
+    # camera position
+    cam = plotter.camera
+    cam.focal_point = (
+        cam.focal_point[0] + .25 * n0,
+        cam.focal_point[1],
+        cam.focal_point[2]
+    )
+    
+    # slider callbacks    
+    def update_iso(value):
+        contour = grid.contour([value])
+        surface_actor.mapper.SetInputData(contour)
+        plotter.render()
+    
+    def update_opacity(value, actors_list):
+        for actor in actors_list:
+            actor.GetProperty().SetOpacity(value)
+        plotter.render()
+    
+    def update_slice_y(value):
+        sl = grid.slice(normal='x', origin=(value, 0, 0))
+        slice_x_actor.mapper.SetInputData(sl)
+        plotter.render()
+    
+    def update_slice_x(value):
+        sl = grid.slice(normal='y', origin=(0, value, 0))
+        slice_y_actor.mapper.SetInputData(sl)
+        plotter.render()
+    
+    def update_slice_z(value):
+        sl = grid.slice(normal='z', origin=(0, 0, value))
+        slice_z_actor.mapper.SetInputData(sl)
+        plotter.render()
+    
+    def set_slider_color(slider, rgb):
+        slider.GetRepresentation().GetTitleProperty().SetColor(*rgb)
+        slider.GetRepresentation().GetTubeProperty().SetColor(*rgb)
+    
+    # isosurface slider
+    iso_rng = [u.min(), u.max()]
+    slider_iso = plotter.add_slider_widget(
+        callback=update_iso,
+        rng=iso_rng,
+        value=isovalue,
+        title="isovalue",
+        pointa=(.01, .9),
+        pointb=(.2, .9),
+        color="black",
+    )
+    set_slider_color(slider_iso, (1, 0, 0))
+    slider_iso.GetRepresentation().GetTitleProperty().SetFontSize(1)
+    
+    # isosurface opacity slider
+    slider_isosurf_opacity = plotter.add_slider_widget(
+        callback=lambda value: update_opacity(value, [surface_actor]),
+        rng=[0, 1],
+        value=1,
+        title="surface opacity",
+        pointa=(.01, .76),
+        pointb=(.2, .76),
+        color="black",
+    )
+    
+    # X slice slider
+    slider_x_slice = plotter.add_slider_widget(
+        callback=update_slice_x,
+        rng=[0, n1 - 1],
+        value=n1//2,
+        title="slice X",
+        pointa=(0.01, 0.58),
+        pointb=(0.2, 0.58)
+    )
+    
+    # Y slice slider
+    slider_y_slice = plotter.add_slider_widget(
+        callback=update_slice_y,
+        rng=[0, n0-1],
+        value=n0//2,
+        title="slice Y",
+        pointa=(0.01, 0.44),
+        pointb=(0.2, 0.44)
+    )
+    
+    # Y slice slider
+    slider_z_slice = plotter.add_slider_widget(
+        callback=update_slice_z,
+        rng=[0, n2-1],
+        value=n2//2,
+        title="slice Z",
+        pointa=(0.01, 0.3),
+        pointb=(0.2, 0.3)
+    )
+    
+    # slices opacity slider
+    slider_slices_opacity = plotter.add_slider_widget(
+        callback=lambda value: update_opacity(value, [slice_x_actor, slice_y_actor, slice_z_actor]),
+        rng=[0, 1],
+        value=1,
+        title="slices opacity",
+        pointa=(0.01, 0.16),
+        pointb=(0.2, 0.16)
+    )
+
+    # deal with slider cycling
+    sliders = [slider_iso, slider_isosurf_opacity, slider_x_slice,
+               slider_y_slice, slider_z_slice,
+               slider_slices_opacity]
+    
+    sliders_callback = [
+        update_iso,
+        lambda value: update_opacity(value, [surface_actor]),
+        update_slice_x, update_slice_y,
+        update_slice_z,
+        lambda value: update_opacity(value, [slice_x_actor, slice_y_actor, slice_z_actor])
+    ]
+    params = {'id': 0}
+    
+    # keyboard callbacks
+    interactor = plotter.iren.interactor
+    
+    def on_left_arrow():
+        rep = sliders[params['id']].GetRepresentation()
+        rng = (rep.GetMinimumValue(), rep.GetMaximumValue())
+        value = rep.GetValue()
+        ctrl = interactor.GetControlKey()
+        step = step1 if ctrl == 0 else step2
+        new_val = max(rng[0], value - step * (rng[1] - rng[0]))
+        rep.SetValue(new_val)
+        sliders_callback[params['id']](new_val)
+    
+    def on_right_arrow():
+        rep = sliders[params['id']].GetRepresentation()
+        rng = (rep.GetMinimumValue(), rep.GetMaximumValue())
+        value = rep.GetValue()
+        ctrl = interactor.GetControlKey()
+        step = step1 if ctrl == 0 else step2
+        new_val = min(rng[1], value + step * (rng[1] - rng[0]))
+        rep.SetValue(new_val)
+        sliders_callback[params['id']](new_val)
+    
+    def change_slider():
         
-        # prepare slider callback
-        def update_iso(value):
-            new_contour = grid.contour([value])
-            actor.mapper.SetInputData(new_contour) 
-            p.render()        
+        # set current slider color to black
+        set_slider_color(sliders[params['id']], (0, 0, 0))
         
-        # prepare slider parameters
-        rng = title = pointa = pointb = None
-        if slider_params is not None:
-            rng = slider_params.get('rng')
-            title = slider_params.get('title')
-            pointa = slider_params.get('pointa')
-            pointb = slider_params.get('pointb')
-        rng = [u.min(), u.max()] if rng is None else rng
-        title = "isovalue" if title is None else title
-        pointa = (.2, .075) if pointa is None else pointa
-        pointb = (.8, .075) if pointb is None else pointb
+        # cycle slider
+        ctrl = interactor.GetControlKey()
+        step = 1 if ctrl == 0 else -1
+        params['id'] += step
+        params['id'] = params['id'] % len(sliders)
         
-        # create slider
-        slider_iso = p.add_slider_widget(
-            callback=update_iso,
-            rng=rng,
-            value=isoval,
-            title=title,
-            pointa=pointa,
-            pointb=pointb,
-        )
+        # set new slider color to red
+        set_slider_color(sliders[params['id']], (1, 0, 0))
+        
+        # refresh rendering
+        plotter.render()
     
-    p.show()
-    return p
+    def toogle_actor_visibility(actor, refresh=True):
+        actor.SetVisibility(not actor.GetVisibility())
+        if refresh:
+            plotter.render()
+    
+    def toogle_slider_visibility(slider):
+        slider.GetRepresentation().SetVisibility(not slider.GetRepresentation().GetVisibility())
+    
+    def on_c_pressed():
+        ctrl = interactor.GetControlKey()
+        if ctrl == 0 : # show/hide slices
+            toogle_actor_visibility(slice_x_actor, refresh=False)
+            toogle_actor_visibility(slice_y_actor, refresh=False)
+            toogle_actor_visibility(slice_z_actor, refresh=True)
+        else: # show/hide isosurface
+            toogle_actor_visibility(surface_actor, refresh=True)
+    
+    def on_s_pressed():
+        ctrl = interactor.GetControlKey()
+        if ctrl == 1: # screenshot (TODO)
+            pass
+        else:
+            for s in sliders:
+                toogle_slider_visibility(s)
+            plotter.render()
+    
+    def on_h_pressed():
+        print("")
+        print("Interactive controls (3D isosurface displayer)")
+        print("==============================================\n")
+        print("Mouse")
+        print("-----\n")
+        print("  - Wheel up : zoom in (*)")
+        print("  - Wheel down : zoom out (*)")
+        print("  - left click + move : rotate display (*)")
+        print("  - shift + double left click + move : translate volume in the focal plan (*)")
+        print("")
+        print("Keyboard")
+        print("--------\n")
+        print("  - space : cycle selected slider (downard direction)")
+        print("  - ctrl + space : cycle selected slider (upward direction)")
+        print("  - left : increase slider value by %g%s of its range" % (100 * step1, "%"))
+        print("  - right : decrease slider value by %g%s of its range"% (100 * step1, "%"))
+        print("  - ctrl + left : increase slider value by %g%s of its range" % (100 * step2, "%"))
+        print("  - ctrl + right : decrease slider value by %g%s of its range" % (100 * step2, "%"))
+        print("  - ctrl + c : show/hide isosurface")
+        print("  - c : show/hide all slices")
+        print("  - x : show/hide X slices")
+        print("  - y : show/hide Y slices")
+        print("  - z : show/hide Z slices")
+        print("  - g : show/hide grid")
+        print("  - s : show/hide sliders (useful before screenshot)")
+        print("  - q : quit")
+        print("  - h : display help")
+        print("")
+        print("(*) native interactions (inherited from PyVista)")
+    
+    # key binding
+    plotter.add_key_event("Left", on_left_arrow)
+    plotter.add_key_event("Right", on_right_arrow)
+    plotter.add_key_event("space", change_slider)
+    plotter.add_key_event("c", on_c_pressed)
+    plotter.add_key_event("x", lambda : toogle_actor_visibility(slice_x_actor, refresh=True))
+    plotter.add_key_event("y", lambda : toogle_actor_visibility(slice_y_actor, refresh=True))
+    plotter.add_key_event("z", lambda : toogle_actor_visibility(slice_z_actor, refresh=True))
+    plotter.add_key_event("g", lambda : toogle_actor_visibility(ax, refresh=True))
+    plotter.add_key_event("s", on_s_pressed)
+    plotter.add_key_event("h", on_h_pressed)
+    
+    # show & return
+    plotter.show()
+    return plotter
 
 def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, indexes=None,
              units='', figsize=None, valfmt='%0.3g',
