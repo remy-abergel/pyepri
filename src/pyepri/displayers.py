@@ -369,8 +369,8 @@ def isosurf3d(u, isovalue=None, color='#f7fe00', cmap=None,
     def toogle_slider_visibility(slider):
         slider.GetRepresentation().SetVisibility(not slider.GetRepresentation().GetVisibility())
     
-    def on_c_pressed():
-        ctrl = interactor.GetControlKey()
+    def on_c_pressed(ctrl=None):
+        ctrl = interactor.GetControlKey() if ctrl is None else ctrl
         if ctrl == 0 : # show/hide slices
             toogle_actor_visibility(slice_x_actor, refresh=False)
             toogle_actor_visibility(slice_y_actor, refresh=False)
@@ -395,8 +395,8 @@ def isosurf3d(u, isovalue=None, color='#f7fe00', cmap=None,
         print("-----\n")
         print("  - Wheel up : zoom in (*)")
         print("  - Wheel down : zoom out (*)")
-        print("  - left click + move : rotate display (*)")
-        print("  - shift + double left click + move : translate volume in the focal plan (*)")
+        print("  - drag : rotate display (*)")
+        print("  - shift + drag : translate volume in the focal plan (*)")
         print("")
         print("Keyboard")
         print("--------\n")
@@ -417,6 +417,38 @@ def isosurf3d(u, isovalue=None, color='#f7fe00', cmap=None,
         print("  - h : display help")
         print("")
         print("(*) native interactions (inherited from PyVista)")
+
+    # show/hide button
+    if is_notebook():
+        def onoff_isosurf_check(checked):
+            on_c_pressed(ctrl=1)
+            
+        onoff_isosurf = plotter.add_checkbox_button_widget(
+            lambda checked : on_c_pressed(ctrl=1),
+            value=True,      # état initial
+            position=(10, 10),
+            color_on=color,
+            background_color='black',
+            size=25,
+        )
+        onoff_slice_x = plotter.add_checkbox_button_widget(
+            lambda checked : toogle_actor_visibility(slice_x_actor, refresh=True),
+            value=True,      # état initial
+            position=(45, 10),
+            size=25,
+        )
+        onoff_slice_y = plotter.add_checkbox_button_widget(
+            lambda checked : toogle_actor_visibility(slice_y_actor, refresh=True),
+            value=True,      # état initial
+            position=(80, 10),
+            size=25,
+        )
+        onoff_slice_z = plotter.add_checkbox_button_widget(
+            lambda checked : toogle_actor_visibility(slice_z_actor, refresh=True),
+            value=True,      # état initial
+            position=(115, 10),
+            size=25,
+        )
     
     # key binding
     plotter.add_key_event("Left", on_left_arrow)
@@ -2182,6 +2214,286 @@ def update_display_monosrc_3d(u, fg, is_notebook=False, displayFcn=None, adjust_
     
     return
 
+def init_display_spectralspatial_4d(u, newfig=True, figsize=None,
+                                    time_sleep=0.01, displayFcn=None,
+                                    cmap=None, grids=None,
+                                    origin='lower', aspect=None,
+                                    boundaries='auto',
+                                    is_notebook=False,
+                                    interpolation='nearest',
+                                    slice_indexes=None,
+                                    spec_indexes=None,
+                                    show_legend=True,
+                                    legend_loc='upper right',
+                                    custom_spec=[],
+                                    spec_normalization=False):
+    """TODO HEADER"""
+    
+    # prepare image
+    im = u if displayFcn is None else displayFcn(u)
+    
+    # retrieve image dimensions
+    Nb, Ny, Nx, Nz = im.shape
+    
+    # create discrete indexes
+    idx = np.arange(Nx, dtype='int32')
+    idy = np.arange(Ny, dtype='int32')
+    idz = np.arange(Nz, dtype='int32')
+    idB = np.arange(Nb, dtype='int32')
+    
+    # set default grids (if not provided)
+    if grids is not None:
+        Bgrid, ygrid, xgrid, zgrid = grids
+    else:
+        Bgrid = ygrid = xgrid = zgrid = None    
+    if Bgrid is None:
+        Bgrid = idB
+    if xgrid is None:
+        xgrid = idx
+    if ygrid is None:
+        ygrid = idy
+    if zgrid is None:
+        zgrid = idz
+    if Bgrid is None:
+        Bgrid = idB
+    
+    # retrieve sampling steps
+    dx = xgrid[1] - xgrid[0]
+    dy = ygrid[1] - ygrid[0]
+    dz = zgrid[1] - zgrid[0]
+    dB = Bgrid[1] - Bgrid[0]
+    
+    # get slices indexes
+    if slice_indexes is not None:
+        B0, y0, x0, z0 = slice_indexes
+    else:
+        B0 = y0 = x0 = z0 = None
+    B0 = Nb//2 if B0 is None else B0
+    x0 = Nx//2 if x0 is None else x0
+    y0 = Ny//2 if y0 is None else y0
+    z0 = Nz//2 if z0 is None else z0
+    
+    # extract slices
+    slice_yz = im[B0, :, x0, :] #02
+    slice_xz = im[B0, y0, :, :] #12
+    slice_yx = im[B0, :, :, z0] #01
+    if origin == 'lower':
+        extent_yx = (xgrid[0] - .5 * dx, xgrid[-1] + .5 * dx, ygrid[0] - .5 * dy, ygrid[-1] + .5 * dy)
+        extent_yz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, ygrid[0] - .5 * dy, ygrid[-1] + .5 * dy)
+        extent_xz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, xgrid[0] - .5 * dx, xgrid[-1] + .5 * dx)
+    else:
+        extent_yx = (xgrid[0] - .5 * dx, xgrid[-1] + .5 * dx, ygrid[-1] + .5 * dy, ygrid[0] - .5 * dy)
+        extent_yz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, ygrid[-1] + .5 * dy, ygrid[0] - .5 * dy)
+        extent_xz = (zgrid[0] - .5 * dz, zgrid[-1] + .5 * dz, xgrid[-1] + .5 * dx, xgrid[0] - .5 * dx)
+    
+    # prepare figure & axes
+    fg = plt.figure(figsize=figsize)
+    gs = GridSpec(5, 3, width_ratios=[1, 1, 1], height_ratios=[1, 5, 3, .1, 8], hspace=0)
+    ax_slices_title = fg.add_subplot(gs[0, :])
+    ax_im_yz = fg.add_subplot(gs[1, 0])
+    ax_im_xz = fg.add_subplot(gs[1, 1])
+    ax_im_yx = fg.add_subplot(gs[1, 2])
+    ax_spec_title = fg.add_subplot(gs[3, :])
+    ax_h = fg.add_subplot(gs[4, :])
+    
+    # display YZ-slice
+    im_yz = ax_im_yz.imshow(slice_yz, extent=extent_yz, origin=origin,
+                            aspect=aspect, cmap=cmap,
+                            interpolation=interpolation)
+    ax_im_yz.set_xlabel("Z")
+    ax_im_yz.set_ylabel("Y")
+    ax_im_yz.set_title("X = %g" % xgrid[x0])
+    
+    # display XZ-slice    
+    im_xz = ax_im_xz.imshow(slice_xz, extent=extent_xz, origin=origin,
+                            aspect=aspect, cmap=cmap,
+                            interpolation=interpolation)
+    ax_im_xz.set_xlabel("Z")
+    ax_im_xz.set_ylabel("X")
+    ax_im_xz.set_title("Y = %g" % ygrid[y0])
+    
+    # display YX-slice
+    im_yx = ax_im_yx.imshow(slice_yx, extent=extent_yx, origin=origin,
+                            aspect=aspect, cmap=cmap,
+                            interpolation=interpolation)
+    ax_im_yx.set_xlabel("X")
+    ax_im_yx.set_ylabel("Y")
+    ax_im_yx.set_title("Z = %g" % zgrid[z0])
+    
+    # set slices title
+    ax_slices_title.axis("off")
+    ax_slices_title.set_title("Extracted slices (B = %g)" % Bgrid[B0])
+
+    # deal with spec normalization
+    if spec_normalization:
+        display_spec = lambda h : h / h.max()
+    else:
+        display_spec = lambda h : h
+    
+    # retrieve spec indexes
+    if spec_indexes is None:
+        spec_indexes = [[y0, x0, z0]]
+    
+    # display custom spec
+    for cspec in custom_spec:
+        l0, = ax_h.plot(cspec['B'], display_spec(cspec['spec']), label=cspec['label'])
+    
+    # display spec
+    spec_hdl = []
+    for id in spec_indexes:        
+        label = 'u[:, %d, %d, %d]' % (id[0], id[1], id[2])
+        l0, = ax_h.plot(Bgrid, display_spec(im[:, id[0], id[1], id[2]]), label=label)
+        spec_hdl.append(l0)
+    ax_h.set_xlabel("B")
+    ax_h.set_xlim((Bgrid[0], Bgrid[-1]))
+    leg = ax_h.legend(loc=legend_loc)
+    leg.set_visible(show_legend)
+    
+    # compute total number of displayed spec
+    Nspec = len(spec_indexes) + len(custom_spec)
+    
+    # set spec title
+    ax_spec_title.axis("off")
+    spec_title = "Extracted %s" % ("spectra" if Nspec > 1 else "spectrum")
+    if spec_normalization:
+        spec_title += " (normalized)"
+    ax_spec_title.set_title(spec_title)
+    
+    # deal with boundaries (if same pixel size is needed, give to all
+    # subplots the same axes boundaries)
+    if boundaries == 'same':
+        Dxlim = max(xgrid[-1] + .5 * dx, zgrid[-1] + .5 * dz) - min(xgrid[0] - .5 * dx, zgrid[0] - .5 * dx)
+        Dylim = max(xgrid[-1] + .5 * dx, ygrid[-1] + .5 * dy) - min(xgrid[0] - .5 * dx, ygrid[0] - .5 * dy)
+        Dx = xgrid[-1] - xgrid[0]
+        Dy = ygrid[-1] - ygrid[0]
+        Dz = zgrid[-1] - zgrid[0]
+        xlim_im_yz = (zgrid[0] - .5 * (Dxlim - Dz), zgrid[-1] + .5 * (Dxlim - Dz))
+        ylim_im_yz = (ygrid[0] - .5 * (Dylim - Dy), ygrid[-1] + .5 * (Dylim - Dy))
+        xlim_im_xz = (zgrid[0] - .5 * (Dxlim - Dz), zgrid[-1] + .5 * (Dxlim - Dz))
+        ylim_im_xz = (xgrid[0] - .5 * (Dylim - Dx), xgrid[-1] + .5 * (Dylim - Dx))
+        xlim_im_yx = (xgrid[0] - .5 * (Dxlim - Dx), xgrid[-1] + .5 * (Dxlim - Dx))
+        ylim_im_yx = (ygrid[0] - .5 * (Dylim - Dy), ygrid[-1] + .5 * (Dylim - Dy))
+        if origin != 'lower':
+            ylim_im_yz = (ylim_im_yz[-1], ylim_im_yz[-2])
+            ylim_im_xz = (ylim_im_xz[-1], ylim_im_xz[-2])
+            ylim_im_yx = (ylim_im_yx[-1], ylim_im_yx[-2])
+        ax_im_yz.set_xlim(xlim_im_yz)
+        ax_im_xz.set_xlim(xlim_im_xz)
+        ax_im_yx.set_xlim(xlim_im_yx)
+        ax_im_yz.set_ylim(ylim_im_yz)
+        ax_im_xz.set_ylim(ylim_im_xz)
+        ax_im_yx.set_ylim(ylim_im_yx)
+    
+    # deal with xlim/ylim/zlim/Blim options
+    #if xlim is not None:
+    #    ax_uxz.set_ylim(xlim)
+    #    ax_uyx.set_xlim(xlim)
+    #if ylim is not None:
+    #    ax_uyz.set_ylim(ylim)
+    #    ax_uyx.set_ylim(ylim)
+    #if zlim is not None:
+    #    ax_uyz.set_xlim(zlim)
+    #    ax_uxz.set_xlim(zlim)
+    
+    # gather outputs
+    hdl = {
+        'fg': fg,
+        'im_yz': im_yz,
+        'im_xz': im_xz,
+        'im_yx': im_yx,
+        'ax_spec': ax_h,
+        'spec_hdl': spec_hdl        
+    }
+    
+    # pause an return
+    if is_notebook:
+        time.sleep(time_sleep)
+    else:
+        plt.pause(time_sleep)
+    
+    return hdl
+
+def update_display_spectralspatial_4d(u, hdl, is_notebook=False,
+                                      displayFcn=None,
+                                      adjust_dynamic=True,
+                                      time_sleep=0.01,
+                                      slice_indexes=None,
+                                      spec_indexes=None,
+                                      spec_normalization=False):
+    """TODO HEADER"""
+    
+    # retrieve slice images
+    im = u if displayFcn is None else displayFcn(u)
+    
+    # retrieve image dimensions
+    Nb, Ny, Nx, Nz = im.shape
+    
+    # get slices indexes
+    if slice_indexes is not None:
+        B0, y0, x0, z0 = slice_indexes
+    else:
+        B0 = y0 = x0 = z0 = None
+    B0 = Nb//2 if B0 is None else B0
+    x0 = Nx//2 if x0 is None else x0
+    y0 = Ny//2 if y0 is None else y0
+    z0 = Nz//2 if z0 is None else z0
+    
+    # get spec indexes
+    if spec_indexes is None:
+        spec_indexes = [[y0, x0, z0]]
+    
+    # extract slices
+    slice_yz = im[B0, :, x0, :] #02
+    slice_xz = im[B0, y0, :, :] #12
+    slice_yx = im[B0, :, :, z0] #01
+    
+    # draw images
+    hdl['im_yz'].set_data(slice_yz)
+    hdl['im_xz'].set_data(slice_xz)
+    hdl['im_yx'].set_data(slice_yx)
+    
+    # if needed, adjust dynamics
+    if(adjust_dynamic):
+        cmin = min((slice_yz.min(), slice_xz.min(), slice_yx.min()))
+        cmax = max((slice_yz.max(), slice_xz.max(), slice_yx.max()))
+        hdl['im_yz'].set_clim(cmin, cmax)
+        hdl['im_xz'].set_clim(cmin, cmax)
+        hdl['im_yx'].set_clim(cmin, cmax)
+    
+    # deal with spec normalization
+    if spec_normalization:
+        display_spec = lambda h : h / h.max()
+    else:
+        display_spec = lambda h : h
+    
+    # draw specs
+    if adjust_dynamic:
+        ymin, ymax = math.inf, -math.inf
+        for i, id in enumerate(spec_indexes):
+            label = 'u[:, %d, %d, %d]' % (id[0], id[1], id[2])
+            s = display_spec(im[:, id[0], id[1], id[2]])
+            ymin = min((ymin, s.min()))
+            ymax = max((ymax, s.max()))
+            hdl['spec_hdl'][i].set_ydata(s)
+        ymax *= (1 + np.sign(ymax) * .05)
+        ymin *= (1 - np.sign(ymin) * .05)
+        hdl['ax_spec'].set_ylim((ymin, ymax))
+            
+    else:
+        for i, id in enumerate(spec_indexes):
+            label = 'u[:, %d, %d, %d]' % (id[0], id[1], id[2])
+            hdl['spec_hdl'][i].set_ydata(display_spec(im[:, id[0], id[1], id[2]]))
+    
+    # deal with interactive notebook running environments
+    if is_notebook:
+        display.clear_output(wait=True)
+        display.display(pl.gcf())    
+        time.sleep(time_sleep)
+    #else:
+    #    plt.pause(time_sleep)
+    
+    return
+
 def init_display_multisrc_2d(u, newfig=True, figsize=None,
                              time_sleep=0.01, units=None,
                              display_labels=False, displayFcn=None,
@@ -2843,6 +3155,34 @@ def create_3d_displayer(nsrc=1, newfig=True, figsize=None,
                      boundaries=boundaries, indexes=indexes,
                      src_labels=src_labels)
 
+def create_spectralspatial_4d_displayer(newfig=True, figsize=None,
+                                        displayFcn=None,
+                                        time_sleep=0.01,
+                                        adjust_dynamic=True,
+                                        cmap=None, grids=None,
+                                        origin='lower', aspect=None,
+                                        boundaries='auto',
+                                        interpolation='nearest',
+                                        slice_indexes=None,
+                                        spec_indexes=None,
+                                        show_legend=True,
+                                        legend_loc='upper right',
+                                        custom_spec=[],
+                                        spec_normalization=False):
+    nsrc = 1
+    ndim = 4
+    return Displayer(nsrc, ndim, newfig=newfig, figsize=figsize,
+                     displayFcn=displayFcn, time_sleep=time_sleep,
+                     adjust_dynamic=adjust_dynamic, cmap=cmap,
+                     grids=grids, origin=origin, aspect=aspect,
+                     boundaries=boundaries,
+                     interpolation=interpolation,
+                     slice_indexes=slice_indexes,
+                     spec_indexes=spec_indexes,
+                     show_legend=show_legend, legend_loc=legend_loc,
+                     custom_spec=custom_spec,
+                     spec_normalization=spec_normalization)
+
 def create(u, newfig=True, figsize=None, displayFcn=None,
            time_sleep=0.01, units=None, extents=None,
            adjust_dynamic=True, display_labels=False, cmap=None,
@@ -2871,7 +3211,7 @@ def create(u, newfig=True, figsize=None, displayFcn=None,
         nsrc = 1
         ndim = u.ndim
         force_multisrc = False
-
+    
     # create & return Displayer object instance
     return Displayer(nsrc, ndim, newfig=newfig, figsize=figsize,
                      displayFcn=displayFcn, time_sleep=time_sleep,
@@ -2888,15 +3228,16 @@ def get_number(fg):
     ----------
     
     fg : <class 'matplotlib.image.AxesImage'> or sequence of <class \
-    'matplotlib.image.AxesImage'>
-        Image instance or sequence of image instances that belond to
-        the same figure.
-
+    'matplotlib.image.AxesImage'> or dict
+        Image instance or sequence of image instances that belong to
+        the same figure or dict with 'fg' key and <class
+        'matplotlib.figure.Figure'> associated value.
+    
     Return
     ------
     
     fgnum : int 
-        Figure number. 
+        Figure number.
     
     """
     
@@ -2905,6 +3246,8 @@ def get_number(fg):
             fgnum = fg[0][0].get_figure().get_figure().number
         else:
             fgnum = fg[0].get_figure().number
+    elif isinstance(fg, dict):
+        fgnum = fg['fg'].get_figure().number
     else:
         fgnum = fg.get_figure().number
     
@@ -2919,7 +3262,7 @@ def _check_inputs_(nsrc=None, ndim=None, displayFcn=None,
     """Factorized consistency checks for functions in this :py:mod:`pyepri.displayers` submodule.
 
     """
-
+    
     # type checks
     checks._check_type_(int, nsrc=nsrc, ndim=ndim)
     checks._check_type_(float, time_sleep=time_sleep)
@@ -3080,7 +3423,11 @@ class Displayer:
                  adjust_dynamic=True, display_labels=False, cmap=None,
                  grids=None, origin='lower', aspect=None,
                  boundaries='auto', force_multisrc=False,
-                 indexes=None, src_labels=None):
+                 indexes=None, src_labels=None,
+                 interpolation='nearest', slice_indexes=None,
+                 spec_indexes=None, show_legend=True,
+                 legend_loc='upper right', custom_spec=[],
+                 spec_normalization=False):
         """Default constructor for ``pyepri.displayers.Displayer`` objects instanciation.
         
         
@@ -3256,7 +3603,7 @@ class Displayer:
             self.title = plt.title
         else:
             self.title = plt.suptitle
-            
+        
         # configure init_display and update_display attribute
         if nsrc == 1 and not force_multisrc: # monosrc
             if ndim == 2:
@@ -3296,6 +3643,33 @@ class Displayer:
                                   adjust_dynamic=adjust_dynamic,
                                   indexes=indexes,
                                   time_sleep=time_sleep)
+            elif ndim == 4:
+                self.init_display = \
+                functools.partial(init_display_spectralspatial_4d,
+                                  newfig=newfig, figsize=figsize,
+                                  displayFcn=displayFcn,
+                                  time_sleep=time_sleep, cmap=cmap,
+                                  grids=grids, origin=origin,
+                                  aspect=aspect,
+                                  boundaries=boundaries,
+                                  is_notebook=self.notebook,
+                                  interpolation=interpolation,
+                                  slice_indexes=slice_indexes,
+                                  spec_indexes=spec_indexes,
+                                  show_legend=show_legend,
+                                  legend_loc=legend_loc,
+                                  custom_spec=custom_spec,
+                                  spec_normalization=spec_normalization)
+                self.update_display = \
+                functools.partial(update_display_spectralspatial_4d,
+                                  is_notebook=self.notebook,
+                                  displayFcn=displayFcn,
+                                  adjust_dynamic=adjust_dynamic,
+                                  time_sleep=time_sleep,
+                                  slice_indexes=slice_indexes,
+                                  spec_indexes=spec_indexes,
+                                  spec_normalization=spec_normalization)
+        
         else: # multisrc
             if ndim == 2:
                 self.init_display = \
