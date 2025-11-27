@@ -12,8 +12,8 @@ Static (but updatable) image displayers
 ---------------------------------------
 
 Static image displayers can be used to display different kind of
-images (2D & 3D, mono & multisource images) in different execution
-environments (console & notebooks).
+images (mono & multisource 2D & 3D images, spectral-spatial 4D images)
+in different execution environments (console & notebooks).
 
 They come with the possibility to update the displayed image at any
 moment (useful in an iterative framework).
@@ -599,6 +599,7 @@ def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, indexes=None,
         limits are determined automatically based on the data. Note
         that the use of this option jointly with ``boundaries='same'``
         is discouraged and may lead to unexpected behavior.
+
     
     Return
     ------
@@ -1149,6 +1150,7 @@ def imshow4d(u, xgrid=None, ygrid=None, zgrid=None, Bgrid=None,
         limits are determined automatically based on the data. Note
         that the use of this option jointly with ``boundaries='same'``
         is discouraged and may lead to unexpected behavior.
+
     
     Return
     ------
@@ -2044,7 +2046,7 @@ def init_display_monosrc_3d(u, newfig=True, figsize=None,
     
     # draw a new figure (if needed)
     if newfig:
-        plt.figure(figsize=figsize)    
+        plt.figure(figsize=figsize)
     
     # update figsize (if needed)
     if figsize is not None:
@@ -2217,6 +2219,7 @@ def update_display_monosrc_3d(u, fg, is_notebook=False, displayFcn=None, adjust_
 def init_display_spectralspatial_4d(u, newfig=True, figsize=None,
                                     time_sleep=0.01, displayFcn=None,
                                     cmap=None, grids=None,
+                                    display_labels=True,
                                     origin='lower', aspect=None,
                                     boundaries='auto',
                                     is_notebook=False,
@@ -2227,7 +2230,163 @@ def init_display_spectralspatial_4d(u, newfig=True, figsize=None,
                                     legend_loc='upper right',
                                     custom_spec=[],
                                     spec_normalization=False):
-    """TODO HEADER"""
+    """Initialize display for a spectral-spatial 4D image.
+    
+    Parameters
+    ----------
+    
+    u : ndarray
+        Three-dimensional array
+    
+    newfig : bool, optional
+        Specify whether the display must be done into a new figure or
+        not.
+    
+    figsize : (float, float), optional
+        When given, figsize must be a tuple with length two and such
+        that ``figsize[0]`` and ``figsize[1]`` are the width and
+        height in inches of the figure to be displayed. When not
+        given, the default setting is that of `matplotlib` (see key
+        'figure.figsize' of the matplotlib configuration parameter
+        ``rcParams``).
+    
+    time_sleep : float, optional 
+        Duration in seconds of pause or sleep (depending on the
+        running environment) to perform after image drawing.
+    
+    displayFcn : <class 'function'>, optional 
+        Function with prototype ``im = displayFcn(u)`` that changes
+        the 4D image ``u`` into another 4D image. When `displayFcn` is
+        given, the displayed image is ``im = displayFcn(u)`` instead
+        of ``u``.
+    
+    cmap : str, optional
+        The registered colormap name used to map scalar data to colors
+        in `matplotlib.imshow`.
+    
+    grids : sequence, optional    
+        A sequence (tuple or list) of four monodimensional ndarrays,
+        such that grids[0], grids[1], grids[2] and grids[3] contain
+        the sampling nodes associated to axes 0 (B-axis), axe 1
+        (Y-axis), axe 2 (X-axis) and axe 3 (Z-axis) of the input array
+        ``u``.
+        
+        When given, the input grids are used to set the extent of the
+        displayed slices (see `matplotlib.imshow` documentation).
+    
+    display_labels : bool, optional
+        Set ``display_labels = True`` to display axes labels.
+    
+    origin : str in {'upper', 'lower'}, optional    
+        This parameter only affects the 2D slice image axes. Place the
+        [0, 0] index of the array in the upper left or lower left
+        corner of the Axes. When not given, the default setting is
+        that of `matplotlib` (see key 'image.origin' of the matplotlib
+        configuration parameter ``rcParams``).
+    
+    aspect : str in {'equal', 'auto'} or float or None, optional    
+        This parameter only affects the 2D slice image axes. Set
+        aspect ratio of the Axes. This parameter is particularly
+        relevant for images since it determines whether data pixels
+        are square (see `matplotlib.imshow` documentation).
+        
+        When not given, the default setting is that of `matplotlib`
+        (see key 'image.aspect' of the matplotlib configuration
+        parameter ``rcParams``).
+    
+    boundaries : str in {'auto', 'same'}    
+        This parameter only affects the 2D slice image axes. Use
+        ``boundaries = 'same'`` to give all subplots the same axes
+        boundaries (in particular, this ensures that all slice images
+        will be displayed on the screen using the same pixel size).
+    
+        Otherwise, set ``boundaries = 'auto'`` to use tight extent for
+        each displayed slice image.
+    
+    is_notebook : bool, optional
+        Indicate whether the running environment is an interactive
+        notebook (``is_notebook = True``) or not (``is_notebook =
+        False``).
+    
+    interpolation : str, optional    
+        The interpolation method used (see ``matplotlib``
+        documentation for the possible choices).
+    
+    slice_indexes : sequence of four int, optional    
+        Indexes used to extract slices of spectral-spatial image, the
+        sequence must contain four integer indexes, ``slice_indexes =
+        (id0, id1, id2, id3)``, that are used to extract and display
+        2D slices from the 4D spectral-spatial image:
+        
+        + ``u[id0, :, id2, :]`` : YZ slice (for ``B = Bgrid[id0]``
+          and ``X = xgrid[id2]``)
+        
+        + ``u[id0, id1, :, :]`` : ZX slice (for ``B = Bgrid[id0]``
+          and ``Y = ygrid[id1]``)
+        
+        + ``u[id0, :, :, id3]`` : YX slice (for ``B = Bgrid[id0]``
+          and ``Z = zgrid[id3]``)
+        
+        When not given, the default setting is ``slice_indexes[i] =
+        u.shape[i]//2``, The slice indexes can be partially given,
+        e.g., using ``slice_indexes = (5, None, 10, None)``, in this
+        case, the not given indexes will be automatically replaced by
+        their default values described above.
+        
+    spec_indexes : sequence of sequences of 3 int, optional    
+        Each element ``spec_indexes[i]`` is a sequence containing 3
+        integers, corresponding to the spatial indexes along the three
+        spatial axes of the 4D image, and use to extract and display
+        profiles.
+        
+        More precisely, the extracted and displayed profiles are
+        the ``u[:, id[0], id[1], id[2]] for id in spec_indexes``.
+        
+        When not given, the default setting is ``spec_indexes =
+        ((u.shape[1]//2, u.shape[2]//2, u.shape[3]//2))``.
+    
+    show_legend : bool, optional
+        Decide whether the legend in the spectrum display area should
+        be visible or not when the figure is drawn.
+    
+    legend_loc : str, optional
+        The location of the legend in the spectrum display area (see
+        ``matplotlib`` documentation for possible choices).
+    
+    custom_spec : sequence of dict, optional    
+        This parameter can be used to specify some custom profiles to
+        be displayed in the bottom axes.
+        
+        When given, each element of ``custom_spec`` must be a
+        dictionary with the following key-values:
+        
+        + 'spec' : the custom profile to be displayed (monodimensional
+          numpy array)
+        
+        + 'B' : the sampling grid (B axis) associated to the custom
+          profile (monodimensional numpy array)
+        
+        + 'label' : label of the custom profile (str)
+    
+    spec_normalization : bool, optional    
+        Decide whether the displayed spectra should be normalized or
+        not. When spectra normalization is enabled, each displayed
+        spectrum is divided by its maximum value (normalization occurs
+        at display only, it does not affect the latent image)
+    
+    Return
+    ------
+    
+    fg : dict
+        Contains axes and handles of the produced image instance
+    
+    
+    See also
+    --------
+    
+    update_display_spectralspatial_4d
+
+    """
     
     # prepare image
     im = u if displayFcn is None else displayFcn(u)
@@ -2245,7 +2404,7 @@ def init_display_spectralspatial_4d(u, newfig=True, figsize=None,
     if grids is not None:
         Bgrid, ygrid, xgrid, zgrid = grids
     else:
-        Bgrid = ygrid = xgrid = zgrid = None    
+        Bgrid = ygrid = xgrid = zgrid = None
     if Bgrid is None:
         Bgrid = idB
     if xgrid is None:
@@ -2300,25 +2459,28 @@ def init_display_spectralspatial_4d(u, newfig=True, figsize=None,
     im_yz = ax_im_yz.imshow(slice_yz, extent=extent_yz, origin=origin,
                             aspect=aspect, cmap=cmap,
                             interpolation=interpolation)
-    ax_im_yz.set_xlabel("Z")
-    ax_im_yz.set_ylabel("Y")
-    ax_im_yz.set_title("X = %g" % xgrid[x0])
+    if display_labels:
+        ax_im_yz.set_xlabel("Z")
+        ax_im_yz.set_ylabel("Y")
+        ax_im_yz.set_title("X = %g" % xgrid[x0])
     
     # display XZ-slice    
     im_xz = ax_im_xz.imshow(slice_xz, extent=extent_xz, origin=origin,
                             aspect=aspect, cmap=cmap,
                             interpolation=interpolation)
-    ax_im_xz.set_xlabel("Z")
-    ax_im_xz.set_ylabel("X")
-    ax_im_xz.set_title("Y = %g" % ygrid[y0])
+    if display_labels:
+        ax_im_xz.set_xlabel("Z")
+        ax_im_xz.set_ylabel("X")
+        ax_im_xz.set_title("Y = %g" % ygrid[y0])
     
     # display YX-slice
     im_yx = ax_im_yx.imshow(slice_yx, extent=extent_yx, origin=origin,
                             aspect=aspect, cmap=cmap,
                             interpolation=interpolation)
-    ax_im_yx.set_xlabel("X")
-    ax_im_yx.set_ylabel("Y")
-    ax_im_yx.set_title("Z = %g" % zgrid[z0])
+    if display_labels:
+        ax_im_yx.set_xlabel("X")
+        ax_im_yx.set_ylabel("Y")
+        ax_im_yx.set_title("Z = %g" % zgrid[z0])
     
     # set slices title
     ax_slices_title.axis("off")
@@ -2335,8 +2497,12 @@ def init_display_spectralspatial_4d(u, newfig=True, figsize=None,
         spec_indexes = [[y0, x0, z0]]
     
     # display custom spec
+    smin, smax = math.inf, -math.inf
     for cspec in custom_spec:
-        l0, = ax_h.plot(cspec['B'], display_spec(cspec['spec']), label=cspec['label'])
+        s = display_spec(cspec['spec'])
+        l0, = ax_h.plot(cspec['B'], s, label=cspec['label'])
+        smin = min(smin, s.min())
+        smax = max(smax, s.max())
     
     # display spec
     spec_hdl = []
@@ -2344,17 +2510,18 @@ def init_display_spectralspatial_4d(u, newfig=True, figsize=None,
         label = 'u[:, %d, %d, %d]' % (id[0], id[1], id[2])
         l0, = ax_h.plot(Bgrid, display_spec(im[:, id[0], id[1], id[2]]), label=label)
         spec_hdl.append(l0)
-    ax_h.set_xlabel("B")
     ax_h.set_xlim((Bgrid[0], Bgrid[-1]))
     leg = ax_h.legend(loc=legend_loc)
     leg.set_visible(show_legend)
+    if display_labels:
+        ax_h.set_xlabel("B")
     
     # compute total number of displayed spec
     Nspec = len(spec_indexes) + len(custom_spec)
     
     # set spec title
     ax_spec_title.axis("off")
-    spec_title = "Extracted %s" % ("spectra" if Nspec > 1 else "spectrum")
+    spec_title = "Extracted profile%s" % ("s" if Nspec > 1 else "")
     if spec_normalization:
         spec_title += " (normalized)"
     ax_spec_title.set_title(spec_title)
@@ -2384,17 +2551,6 @@ def init_display_spectralspatial_4d(u, newfig=True, figsize=None,
         ax_im_xz.set_ylim(ylim_im_xz)
         ax_im_yx.set_ylim(ylim_im_yx)
     
-    # deal with xlim/ylim/zlim/Blim options
-    #if xlim is not None:
-    #    ax_uxz.set_ylim(xlim)
-    #    ax_uyx.set_xlim(xlim)
-    #if ylim is not None:
-    #    ax_uyz.set_ylim(ylim)
-    #    ax_uyx.set_ylim(ylim)
-    #if zlim is not None:
-    #    ax_uyz.set_xlim(zlim)
-    #    ax_uxz.set_xlim(zlim)
-    
     # gather outputs
     hdl = {
         'fg': fg,
@@ -2402,7 +2558,8 @@ def init_display_spectralspatial_4d(u, newfig=True, figsize=None,
         'im_xz': im_xz,
         'im_yx': im_yx,
         'ax_spec': ax_h,
-        'spec_hdl': spec_hdl        
+        'spec_hdl': spec_hdl,
+        'ylim_custom_spec': (smin, smax),
     }
     
     # pause an return
@@ -2420,7 +2577,92 @@ def update_display_spectralspatial_4d(u, hdl, is_notebook=False,
                                       slice_indexes=None,
                                       spec_indexes=None,
                                       spec_normalization=False):
-    """TODO HEADER"""
+    """Update spectral-spatial 4D image display.
+    
+    Parameters
+    ----------
+    
+    u : ndarray
+        Three-dimensional array
+    
+    hdl : dict
+        Contains the handles and axes of the image instance to be
+        updated (output of
+        ``py:func:init_display_spectralspatial_4d``)
+    
+    is_notebook : bool, optional
+        Indicate whether the running environment is an interactive
+        notebook (``is_notebook = True``) or not (``is_notebook =
+        False``).
+    
+    displayFcn : <class 'function'>, optional 
+        Function with prototype ``im = displayFcn(u)`` that changes
+        the 4D image ``u`` into another 4D image. When `displayFcn` is
+        given, the displayed image is ``im = displayFcn(u)`` instead
+        of ``u``.
+    
+    adjust_dynamic : bool, optional
+        Set ``adjust_dynamic = True`` to maximize the dynamic of the
+        displayed slices and profiles during the updating
+        process. Otherwise, set ``adjust_dynamic = False`` to keep the
+        displayed dynamic unchanged.
+    
+    time_sleep : float, optional 
+        Duration in seconds of pause or sleep (depending on the
+        running environment) to perform after image drawing.
+    
+    slice_indexes : sequence of four int, optional    
+        Indexes used to extract slices of spectral-spatial image, the
+        sequence must contain four integer indexes, ``slice_indexes =
+        (id0, id1, id2, id3)``, that are used to extract and display
+        2D slices from the 4D spectral-spatial image:
+        
+        + ``u[id0, :, id2, :]`` : YZ slice (for ``B = Bgrid[id0]``
+          and ``X = xgrid[id2]``)
+        
+        + ``u[id0, id1, :, :]`` : ZX slice (for ``B = Bgrid[id0]``
+          and ``Y = ygrid[id1]``)
+        
+        + ``u[id0, :, :, id3]`` : YX slice (for ``B = Bgrid[id0]``
+          and ``Z = zgrid[id3]``)
+        
+        When not given, the default setting is ``slice_indexes[i] =
+        u.shape[i]//2``, The slice indexes can be partially given,
+        e.g., using ``slice_indexes = (5, None, 10, None)``, in this
+        case, the not given indexes will be automatically replaced by
+        their default values described above.
+        
+    spec_indexes : sequence of sequences of 3 int, optional    
+        Each element ``spec_indexes[i]`` is a sequence containing 3
+        integers, corresponding to the spatial indexes along the three
+        spatial axes of the 4D image, and use to extract and display
+        profiles.
+        
+        More precisely, the extracted and displayed profiles are
+        the ``u[:, id[0], id[1], id[2]] for id in spec_indexes``.
+        
+        When not given, the default setting is ``spec_indexes =
+        ((u.shape[1]//2, u.shape[2]//2, u.shape[3]//2))``.
+    
+    spec_normalization : bool, optional    
+        Decide whether the displayed spectra should be normalized or
+        not. When spectra normalization is enabled, each displayed
+        spectrum is divided by its maximum value (normalization occurs
+        at display only, it does not affect the latent image)
+
+    
+    Return
+    ------
+    
+    None
+    
+    
+    See also
+    --------
+    
+    init_display_spectralspatial_4d
+    
+    """
     
     # retrieve slice images
     im = u if displayFcn is None else displayFcn(u)
@@ -2468,7 +2710,8 @@ def update_display_spectralspatial_4d(u, hdl, is_notebook=False,
     
     # draw specs
     if adjust_dynamic:
-        ymin, ymax = math.inf, -math.inf
+        #ymin, ymax = math.inf, -math.inf
+        ymin, ymax = hdl['ylim_custom_spec']
         for i, id in enumerate(spec_indexes):
             label = 'u[:, %d, %d, %d]' % (id[0], id[1], id[2])
             s = display_spec(im[:, id[0], id[1], id[2]])
@@ -2856,6 +3099,7 @@ def init_display_multisrc_3d(u, newfig=True, figsize=None,
         ``u`` such that ``src_labels[j]`` corresponds to the label of
         the j-th source ``u[j]`` (that is, a str to be added to the
         j-th source suptitle).
+
     
     Return
     ------
@@ -3160,6 +3404,7 @@ def create_spectralspatial_4d_displayer(newfig=True, figsize=None,
                                         time_sleep=0.01,
                                         adjust_dynamic=True,
                                         cmap=None, grids=None,
+                                        display_labels=True,
                                         origin='lower', aspect=None,
                                         boundaries='auto',
                                         interpolation='nearest',
@@ -3174,7 +3419,8 @@ def create_spectralspatial_4d_displayer(newfig=True, figsize=None,
     return Displayer(nsrc, ndim, newfig=newfig, figsize=figsize,
                      displayFcn=displayFcn, time_sleep=time_sleep,
                      adjust_dynamic=adjust_dynamic, cmap=cmap,
-                     grids=grids, origin=origin, aspect=aspect,
+                     grids=grids, display_labels=display_labels,
+                     origin=origin, aspect=aspect,
                      boundaries=boundaries,
                      interpolation=interpolation,
                      slice_indexes=slice_indexes,
@@ -3187,7 +3433,10 @@ def create(u, newfig=True, figsize=None, displayFcn=None,
            time_sleep=0.01, units=None, extents=None,
            adjust_dynamic=True, display_labels=False, cmap=None,
            grids=None, origin='lower', aspect=None, boundaries='auto',
-           indexes=None, src_labels=None):
+           indexes=None, src_labels=None, interpolation='nearest',
+           slice_indexes=None, spec_indexes=None, show_legend=True,
+           legend_loc='upper right', custom_spec=[],
+           spec_normalization=False):
     """Instantiate a Displayer object suited to the input parameter.
     
     This function instantiate a ``pyepri.Displayer`` class instance
@@ -3219,7 +3468,13 @@ def create(u, newfig=True, figsize=None, displayFcn=None,
                      display_labels=display_labels, cmap=cmap,
                      grids=grids, origin=origin, aspect=aspect,
                      boundaries=boundaries,
-                     force_multisrc=force_multisrc)
+                     force_multisrc=force_multisrc,
+                     interpolation=interpolation,
+                     slice_indexes=slice_indexes,
+                     spec_indexes=spec_indexes,
+                     show_legend=show_legend, legend_loc=legend_loc,
+                     custom_spec=custom_spec,
+                     spec_normalization=spec_normalization)
 
 def get_number(fg):
     """Retrieve displayed figure number.
@@ -3232,6 +3487,7 @@ def get_number(fg):
         Image instance or sequence of image instances that belong to
         the same figure or dict with 'fg' key and <class
         'matplotlib.figure.Figure'> associated value.
+
     
     Return
     ------
@@ -3258,7 +3514,10 @@ def _check_inputs_(nsrc=None, ndim=None, displayFcn=None,
                    display_labels=None, cmap=None, grids=None,
                    origin=None, aspect=None, boundaries=None,
                    u=__EMPTY_ARRAY__, newfig=None, figsize=None,
-                   indexes=None, src_labels=None):
+                   indexes=None, src_labels=None, interpolation=None,
+                   legend_loc=None, show_legend=None,
+                   spec_normalization=None, slice_indexes=None,
+                   spec_indexes=None, custom_spec=None):
     """Factorized consistency checks for functions in this :py:mod:`pyepri.displayers` submodule.
 
     """
@@ -3266,8 +3525,8 @@ def _check_inputs_(nsrc=None, ndim=None, displayFcn=None,
     # type checks
     checks._check_type_(int, nsrc=nsrc, ndim=ndim)
     checks._check_type_(float, time_sleep=time_sleep)
-    checks._check_type_(bool, adjust_dynamic=adjust_dynamic, display_labels=display_labels, newfig=newfig)
-    checks._check_type_(str, units=units, cmap=cmap, origin=origin, aspect=aspect, boundaries=boundaries)
+    checks._check_type_(bool, adjust_dynamic=adjust_dynamic, display_labels=display_labels, newfig=newfig, show_legend=show_legend, spec_normalization=spec_normalization)
+    checks._check_type_(str, units=units, cmap=cmap, origin=origin, aspect=aspect, boundaries=boundaries, interpolation=interpolation, legend_loc=legend_loc)
     checks._check_type_(types.FunctionType, displayFcn=displayFcn)
     
     # custom checks
@@ -3326,9 +3585,48 @@ def _check_inputs_(nsrc=None, ndim=None, displayFcn=None,
         if 1 == nsrc:
             checks._check_seq_(t=int, n=ndim, indexes=indexes)
         else:
-            checks._check_seq_of_seq_(t=int, len0=nsrc, len1=ndim, indexes=indexes)            
+            checks._check_seq_of_seq_(t=int, len0=nsrc, len1=ndim, indexes=indexes)
     if src_labels is not None:
         checks._check_seq_(t=str, n=nsrc, src_labels=src_labels)
+    
+    # additional spectral-spatial inputs
+    if slice_indexes is not None:
+        checks._check_seq_(t=int, n=ndim, slice_indexes=slice_indexes)
+    
+    if spec_indexes is not None:
+        checks._check_seq_of_seq_(t=int, len1=3, spec_indexes=spec_indexes)
+    
+    if custom_spec is not None:
+        checks._check_seq_(t=dict, custom_spec=custom_spec)
+        for d in custom_spec:
+            if "B" not in d.keys():
+                raise RuntimeError(
+                    "All elements in `custom_spec` must be dictionaries and contain a key: 'B'"
+                )
+            if "spec" not in d.keys():
+                raise RuntimeError(
+                    "All elements in `custom_spec` must be dictionaries and contain a key: 'spec'"
+                )
+            if "label" not in d.keys():
+                raise RuntimeError(
+                    "All elements in `custom_spec` must be dictionaries and contain a key: 'label'"
+                )
+            if not isinstance(d["B"], np.ndarray) or 1 != d["B"].ndim:
+                raise RuntimeError(
+                    "All ellements in `custom_spec` with key 'B' must be monodimensional numpy arrays"
+                )
+            if not isinstance(d["spec"], np.ndarray) or 1 != d["B"].ndim:
+                raise RuntimeError(
+                    "All ellements in `custom_spec` with key 'spec' must be monodimensional numpy arrays"
+                )
+            if not isinstance(d["label"], str):
+                raise RuntimeError(
+                    "All ellements in `custom_spec` with key 'label' must have str type"
+                )
+            if not len(d["B"]) == len(d["spec"]):
+                raise RuntimeError(
+                    "For all dictionary d in `custom_spec`, we must have len(d['B']) == len(d['spec'])"
+                )
     
     return True
 
@@ -3487,7 +3785,7 @@ class Displayer:
             ``grids[i][j]`` is a monodimensional array containing the
             sampling nodes associated to the j-th axe of the i-th
             source image.
-        
+            
             When given, the input grids are used to set the extent of
             the displayed images (see `matplotlib.imshow`
             documentation).
@@ -3503,7 +3801,7 @@ class Displayer:
             particularly relevant for images since it determines
             whether data pixels are square (see `matplotlib.imshow`
             documentation).
-        
+            
             When not given, the default setting is that of
             `matplotlib` (see key 'image.aspect' of the matplotlib
             configuration parameter ``rcParams``).
@@ -3514,7 +3812,7 @@ class Displayer:
             boundaries (in particular, this ensures that all slice
             images will be displayed on the screen using the same
             pixel size).
-        
+            
             Otherwise, set ``boundaries = 'auto'`` to use tight extent
             for each displayed slice image.
         
@@ -3528,7 +3826,7 @@ class Displayer:
         indexes : sequence, optional
             Used for 3D (monosrc or multisrc) displayers only. When
             given, indexes must be:
-        
+            
             + when ``nsrc == 1``: a sequence of three int, ``indexes =
               (id0, id1, id2)`` such that `id0`, `id1` and `id2`
               correspond to the indexes used along each axis of the 3D
@@ -3537,7 +3835,7 @@ class Displayer:
               is possible). The default setting in this situation is
               ``indexes = (u.shape[0]//2, u.shape[1]//2,
               u.shape[2]//2)``;
-
+            
             + when ``nsrc > 1``: a sequence with lenght ``nsrc`` such
               that ``indexes[j] = (id0, id1, id2)`` is a sequence of
               three indexes corresponding to the indexes used along
@@ -3554,6 +3852,81 @@ class Displayer:
             that ``src_labels[j]`` corresponds to the label of the
             j-th source (a str to be added to the j-th source
             suptitle).
+        
+        interpolation : str, optional        
+            Used for spectral-spatial displayers only. The
+            interpolation method used (see ``matplotlib``
+            documentation for the possible choices).
+        
+        slice_indexes : sequence of four int, optional        
+            Used for spectral-spatial displayers only. Indexes used to
+            extract slices of spectral-spatial image, the sequence
+            must contain four integer indexes, ``slice_indexes = (id0,
+            id1, id2, id3)``, that are used to extract and display 2D
+            slices from the 4D spectral-spatial image:
+            
+            + ``u[id0, :, id2, :]`` : YZ slice (for ``B = Bgrid[id0]``
+              and ``X = xgrid[id2]``)
+            
+            + ``u[id0, id1, :, :]`` : ZX slice (for ``B = Bgrid[id0]``
+              and ``Y = ygrid[id1]``)
+            
+            + ``u[id0, :, :, id3]`` : YX slice (for ``B = Bgrid[id0]``
+              and ``Z = zgrid[id3]``)
+            
+            When not given, the default setting is ``slice_indexes[i]
+            = u.shape[i]//2``, The slice indexes can be partially
+            given, e.g., using ``slice_indexes = (5, None, 10,
+            None)``, in this case, the not given indexes will be
+            automatically replaced by their default values described
+            above.
+        
+        spec_indexes : sequence of sequences of 3 int, optional        
+            Used for spectral-spatial displayers only. Each element
+            ``spec_indexes[i]`` is a sequence containing 3 integers,
+            corresponding to the spatial indexes along the three
+            spatial axes of the 4D image, and use to extract and
+            display profiles.
+            
+            More precisely, the extracted and displayed profiles are
+            the ``u[:, id[0], id[1], id[2]] for id in spec_indexes``.
+            
+            When not given, the default setting is ``spec_indexes =
+            ((u.shape[1]//2, u.shape[2]//2, u.shape[3]//2))``.
+        
+        show_legend : bool, optional
+            Used for spectral-spatial displayers only. Decide whether
+            the legend in the spectrum display area should be visible
+            or not when the figure is drawn.
+        
+        legend_loc : str, optional        
+            Used for spectral-spatial displayers only. The location of
+            the legend in the spectrum display area (see
+            ``matplotlib`` documentation for possible choices).
+        
+        custom_spec : sequence of dict, optional        
+            Used for spectral-spatial displayers only. This parameter
+            can be used to specify some custom profiles to be
+            displayed in the bottom axes.
+            
+            When given, each element of ``custom_spec`` must be a
+            dictionary with the following key-values:
+            
+            + 'spec' : the custom profile to be displayed (monodimensional
+              numpy array)
+            
+            + 'B' : the sampling grid (B axis) associated to the custom
+              profile (monodimensional numpy array)
+            
+            + 'label' : label of the custom profile (str)
+        
+        spec_normalization : bool, optional
+            Used for spectral-spatial displayers only. Decide whether
+            the displayed spectra should be normalized or not. When
+            spectra normalization is enabled, each displayed spectrum
+            is divided by its maximum value (normalization occurs at
+            display only, it does not affect the latent image)
+        
         
         Return
         ------
@@ -3577,7 +3950,13 @@ class Displayer:
                        display_labels=display_labels, cmap=cmap,
                        grids=grids, origin=origin, aspect=aspect,
                        boundaries=boundaries, figsize=figsize,
-                       indexes=indexes, src_labels=src_labels)
+                       indexes=indexes, src_labels=src_labels,
+                       interpolation=interpolation,
+                       legend_loc=legend_loc, show_legend=show_legend,
+                       spec_normalization=spec_normalization,
+                       slice_indexes=slice_indexes,
+                       spec_indexes=spec_indexes,
+                       custom_spec=custom_spec)
         
         # configure display libraries according to the running
         # environment
