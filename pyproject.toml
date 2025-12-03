@@ -76,6 +76,11 @@ doc = [
     "sphinxcontrib-bibtex", 
     "sphinxcontrib-video",
 ]
+jupyter = [
+    "trame",
+    "trame-vtk",
+    "trame-vuetify"
+]
 
 # rocm support not seriously tested
 cupy-rocm-5-0 = [
