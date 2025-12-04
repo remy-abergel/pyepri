@@ -19,7 +19,7 @@ dependencies = [
     "numpy>=2.2.4",
     "scipy",
     "matplotlib",
-    "pyvista",
+    "pyvista>=0.44.0",
     "finufft>=2.4.0",
     "jupyter",
     "psutil",
@@ -75,6 +75,11 @@ doc = [
     "ipyvtklink",
     "sphinxcontrib-bibtex", 
     "sphinxcontrib-video",
+]
+jupyter = [
+    "trame",
+    "trame-vtk",
+    "trame-vuetify"
 ]
 
 # rocm support not seriously tested
