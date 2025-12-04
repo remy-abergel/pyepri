@@ -47,6 +47,9 @@
 - added reference to the recently published paper presenting the
   PyEPRI package ([#18](../../pull/18))
 
+- added tutorial for ``imshow3d``, ``isosurf3d`` and ``imshow4d``
+  ([#25](../../pull/25))
+  
 ### Packaging
 
 - require pyvista >= 0.44.0 (due to internal updates of PyVista's
