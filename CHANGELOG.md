@@ -2,7 +2,7 @@
 
 <!--next-version-placeholder-->
 
-## Future v1.1.1
+## v1.1.1 (December 4th, 2025)
 
 ### New features & improvements
 
@@ -41,8 +41,8 @@
   
 ### Documentation
 
-- minor improvements ([#18](../../pull/18), [#19](../../pull/19) and
-  [#23](../../pull/23))
+- minor improvements ([#18](../../pull/18), [#19](../../pull/19),
+  [#23](../../pull/23) and [#26](../../pull/26))
 
 - added reference to the recently published paper presenting the
   PyEPRI package ([#18](../../pull/18))
