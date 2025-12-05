@@ -2,7 +2,7 @@
 
 <!--next-version-placeholder-->
 
-## v1.1.1 (December 4th, 2025)
+## v1.1.1 (December 5th, 2025)
 
 ### New features & improvements
 
