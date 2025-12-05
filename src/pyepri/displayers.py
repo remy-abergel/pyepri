@@ -380,7 +380,7 @@ def isosurf3d(u, isovalue=None, color='#f7fe00', cmap=None,
     
     def on_s_pressed():
         ctrl = interactor.GetControlKey()
-        if ctrl == 1: # screenshot (TODO)
+        if ctrl == 1: # screenshot ? (not implemented yet)
             pass
         else:
             for s in sliders:
@@ -425,7 +425,7 @@ def isosurf3d(u, isovalue=None, color='#f7fe00', cmap=None,
             
         onoff_isosurf = plotter.add_checkbox_button_widget(
             lambda checked : on_c_pressed(ctrl=1),
-            value=True,      # état initial
+            value=True,
             position=(10, 10),
             color_on=color,
             background_color='black',
@@ -433,19 +433,19 @@ def isosurf3d(u, isovalue=None, color='#f7fe00', cmap=None,
         )
         onoff_slice_x = plotter.add_checkbox_button_widget(
             lambda checked : toogle_actor_visibility(slice_x_actor, refresh=True),
-            value=True,      # état initial
+            value=True,
             position=(45, 10),
             size=25,
         )
         onoff_slice_y = plotter.add_checkbox_button_widget(
             lambda checked : toogle_actor_visibility(slice_y_actor, refresh=True),
-            value=True,      # état initial
+            value=True,
             position=(80, 10),
             size=25,
         )
         onoff_slice_z = plotter.add_checkbox_button_widget(
             lambda checked : toogle_actor_visibility(slice_z_actor, refresh=True),
-            value=True,      # état initial
+            value=True,
             position=(115, 10),
             size=25,
         )
@@ -464,6 +464,7 @@ def isosurf3d(u, isovalue=None, color='#f7fe00', cmap=None,
     
     # show & return
     plotter.show()
+    
     return plotter
 
 def imshow3d(u, xgrid=None, ygrid=None, zgrid=None, indexes=None,
