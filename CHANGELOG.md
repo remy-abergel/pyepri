@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## Future v1.2.0
+	
+### Packaging
+
+- fixed missing ``*.pkl`` and ``*.mat`` dataset when installing using
+  ``pip install git+https://github.com/remy-abergel/pyepri.git``
+  ([#28](../../pull/28))
+
 ## v1.1.1 (December 5th, 2025)
 
 ### New features & improvements
