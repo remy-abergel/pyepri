@@ -6,9 +6,10 @@
 	
 ### Packaging
 
-- added missing ``*.pkl`` and ``*.mat`` dataset in ``setup.py``
-  otherwise those files are missing when installing PyEPRI using ``pip
-  install git+https://github.com/remy-abergel/pyepri.git``
+- added missing ``*.pkl`` and ``*.mat`` dataset in
+  [setup.py](setup.py) otherwise those files are not included when
+  installing PyEPRI using ``pip install
+  git+https://github.com/remy-abergel/pyepri.git``
   ([#28](../../pull/28))
 
 ## v1.1.1 (December 5th, 2025)
