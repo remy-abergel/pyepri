@@ -7,12 +7,12 @@
 ### Code
 	
 - removed ``plt.ion()`` in [displayers.py](src/pyepri/displayers.py)
-  ([#29](../../pull/29))
+  ([#30](../../pull/30))
    
 ### Documentation
 
 - made the display persistent when the example codes are executed as
-  scripts ([#29](../../pull/29))
+  scripts ([#30](../../pull/30))
    
 ### Packaging
 
