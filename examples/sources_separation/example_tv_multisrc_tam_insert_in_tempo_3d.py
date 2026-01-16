@@ -30,7 +30,6 @@ import pyepri.datasets as datasets # to retrieve the path (on your own machine) 
 import pyepri.displayers as displayers # tools for displaying images (with update along the computation)
 import pyepri.processing as processing # tools for EPR image reconstruction
 import pyepri.io as io # tools for loading EPR datasets (in BES3T or Python .PKL format)
-import pyvista as pv # tools for rendering 3D volumes
 
 
 # %%
@@ -117,7 +116,7 @@ plt.imshow(backend.to_numpy(proj_mixture), extent=proj_extent, aspect='auto')
 plt.title("Measured projections")
 plt.xlabel("B: homogeneous magnetic field intensity (G)")
 plt.ylabel("projection indexes")
-plt.show()
+plt.show() # to keep the display persistent when the code is executed as a script
 
 
 # %%
@@ -191,17 +190,20 @@ out = processing.tv_multisrc(proj, B, fgrad, delta, h, lbda,
                              eval_energy=eval_energy, video=video,
                              verbose=verbose, Ndisplay=Ndisplay,
                              displayer=displayer)
-
+plt.show() # to keep the display persistent when the code is executed as a script
 
 # %%
-# Isosurface rendering
-# --------------------
+# Isosurface rendering (requires working pyvista installation)
+# ------------------------------------------------------------
 #
 # Let us display isosurfaces of the reconstructed TAM and TEMPO source
 # images (TAM is displayed in red color and TEMPO is displayed in
 # green color). The TEMPO source image is masked over half a plane so
 # that we can visualize the TAM insert.
 #
+
+# additional import (pyvista)
+import pyvista as pv # tools for rendering 3D volumes
 
 # prepare isosurface display
 x_tam, y_tam, z_tam = np.meshgrid(xgrid_tam, ygrid_tam, zgrid_tam, indexing='xy')

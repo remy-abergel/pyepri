@@ -21,6 +21,7 @@ PyEPRI >= 1.1.1).
 # --------------------- #
 # Import needed modules #
 # --------------------- #
+import matplotlib.pyplot as plt # tools for data visualization
 import pyepri.apodization as apodization # tools for creating apodization profiles
 import pyepri.backends as backends # to instanciate PyEPRI backends
 import pyepri.datasets as datasets # to retrieve the path (on your own machine) of the demo dataset
@@ -59,6 +60,7 @@ displayer = displayers.create_3d_displayer(nsrc=1, figsize=(11., 6.), display_la
 out = processing.tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape, backend=backend,
                             init=None, tol=1e-4, nitermax=500, eval_energy=False,
                             verbose=False, video=True, Ndisplay=20, displayer=displayer)
+plt.show() # to keep the display persistent when the code is executed as a script
 
 
 # %%
@@ -110,6 +112,7 @@ p.show()
 #
 
 fig = displayers.imshow3d(backend.to_numpy(out), xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, units='cm', figsize=(14.5, 8.8))
+plt.show() # to keep the display persistent when the code is executed as a script
 
 # %%
 # Interactive isosurface + slices displayer (PyVista)
@@ -160,4 +163,5 @@ im4d = h.reshape(-1, 1, 1, 1) * out.reshape((1, *out.shape)) # im4d[:, i, j, k] 
 fig = displayers.imshow4d(backend.to_numpy(im4d), xgrid=xgrid, ygrid=ygrid, zgrid=zgrid,
                           Bgrid=backend.to_numpy(B), B_unit='G', spatial_unit='cm',
                           figsize=(15.7, 9))
+plt.show() # to keep the display persistent when the code is executed as a script
 

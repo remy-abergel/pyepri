@@ -148,6 +148,7 @@ plt.imshow(backend.to_numpy(proj_mixture), extent=proj_extent, aspect='auto')
 plt.title("Synthetic projections of the mixture (a) + (b)")
 plt.xlabel("B: homogeneous magnetic field intensity (G)")
 _ = plt.ylabel("field gradient orientation (degree)")
+plt.show() # to keep the display persistent when the code is executed as a script
 
 
 # %%
@@ -223,3 +224,4 @@ out = processing.tv_multisrc(proj, B, fgrad, delta, h, lbda,
                              eval_energy=eval_energy, video=video,
                              verbose=verbose, Ndisplay=Ndisplay,
                              displayer=displayer)	   
+plt.show() # to keep the display persistent when the code is executed as a script
