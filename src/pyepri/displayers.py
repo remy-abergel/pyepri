@@ -3970,7 +3970,7 @@ class Displayer:
             self.notebook = False
             self.pause = lambda time_sleep=time_sleep : plt.pause(time_sleep)
             self.pause.__doc__ = "return plt.pause(time_sleep)"
-            plt.ion()
+            #plt.ion() # removed in PR #29
         
         # fill attributes
         self.clear_output = lambda wait=True : display.clear_output(wait=wait)
