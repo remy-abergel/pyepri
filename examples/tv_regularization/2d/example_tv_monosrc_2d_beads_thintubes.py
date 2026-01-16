@@ -94,8 +94,7 @@ plt.title('projections (proj)')
 
 # add suptitle and display the figure
 plt.suptitle("Input dataset",  weight='demibold');
-plt.show()
-
+plt.show() # to keep the display persistent when the code is executed as a script
 
 # %%
 # Configure and run the TV-regularized monosource image reconstruction
@@ -149,3 +148,4 @@ out = processing.tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
                             eval_energy=eval_energy, verbose=verbose,
                             video=video, Ndisplay=Ndisplay,
                             displayer=displayer)
+plt.show() # to keep the display persistent when the code is executed as a script

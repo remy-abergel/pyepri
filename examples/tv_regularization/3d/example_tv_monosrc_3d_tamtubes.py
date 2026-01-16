@@ -32,7 +32,6 @@ import pyepri.datasets as datasets # to retrieve the path (on your own machine) 
 import pyepri.displayers as displayers # tools for displaying images (with update along the computation)
 import pyepri.processing as processing # tools for EPR image reconstruction
 import pyepri.io as io # tools for loading EPR datasets (in BES3T or Python .PKL format)
-import pyvista as pv # tools for rendering 3D volumes
 
 # %%
 # Create backend
@@ -99,7 +98,7 @@ plt.title('projections (proj)')
 
 # add suptitle and display the figure
 plt.suptitle("Input dataset",  weight='demibold');
-plt.show()
+plt.show() # to keep the display persistent when the code is executed as a script
 
 # %%
 # Configure and run the TV-regularized monosource image reconstruction
@@ -153,10 +152,14 @@ out = processing.tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
                             eval_energy=eval_energy, verbose=verbose,
                             video=video, Ndisplay=Ndisplay,
                             displayer=displayer)
+plt.show() # to keep the display persistent when the code is executed as a script
 
 # %%
-# Isosurface rendering
-# --------------------
+# Isosurface rendering (requires working pyvista installation)
+# ------------------------------------------------------------
+
+# additional import (pyvista)
+import pyvista as pv # tools for rendering 3D volumes
 
 # prepare isosurface display
 x, y, z = np.meshgrid(xgrid, ygrid, zgrid, indexing='xy')

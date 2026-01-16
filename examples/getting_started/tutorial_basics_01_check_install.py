@@ -22,6 +22,7 @@ section).
 # console (make sure you have activated the virtual environment in
 # which PyEPRI was installed).
 # 
+import matplotlib.pyplot as plt # tools for data visualization
 import pyepri.apodization as apodization # tools for creating apodization profiles
 import pyepri.backends as backends # to instanciate PyEPRI backends
 import pyepri.datasets as datasets # to retrieve the path (on your own machine) of the demo dataset
@@ -80,6 +81,7 @@ displayer = displayers.create_3d_displayer(nsrc=1, figsize=(11., 6.), display_la
 out = processing.tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape, backend=backend,
                             init=None, tol=1e-4, nitermax=500, eval_energy=False,
                             verbose=False, video=True, Ndisplay=20, displayer=displayer)
+plt.show() # to keep the display persistent when the code is executed as a script
 
 # %%
 #

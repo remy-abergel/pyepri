@@ -93,7 +93,7 @@ plt.title('projections (proj)')
 
 # add suptitle and display the figure
 plt.suptitle("Input dataset",  weight='demibold');
-plt.show()
+plt.show() # to keep the display persistent when the code is executed as a script
 
 # %%
 # Configure and run the filtered backprojection image reconstruction
@@ -152,3 +152,4 @@ out = processing.eprfbp2d(proj, fgrad, h, B, xgrid, ygrid, interp1,
                           frequency_cutoff=frequency_cutoff,
                           video=video, Ndisplay=Ndisplay,
                           displayer=displayer)
+plt.show() # to keep the display persistent when the code is executed as a script
