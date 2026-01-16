@@ -3,7 +3,17 @@
 <!--next-version-placeholder-->
 
 ## Future v1.2.0
+
+### Code
 	
+- removed ``plt.ion()`` in [displayers.py](src/pyepri/displayers.py)
+  ([#29](../../pull/29))
+   
+### Documentation
+
+- made the display persistent when the example codes are executed as
+  scripts ([#29](../../pull/29))
+   
 ### Packaging
 
 - added missing ``*.pkl`` and ``*.mat`` dataset in
