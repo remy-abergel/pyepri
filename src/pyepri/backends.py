@@ -46,22 +46,28 @@ from psutil import cpu_count # temporary fix for FINUFFT issue #596:
                              # physical cores in FINUFFT calls for CPU
                              # backends
 
-def create_numpy_backend():
+def create_numpy_backend(autograd=False):
     """Create a numpy backend.
 
+    Parameters
+    ----------
+
+    autograd: bool, optional
+       Use autograd.numpy instead of numpy
+    
     Returns
     -------
-
+    
     backend : <class 'backends.Backend'> 
         Backend configured to perform operations using numpy library
         on CPU device.
-
+    
     See also 
     --------
-
+    
     backends.create_cupy_backend()
     backends.create_torch_backend()
-
+    
     Examples
     --------
     
@@ -86,26 +92,36 @@ def create_numpy_backend():
     >>>                  # as for numpy.arange)
     >>> print(z)
     [0 1 2 3 4 5 6 7 8 9]
-
+    
     """
-    return Backend(lib=np, device='cpu')
+    if autograd:
+        try:
+            import autograd.numpy as agnp
+        except ModuleNotFoundError as e:
+            raise RuntimeError(
+                "Cannot create autograd.numpy backend because autograd module is not installed.\n"
+                "Please install autograd and try again."
+            ) from e
+        return Backend(lib=agnp, device='cpu')
+    else:
+        return Backend(lib=np, device='cpu')
 
 def create_cupy_backend():
     """Create a cupy backend.
-
+    
     Returns
     -------
-
+    
     backend : <class 'backends.Backend'> 
         Backend configured to perform operations using cupy library
         on GPU device.
-
+    
     See also 
     --------
-
+    
     backends.create_numpy_backend()
     backends.create_torch_backend()
-
+    
     Examples
     --------
     
@@ -133,7 +149,7 @@ def create_cupy_backend():
     >>>                  # as for cupy.arange)
     >>> print(z)
     [0 1 2 3 4 5 6 7 8 9]
-
+    
     """
     try:
         import cupy as cp
@@ -146,34 +162,34 @@ def create_cupy_backend():
     
 def create_torch_backend(device):
     """Create a torch backend with specified device.
-
+    
     Parameter
     ---------
-
+    
     device : str
         One of {'cpu', 'cuda', 'cuda:X'} with X = device index.
-
+    
     Return
     ------
-
+    
     backend : <class 'backends.Backend'> 
         A backends.Backend instance
         configured to perform operations using `torch` library on the
         specified device.
-
+    
     Notes 
     -----
-
+    
     This function will raise an error if torch library is not
     installed or if the input device argument is not available on your
     system.
-
+    
     See also 
     --------
-
+    
     backends.create_numpy_backend()
     backends.create_cupy_backend()
-
+    
     Examples
     --------
     
@@ -183,11 +199,11 @@ def create_torch_backend(device):
     
     Example 1: create and use a torch backend on 'cpu' device
     ---------------------------------------------------------
-
+    
     To run the following example torch library should be installed on
     your system (otherwise the second line of this example will raise
     an error).
-
+    
     >>> import pyepri.backends as backends
     >>> b = backends.create_torch_backend('cpu')
     >>> x = b.zeros((10,),dtype='float64') # type is specified using a
@@ -208,10 +224,10 @@ def create_torch_backend(device):
     >>>                  # as for torch.arange)
     >>> print(z)
     tensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-
+    
     Example 2: create and use a torch backend on 'cuda' device
     ----------------------------------------------------------
-
+    
     To run the following example torch library should be installed on
     your system and 'cuda' device should be available (otherwise the
     second line of this example will raise an error)
@@ -230,9 +246,9 @@ def create_torch_backend(device):
     >>> z = b.arange(10)
     >>> print(z)
     tensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], device='cuda:0')
-
+    
     """
-
+    
     # check torch library availability
     try:
         import torch
@@ -276,11 +292,11 @@ def create_torch_backend(device):
 
 class Backend:
     """Class for mapping our standardized data types and methods to the specified library (numpy, torch, cupy).
-
-   
+    
+    
     Type correspondences
     --------------------
-
+    
     This package relies on data types specified with a str from which
     the library dependent data types will be inferred. The
     correspondence between the different data types is provided in the
@@ -311,10 +327,10 @@ class Backend:
     The mapping between the data types in str format and those of the
     targeted library can be done using the dtypes and invdtypes
     dictionary attributes described below.
-
+    
     We also provide a str to str mapping towards complex data types
     (non invertible mapping) :
-
+    
     +-------------------+---------------------------+
     | data type         | complex data type         |
     +===================+===========================+
@@ -334,7 +350,7 @@ class Backend:
     +-------------------+---------------------------+
     | ``'complex128'``  | ``'complex128'``          |
     +-------------------+---------------------------+
-
+    
     The above mapping can be used to infer the data type of a complex
     array computed from another (non necessarily complex) input array
     (e.g., infer the data type of the discrete Fourier transform of an
@@ -342,45 +358,45 @@ class Backend:
     
     Contextual attributes 
     ---------------------
-
+    
     lib : <class 'module'>
-        One of {numpy, cupy, torch}.
-
+        One of {numpy, numpy.autograd, cupy, torch}.
+    
     device : str 
         Device identifier (see constructor documentation below).
-
+    
     cls : <class 'type'>
         Native array data type in the backend library, as
         described below.
-
-        +-------+-------------------------+
-        | lib   | cls                     |
-        +=======+=========================+
-        | numpy | <class 'numpy.ndarray'> |
-        +-------+-------------------------+
-        | cupy  | <class 'cupy.ndarray'>  |
-        +-------+-------------------------+
-        | torch | <class 'torch.Tensor'>  |
-        +-------+-------------------------+
-
+    
+        +-------------------------+-------------------------+
+        | lib                     | cls                     |
+        +=========================+=========================+
+        | numpy or autograd.numpy | <class 'numpy.ndarray'> |
+        +-------------------------+-------------------------+
+        | cupy                    | <class 'cupy.ndarray'>  |
+        +-------------------------+-------------------------+
+        | torch                   | <class 'torch.Tensor'>  |
+        +-------------------------+-------------------------+
+    
     Data type mapping attributes
     ----------------------------
     
     str_to_lib_dtypes : dict
         Mapping data types in standardized str format -> lib dependent
         data types (see above).
-
+    
     lib_to_str_dtypes : dict
         Invert of the str_to_lib_dtypes mapping (lib dependent data
         types -> data types in standardized str format).
-
+    
     mapping_to_complex_dtypes : dict 
         Mapping from data type in standardized str format -> complex
         data type in standardized str format (see above).
-
+    
     Other attributes (library-dependent methods)
     --------------------------------------------
-
+    
     An instance ``backend`` with class ``pyepri.backends.Backend``
     remaps library dependent methods to basically the same methods
     coming from ``backend.lib`` but with standardized usage
@@ -390,7 +406,7 @@ class Backend:
     A mini documentation is provided for each standardized method and
     can be displayed using the ``help()`` function, as illustrated
     below.
-
+    
     >>> import pyepri.backends as backends
     >>> backend = backends.create_numpy_backend()
     >>> help(backend.meshgrid)
@@ -398,7 +414,7 @@ class Backend:
     ...
     ...<lambda> lambda *xi, indexing='xy'
     ...    return numpy.meshgrid(*xi, indexing=indexing)
-
+    
     """
 
     def __init__(self, lib, device):
@@ -407,24 +423,24 @@ class Backend:
         Parameters
         ----------
         
-        lib : str
-            One of {'numpy','cupy','torch'} used to specify which
-            backend library must be mapped.
+        lib : str        
+            One of {'numpy', 'autograd.numpy','cupy','torch'} used to
+            specify which backend library must be mapped.
         
         device : str
             Device identifier, possible values depends on the lib
             parameters, as described below
         
-            +-------+------------------------------------+
-            | lib   | possible values for device         |
-            +=======+====================================+
-            | numpy | ``'cpu'``                          |
-            +-------+------------------------------------+
-            | cupy  | ``'cuda'``                         |
-            +-------+------------------------------------+
-            | torch | ``'cuda'`` or ``'cuda:X'``         |
-            |       | (where X = available device index) |
-            +-------+------------------------------------+
+            +-------------------------+------------------------------------+
+            | lib                     | possible values for device         |
+            +=========================+====================================+
+            | numpy or autograd.numpy | ``'cpu'``                          |
+            +-------------------------+------------------------------------+
+            | cupy                    | ``'cuda'``                         |
+            +-------------------------+------------------------------------+
+            | torch                   | ``'cuda'`` or ``'cuda:X'``         |
+            |                         | (where X = available device index) |
+            +-------------------------+------------------------------------+
         
         Returns 
         -------
@@ -440,12 +456,12 @@ class Backend:
         """
         
         # check lib input validity
-        if not hasattr(lib, '__name__') or lib.__name__ not in ['numpy', 'cupy', 'torch'] :
-            raise ValueError("lib must be one of {numpy, cupy, torch}")
+        if not hasattr(lib, '__name__') or lib.__name__ not in ['numpy', 'autograd.numpy', 'cupy', 'torch'] :
+            raise ValueError("lib must be one of {numpy, autograd.numpy, cupy, torch}")
         
         # set contextual attibutes
         self.lib = lib
-        if 'numpy' == self.lib.__name__:
+        if self.lib.__name__ in ('numpy', 'autograd.numpy'):
             self.device = 'cpu'
             self.cls = self.lib.ndarray
         elif 'torch' == self.lib.__name__:
@@ -454,12 +470,12 @@ class Backend:
         else:
             self.device = 'cuda'
             self.cls = self.lib.ndarray
-
+        
         # add backend compliance verification method
         self.is_backend_compliant = lambda *args : all([isinstance(arg, self.cls) for arg in args])
-
+        
         # set mapping str data type -> lib data type
-        if lib.__name__ in ['numpy', 'cupy']: # lib = numpy or cupy
+        if lib.__name__ in ['numpy', 'autograd.numpy', 'cupy']: # lib = numpy, autograd.numpy or cupy
             
             self.str_to_lib_dtypes = {
                 'int8'       : self.lib.dtype('int8'),
@@ -486,7 +502,7 @@ class Backend:
                 'complex128' : self.lib.complex128,
                 None         : None,
             }
-
+        
         # mapping to complex datatype (non invertible mapping)
         self.mapping_to_complex_dtypes = {
             'int8'       : None,
@@ -498,7 +514,7 @@ class Backend:
             'float64'    : 'complex128',
             'complex128' : 'complex128',
         }
-
+        
         # set invert mapping : lib data type -> str data type
         self.lib_to_str_dtypes = {value: key for key, value in self.str_to_lib_dtypes.items()}
         
@@ -509,6 +525,7 @@ class Backend:
         self.arccos = self.lib.arccos
         self.arctan2 = self.lib.arctan2
         self.real = self.lib.real
+        self.imag = self.lib.imag
         self.argwhere = self.lib.argwhere
         self.abs = self.lib.abs
         self.tile = self.lib.tile
@@ -558,7 +575,7 @@ class Backend:
                 return tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1))
             
         # set lib-dependent backends methods
-        if self.lib.__name__ in ['numpy', 'cupy']: 
+        if self.lib.__name__ in ['numpy', 'autograd.numpy', 'cupy']: 
             
             # remap lib-dependant methods using lambda functions
             self.zeros = lambda *size, dtype=None : self.lib.zeros(*size, dtype=lib.dtype(dtype))
@@ -581,7 +598,7 @@ class Backend:
             self.stack = lambda arrays, dim=0, out=None : self.lib.stack(arrays, axis=dim, out=out)
             self.quantile = lambda u, q, dim=None, keepdim=False, out=None, interpolation='linear' : self.lib.quantile(u, q, axis=dim, keepdims=keepdim, out=out, method=interpolation)
             self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : self.lib.frombuffer(buffer, dtype=dtype, count=count, offset=offset)
-            if 'numpy' == self.lib.__name__:
+            if self.lib.__name__ in ('numpy', 'autograd.numpy'):
                 self.to_numpy = lambda x : x
                 self.from_numpy = lambda x : x
             else :
@@ -670,7 +687,7 @@ class Backend:
             
             # nufft support (use finufft for CPU device and cufinufft
             # for GPU device)
-            if self.lib.__name__ == "numpy":
+            if self.lib.__name__ in ("numpy", "autograd.numpy"):
                 import finufft
                 self.nufft2d = assign_finufft_nthreads(finufft.nufft2d2)
                 self.nufft3d = assign_finufft_nthreads(finufft.nufft3d2)
@@ -688,7 +705,7 @@ class Backend:
                 self.nufft_plan = cufinufft.Plan
                 self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
                 self.nufft_execute = lambda plan, arr, out=None : plan.execute(arr, out=out)
-                        
+        
         else: # lib == torch
             
             # remap some lib-dependant methods using lambda functions
@@ -810,7 +827,7 @@ class Backend:
                     '''Decorator to cast torch.Tensor inputs of func into numpy.ndarray
                     and the numpy.ndarray output of func into
                     torch.Tensor.
-
+                    
                     '''
                     def numpyfied_func(*args, **kwargs):
                         args2 = (a.numpy() if isinstance(a, self.lib.Tensor) else a for a in args)
