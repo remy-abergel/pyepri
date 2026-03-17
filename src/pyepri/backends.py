@@ -46,22 +46,28 @@ from psutil import cpu_count # temporary fix for FINUFFT issue #596:
                              # physical cores in FINUFFT calls for CPU
                              # backends
 
-def create_numpy_backend():
+def create_numpy_backend(autograd=False):
     """Create a numpy backend.
 
+    Parameters
+    ----------
+
+    autograd: bool, optional
+       Use autograd.numpy instead of numpy
+    
     Returns
     -------
-
+    
     backend : <class 'backends.Backend'> 
         Backend configured to perform operations using numpy library
         on CPU device.
-
+    
     See also 
     --------
-
+    
     backends.create_cupy_backend()
     backends.create_torch_backend()
-
+    
     Examples
     --------
     
@@ -86,26 +92,36 @@ def create_numpy_backend():
     >>>                  # as for numpy.arange)
     >>> print(z)
     [0 1 2 3 4 5 6 7 8 9]
-
+    
     """
-    return Backend(lib=np, device='cpu')
+    if autograd:
+        try:
+            import autograd.numpy as agnp
+        except ModuleNotFoundError as e:
+            raise RuntimeError(
+                "Cannot create autograd.numpy backend because autograd module is not installed.\n"
+                "Please install autograd and try again."
+            ) from e
+        return Backend(lib=agnp, device='cpu')
+    else:
+        return Backend(lib=np, device='cpu')
 
 def create_cupy_backend():
     """Create a cupy backend.
-
+    
     Returns
     -------
-
+    
     backend : <class 'backends.Backend'> 
         Backend configured to perform operations using cupy library
         on GPU device.
-
+    
     See also 
     --------
-
+    
     backends.create_numpy_backend()
     backends.create_torch_backend()
-
+    
     Examples
     --------
     
@@ -133,7 +149,7 @@ def create_cupy_backend():
     >>>                  # as for cupy.arange)
     >>> print(z)
     [0 1 2 3 4 5 6 7 8 9]
-
+    
     """
     try:
         import cupy as cp
@@ -146,34 +162,34 @@ def create_cupy_backend():
     
 def create_torch_backend(device):
     """Create a torch backend with specified device.
-
+    
     Parameter
     ---------
-
+    
     device : str
         One of {'cpu', 'cuda', 'cuda:X'} with X = device index.
-
+    
     Return
     ------
-
+    
     backend : <class 'backends.Backend'> 
         A backends.Backend instance
         configured to perform operations using `torch` library on the
         specified device.
-
+    
     Notes 
     -----
-
+    
     This function will raise an error if torch library is not
     installed or if the input device argument is not available on your
     system.
-
+    
     See also 
     --------
-
+    
     backends.create_numpy_backend()
     backends.create_cupy_backend()
-
+    
     Examples
     --------
     
@@ -183,11 +199,11 @@ def create_torch_backend(device):
     
     Example 1: create and use a torch backend on 'cpu' device
     ---------------------------------------------------------
-
+    
     To run the following example torch library should be installed on
     your system (otherwise the second line of this example will raise
     an error).
-
+    
     >>> import pyepri.backends as backends
     >>> b = backends.create_torch_backend('cpu')
     >>> x = b.zeros((10,),dtype='float64') # type is specified using a
@@ -208,10 +224,10 @@ def create_torch_backend(device):
     >>>                  # as for torch.arange)
     >>> print(z)
     tensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-
+    
     Example 2: create and use a torch backend on 'cuda' device
     ----------------------------------------------------------
-
+    
     To run the following example torch library should be installed on
     your system and 'cuda' device should be available (otherwise the
     second line of this example will raise an error)
@@ -230,9 +246,9 @@ def create_torch_backend(device):
     >>> z = b.arange(10)
     >>> print(z)
     tensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], device='cuda:0')
-
+    
     """
-
+    
     # check torch library availability
     try:
         import torch
@@ -276,11 +292,11 @@ def create_torch_backend(device):
 
 class Backend:
     """Class for mapping our standardized data types and methods to the specified library (numpy, torch, cupy).
-
-   
+    
+    
     Type correspondences
     --------------------
-
+    
     This package relies on data types specified with a str from which
     the library dependent data types will be inferred. The
     correspondence between the different data types is provided in the
@@ -311,10 +327,10 @@ class Backend:
     The mapping between the data types in str format and those of the
     targeted library can be done using the dtypes and invdtypes
     dictionary attributes described below.
-
+    
     We also provide a str to str mapping towards complex data types
     (non invertible mapping) :
-
+    
     +-------------------+---------------------------+
     | data type         | complex data type         |
     +===================+===========================+
@@ -334,7 +350,7 @@ class Backend:
     +-------------------+---------------------------+
     | ``'complex128'``  | ``'complex128'``          |
     +-------------------+---------------------------+
-
+    
     The above mapping can be used to infer the data type of a complex
     array computed from another (non necessarily complex) input array
     (e.g., infer the data type of the discrete Fourier transform of an
@@ -342,45 +358,45 @@ class Backend:
     
     Contextual attributes 
     ---------------------
-
+    
     lib : <class 'module'>
-        One of {numpy, cupy, torch}.
-
+        One of {numpy, numpy.autograd, cupy, torch}.
+    
     device : str 
         Device identifier (see constructor documentation below).
-
+    
     cls : <class 'type'>
         Native array data type in the backend library, as
         described below.
-
-        +-------+-------------------------+
-        | lib   | cls                     |
-        +=======+=========================+
-        | numpy | <class 'numpy.ndarray'> |
-        +-------+-------------------------+
-        | cupy  | <class 'cupy.ndarray'>  |
-        +-------+-------------------------+
-        | torch | <class 'torch.Tensor'>  |
-        +-------+-------------------------+
-
+    
+        +-------------------------+-------------------------+
+        | lib                     | cls                     |
+        +=========================+=========================+
+        | numpy or autograd.numpy | <class 'numpy.ndarray'> |
+        +-------------------------+-------------------------+
+        | cupy                    | <class 'cupy.ndarray'>  |
+        +-------------------------+-------------------------+
+        | torch                   | <class 'torch.Tensor'>  |
+        +-------------------------+-------------------------+
+    
     Data type mapping attributes
     ----------------------------
     
     str_to_lib_dtypes : dict
         Mapping data types in standardized str format -> lib dependent
         data types (see above).
-
+    
     lib_to_str_dtypes : dict
         Invert of the str_to_lib_dtypes mapping (lib dependent data
         types -> data types in standardized str format).
-
+    
     mapping_to_complex_dtypes : dict 
         Mapping from data type in standardized str format -> complex
         data type in standardized str format (see above).
-
+    
     Other attributes (library-dependent methods)
     --------------------------------------------
-
+    
     An instance ``backend`` with class ``pyepri.backends.Backend``
     remaps library dependent methods to basically the same methods
     coming from ``backend.lib`` but with standardized usage
@@ -390,7 +406,7 @@ class Backend:
     A mini documentation is provided for each standardized method and
     can be displayed using the ``help()`` function, as illustrated
     below.
-
+    
     >>> import pyepri.backends as backends
     >>> backend = backends.create_numpy_backend()
     >>> help(backend.meshgrid)
@@ -398,7 +414,7 @@ class Backend:
     ...
     ...<lambda> lambda *xi, indexing='xy'
     ...    return numpy.meshgrid(*xi, indexing=indexing)
-
+    
     """
 
     def __init__(self, lib, device):
@@ -407,24 +423,24 @@ class Backend:
         Parameters
         ----------
         
-        lib : str
-            One of {'numpy','cupy','torch'} used to specify which
-            backend library must be mapped.
+        lib : str        
+            One of {'numpy', 'autograd.numpy','cupy','torch'} used to
+            specify which backend library must be mapped.
         
         device : str
             Device identifier, possible values depends on the lib
             parameters, as described below
         
-            +-------+------------------------------------+
-            | lib   | possible values for device         |
-            +=======+====================================+
-            | numpy | ``'cpu'``                          |
-            +-------+------------------------------------+
-            | cupy  | ``'cuda'``                         |
-            +-------+------------------------------------+
-            | torch | ``'cuda'`` or ``'cuda:X'``         |
-            |       | (where X = available device index) |
-            +-------+------------------------------------+
+            +-------------------------+------------------------------------+
+            | lib                     | possible values for device         |
+            +=========================+====================================+
+            | numpy or autograd.numpy | ``'cpu'``                          |
+            +-------------------------+------------------------------------+
+            | cupy                    | ``'cuda'``                         |
+            +-------------------------+------------------------------------+
+            | torch                   | ``'cuda'`` or ``'cuda:X'``         |
+            |                         | (where X = available device index) |
+            +-------------------------+------------------------------------+
         
         Returns 
         -------
@@ -440,53 +456,53 @@ class Backend:
         """
         
         # check lib input validity
-        if not hasattr(lib, '__name__') or lib.__name__ not in ['numpy','cupy','torch'] :
-            raise ValueError("lib must be one of {numpy, cupy, torch}")
+        if not hasattr(lib, '__name__') or lib.__name__ not in ['numpy', 'autograd.numpy', 'cupy', 'torch'] :
+            raise ValueError("lib must be one of {numpy, autograd.numpy, cupy, torch}")
         
         # set contextual attibutes
         self.lib = lib
-        if 'numpy' == lib.__name__:
+        if self.lib.__name__ in ('numpy', 'autograd.numpy'):
             self.device = 'cpu'
-            self.cls = lib.ndarray
-        elif 'torch' == lib.__name__:
+            self.cls = self.lib.ndarray
+        elif 'torch' == self.lib.__name__:
             self.device = device
-            self.cls = lib.Tensor
+            self.cls = self.lib.Tensor
         else:
             self.device = 'cuda'
-            self.cls = lib.ndarray
-
+            self.cls = self.lib.ndarray
+        
         # add backend compliance verification method
         self.is_backend_compliant = lambda *args : all([isinstance(arg, self.cls) for arg in args])
-
+        
         # set mapping str data type -> lib data type
-        if lib.__name__ in ['numpy','cupy']: # lib = numpy or cupy
+        if lib.__name__ in ['numpy', 'autograd.numpy', 'cupy']: # lib = numpy, autograd.numpy or cupy
             
             self.str_to_lib_dtypes = {
-                'int8'      : lib.dtype('int8'),
-                'int16'      : lib.dtype('int16'),
-                'int32'      : lib.dtype('int32'),
-                'int64'      : lib.dtype('int64'),
-                'float32'    : lib.dtype('float32'),
-                'float64'    : lib.dtype('float64'),
-                'complex64'  : lib.dtype('complex64'),
-                'complex128' : lib.dtype('complex128'),
+                'int8'       : self.lib.dtype('int8'),
+                'int16'      : self.lib.dtype('int16'),
+                'int32'      : self.lib.dtype('int32'),
+                'int64'      : self.lib.dtype('int64'),
+                'float32'    : self.lib.dtype('float32'),
+                'float64'    : self.lib.dtype('float64'),
+                'complex64'  : self.lib.dtype('complex64'),
+                'complex128' : self.lib.dtype('complex128'),
                 None         : None,
             }
         
         else: # lib = torch
             
             self.str_to_lib_dtypes = {
-                'float32'    : lib.float32,
-                'float64'    : lib.float64,
-                'int8'       : lib.int8,
-                'int16'      : lib.int16,
-                'int32'      : lib.int32,
-                'int64'      : lib.int64,
-                'complex64'  : lib.complex64,
-                'complex128' : lib.complex128,
+                'float32'    : self.lib.float32,
+                'float64'    : self.lib.float64,
+                'int8'       : self.lib.int8,
+                'int16'      : self.lib.int16,
+                'int32'      : self.lib.int32,
+                'int64'      : self.lib.int64,
+                'complex64'  : self.lib.complex64,
+                'complex128' : self.lib.complex128,
                 None         : None,
             }
-
+        
         # mapping to complex datatype (non invertible mapping)
         self.mapping_to_complex_dtypes = {
             'int8'       : None,
@@ -498,30 +514,31 @@ class Backend:
             'float64'    : 'complex128',
             'complex128' : 'complex128',
         }
-
+        
         # set invert mapping : lib data type -> str data type
         self.lib_to_str_dtypes = {value: key for key, value in self.str_to_lib_dtypes.items()}
         
         # set backend's methods that are common to all lib
-        self.sqrt = lib.sqrt
-        self.sin = lib.sin
-        self.cos = lib.cos
-        self.arccos = lib.arccos
-        self.arctan2 = lib.arctan2
-        self.real = lib.real
-        self.argwhere = lib.argwhere
-        self.abs = lib.abs
-        self.tile = lib.tile
-        self.moveaxis = lib.moveaxis
-        self.unique = lib.unique
-        self.tile = lib.tile
-        self.meshgrid = lambda *xi, indexing='xy' : lib.meshgrid(*xi, indexing=indexing)
-        self.exp = lambda arr, out=None : lib.exp(arr, out=out)
-
+        self.sqrt = self.lib.sqrt
+        self.sin = self.lib.sin
+        self.cos = self.lib.cos
+        self.arccos = self.lib.arccos
+        self.arctan2 = self.lib.arctan2
+        self.real = self.lib.real
+        self.imag = self.lib.imag
+        self.argwhere = self.lib.argwhere
+        self.abs = self.lib.abs
+        self.tile = self.lib.tile
+        self.moveaxis = self.lib.moveaxis
+        self.unique = self.lib.unique
+        self.tile = self.lib.tile
+        self.meshgrid = lambda *xi, indexing='xy' : self.lib.meshgrid(*xi, indexing=indexing)
+        self.exp = lambda arr, out=None : self.lib.exp(arr, out=out)
+        
         # set minimal doc for the above defined lambda functions
-        self.meshgrid.__doc__ = "return " + lib.__name__ + ".meshgrid(*xi, indexing=indexing)\n"
-        self.exp.__doc__ = "return " + lib.__name__ + ".exp(arr, out=out)"
-
+        self.meshgrid.__doc__ = "return " + self.lib.__name__ + ".meshgrid(*xi, indexing=indexing)\n"
+        self.exp.__doc__ = "return " + self.lib.__name__ + ".exp(arr, out=out)"
+        
         # prepare decorator for temporary fix for FINUFFT issue #596
         def assign_finufft_nthreads(func):
             omp_num_threads = os.environ.get("OMP_NUM_THREADS")
@@ -558,110 +575,110 @@ class Backend:
                 return tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1))
             
         # set lib-dependent backends methods
-        if lib.__name__ in ['numpy', 'cupy']: 
+        if self.lib.__name__ in ['numpy', 'autograd.numpy', 'cupy']: 
             
             # remap lib-dependant methods using lambda functions
-            self.zeros = lambda *size, dtype=None : lib.zeros(*size, dtype=lib.dtype(dtype))
-            self.ones = lambda *size, dtype=None : lib.ones(*size, dtype=lib.dtype(dtype))
-            self.empty = lambda *size, dtype=None : lib.empty(*size, dtype=lib.dtype(dtype))
-            self.fftshift = lambda u, dim=None : lib.fft.fftshift(u, axes=dim)
-            self.ifftshift = lambda u, dim=None : lib.fft.ifftshift(u, axes=dim)
-            self.arange = lambda *args, dtype=None : functools.partial(lib.arange, dtype=dtype)(*args)
-            self.linspace = lambda *args, dtype=None : functools.partial(lib.linspace, dtype=dtype)(*args)
-            self.cumsum = lambda u, dim : lib.cumsum(u, axis=dim)
-            self.randperm = lambda n, dtype='int64' : lib.random.permutation(n).astype(dtype)
-            self.rand = lambda *dims, dtype='float32' : lib.random.rand(*dims).astype(dtype)
-            self.randn = lambda size, dtype='float32', mean=0., std=1. : lib.random.normal(size=size, loc=mean, scale=std).astype(dtype)
+            self.zeros = lambda *size, dtype=None : self.lib.zeros(*size, dtype=lib.dtype(dtype))
+            self.ones = lambda *size, dtype=None : self.lib.ones(*size, dtype=lib.dtype(dtype))
+            self.empty = lambda *size, dtype=None : self.lib.empty(*size, dtype=lib.dtype(dtype))
+            self.fftshift = lambda u, dim=None : self.lib.fft.fftshift(u, axes=dim)
+            self.ifftshift = lambda u, dim=None : self.lib.fft.ifftshift(u, axes=dim)
+            self.arange = lambda *args, dtype=None : functools.partial(self.lib.arange, dtype=dtype)(*args)
+            self.linspace = lambda *args, dtype=None : functools.partial(self.lib.linspace, dtype=dtype)(*args)
+            self.cumsum = lambda u, dim : self.lib.cumsum(u, axis=dim)
+            self.randperm = lambda n, dtype='int64' : self.lib.random.permutation(n).astype(dtype)
+            self.rand = lambda *dims, dtype='float32' : self.lib.random.rand(*dims).astype(dtype)
+            self.randn = lambda size, dtype='float32', mean=0., std=1. : self.lib.random.normal(size=size, loc=mean, scale=std).astype(dtype)
             self.erfc = lambda x, out=None : sp.special.erfc(x, out=out)
-            self.is_complex = lambda x : lib.iscomplexobj(x)
+            self.is_complex = lambda x : self.lib.iscomplexobj(x)
             self.cast = lambda x, dtype : x.astype(self.str_to_lib_dtypes[dtype])
             self.transpose = lambda x : x.transpose()
-            self.copy = lambda x : lib.copy(x)
-            self.maximum = lambda x1, x2 : lib.maximum(x1, x2)
-            self.stack = lambda arrays, dim=0, out=None : lib.stack(arrays, axis=dim, out=out)
-            self.quantile = lambda u, q, dim=None, keepdim=False, out=None, interpolation='linear' : lib.quantile(u, q, axis=dim, keepdims=keepdim, out=out, method=interpolation)
-            self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : lib.frombuffer(buffer, dtype=dtype, count=count, offset=offset)
-            if 'numpy' == lib.__name__:
+            self.copy = lambda x : self.lib.copy(x)
+            self.maximum = lambda x1, x2 : self.lib.maximum(x1, x2)
+            self.stack = lambda arrays, dim=0, out=None : self.lib.stack(arrays, axis=dim, out=out)
+            self.quantile = lambda u, q, dim=None, keepdim=False, out=None, interpolation='linear' : self.lib.quantile(u, q, axis=dim, keepdims=keepdim, out=out, method=interpolation)
+            self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : self.lib.frombuffer(buffer, dtype=dtype, count=count, offset=offset)
+            if self.lib.__name__ in ('numpy', 'autograd.numpy'):
                 self.to_numpy = lambda x : x
                 self.from_numpy = lambda x : x
             else :
-                self.to_numpy = lambda x : lib.asnumpy(x)
-                self.from_numpy = lambda x : lib.asarray(x)
-
+                self.to_numpy = lambda x : self.lib.asnumpy(x)
+                self.from_numpy = lambda x : self.lib.asarray(x)
+            
             # set minimal doc for the above defined lambda functions
-            self.zeros.__doc__ = "return " + lib.__name__ + ".zeros(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
-            self.ones.__doc__ = "return " + lib.__name__ + ".ones(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
-            self.empty.__doc__ = "return " + lib.__name__ + ".empty(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
-            self.fftshift.__doc__ = "return " + lib.__name__ + ".fft.fftshift(u, axes=dim)"
-            self.ifftshift.__doc__ = "return " + lib.__name__ + ".fft.ifftshift(u, axes=dim)"
-            self.arange.__doc__ = "return functools.partial(" + lib.__name__ + ".arange, dtype=dtype)(*args)"
-            self.linspace.__doc__ = "return functools.partial(" + lib.__name__ + ".linspace, dtype=dtype)(*args)"
-            self.cumsum.__doc__ = "return " + lib.__name__ + ".cumsum(u, axis=dim)"
-            self.rand.__doc__ = "return " + lib.__name__ + ".random.rand(*dims).astype(dtype)"
-            self.randn.__doc__ = "return " + lib.__name__ + ".random.normal(size=size, loc=mean, scale=std).astype(dtype)"
-            self.randperm.__doc__ = "return " + lib.__name__ + ".random.permutation(n).astype(dtype)"
+            self.zeros.__doc__ = "return " + self.lib.__name__ + ".zeros(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
+            self.ones.__doc__ = "return " + self.lib.__name__ + ".ones(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
+            self.empty.__doc__ = "return " + self.lib.__name__ + ".empty(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
+            self.fftshift.__doc__ = "return " + self.lib.__name__ + ".fft.fftshift(u, axes=dim)"
+            self.ifftshift.__doc__ = "return " + self.lib.__name__ + ".fft.ifftshift(u, axes=dim)"
+            self.arange.__doc__ = "return functools.partial(" + self.lib.__name__ + ".arange, dtype=dtype)(*args)"
+            self.linspace.__doc__ = "return functools.partial(" + self.lib.__name__ + ".linspace, dtype=dtype)(*args)"
+            self.cumsum.__doc__ = "return " + self.lib.__name__ + ".cumsum(u, axis=dim)"
+            self.rand.__doc__ = "return " + self.lib.__name__ + ".random.rand(*dims).astype(dtype)"
+            self.randn.__doc__ = "return " + self.lib.__name__ + ".random.normal(size=size, loc=mean, scale=std).astype(dtype)"
+            self.randperm.__doc__ = "return " + self.lib.__name__ + ".random.permutation(n).astype(dtype)"
             self.transpose.__doc__ = "return x.transpose()"
-            self.copy.__doc__ = "return " + lib.__name__ + ".copy(x)"
-            self.maximum.__doc__ = "return " + lib.__name__ + ".maximum(x1, x2)"
+            self.copy.__doc__ = "return " + self.lib.__name__ + ".copy(x)"
+            self.maximum.__doc__ = "return " + self.lib.__name__ + ".maximum(x1, x2)"
             self.erfc.__doc__ = "return scipy.special.erfc(x, out=out)"
-            self.is_complex.__doc__ = "return" + lib.__name__ + ".iscomplexobj(x)"
-            self.to_numpy.__doc__ = "return " + ("x" if 'numpy' == lib.__name__ else "cupy.asnumpy(x)")
-            self.from_numpy.__doc__ = "return " + ("x" if 'numpy' == lib.__name__ else "cupy.asarray(x)")
+            self.is_complex.__doc__ = "return" + self.lib.__name__ + ".iscomplexobj(x)"
+            self.to_numpy.__doc__ = "return " + ("x" if 'numpy' == self.lib.__name__ else "cupy.asnumpy(x)")
+            self.from_numpy.__doc__ = "return " + ("x" if 'numpy' == self.lib.__name__ else "cupy.asarray(x)")
             self.is_backend_compliant.__doc__ = (
-                "return all([isinstance(arg, " + lib.__name__ + ".ndarray) for arg in args])"
+                "return all([isinstance(arg, " + self.lib.__name__ + ".ndarray) for arg in args])"
             )
             self.cast.__doc__ = (
                 "return x.astype(self.str_to_lib_dtypes[dtype]), where `self` denotes the \n"
                 "backends.Backend class instance from wich this lambda function belongs to."
             )
-            self.stack.__doc__ = "return " + lib.__name__ + ".stack(arrays, axis=dim, out=out)"
-            self.quantile.__doc__ = "return " + lib.__name__ + ".quantile(u, q, axis=dim, keepdims=keepdim, out=out, method=interpolation)"
-            self.frombuffer.__doc__ = "return " + lib.__name__ + ".frombuffer(buffer, dtype=" + lib.__name__ + ".dtype(dtype), count=count, offset=offset)"
+            self.stack.__doc__ = "return " + self.lib.__name__ + ".stack(arrays, axis=dim, out=out)"
+            self.quantile.__doc__ = "return " + self.lib.__name__ + ".quantile(u, q, axis=dim, keepdims=keepdim, out=out, method=interpolation)"
+            self.frombuffer.__doc__ = "return " + self.lib.__name__ + ".frombuffer(buffer, dtype=" + self.lib.__name__ + ".dtype(dtype), count=count, offset=offset)"
             
             # deal with FFT support
-            self.rfft = lambda u, n=None, dim=-1, norm=None : lib.fft.rfft(u, n=n, axis=dim, norm=norm)
-            self.irfft = lambda u, n=None, dim=-1, norm=None : lib.fft.irfft(u, n=n, axis=dim, norm=norm)
-            self.fft = lambda u, n=None, dim=-1, norm=None : lib.fft.fft(u, n=n, axis=dim, norm=norm)
-            self.ifft = lambda u, n=None, dim=-1, norm=None : lib.fft.ifft(u, n=n, axis=dim, norm=norm)
-            self.rfft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.rfft2(u, s=s, axes=dim, norm=norm)
-            self.irfft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.irfft2(u, s=s, axes=dim, norm=norm)
-            self.fft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.fft2(u, s=s, axes=dim, norm=norm)
-            self.ifft2 = lambda u, s=None, dim=(-2, -1), norm=None : lib.fft.ifft2(u, s=s, axes=dim, norm=norm)
-            self.rfftn = lambda u, s=None, dim=None, norm=None : lib.fft.rfftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
-            self.irfftn = lambda u, s=None, dim=None, norm=None : lib.fft.irfftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
-            self.fftn = lambda u, s=None, dim=None, norm=None : lib.fft.fftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
-            self.ifftn = lambda u, s=None, dim=None, norm=None : lib.fft.ifftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
-            self.rfft.__doc__ = "return " + lib.__name__ + ".fft.rfft(u, n=n, axis=dim, norm=norm)"
-            self.irfft.__doc__ = "return " + lib.__name__ + ".fft.irfft(u, n=n, axis=dim, norm=norm)"
-            self.fft.__doc__ = "return " + lib.__name__ + ".fft.fft(u, n=n, axis=dim, norm=norm)"
-            self.ifft.__doc__ = "return " + lib.__name__ + ".fft.ifft(u, n=n, axis=dim, norm=norm)"
-            self.rfft2.__doc__ = "return " + lib.__name__ + ".fft.rfft2(u, n=n, axes=dim, norm=norm)"
-            self.irfft2.__doc__ = "return " + lib.__name__ + ".fft.irfft2(u, n=n, axes=dim, norm=norm)"
-            self.fft2.__doc__ = "return " + lib.__name__ + ".fft.fft2(u, n=n, axes=dim, norm=norm)"
-            self.ifft2.__doc__ = "return " + lib.__name__ + ".fft.ifft2(u, n=n, axes=dim, norm=norm)"
+            self.rfft = lambda u, n=None, dim=-1, norm=None : self.lib.fft.rfft(u, n=n, axis=dim, norm=norm)
+            self.irfft = lambda u, n=None, dim=-1, norm=None : self.lib.fft.irfft(u, n=n, axis=dim, norm=norm)
+            self.fft = lambda u, n=None, dim=-1, norm=None : self.lib.fft.fft(u, n=n, axis=dim, norm=norm)
+            self.ifft = lambda u, n=None, dim=-1, norm=None : self.lib.fft.ifft(u, n=n, axis=dim, norm=norm)
+            self.rfft2 = lambda u, s=None, dim=(-2, -1), norm=None : self.lib.fft.rfft2(u, s=s, axes=dim, norm=norm)
+            self.irfft2 = lambda u, s=None, dim=(-2, -1), norm=None : self.lib.fft.irfft2(u, s=s, axes=dim, norm=norm)
+            self.fft2 = lambda u, s=None, dim=(-2, -1), norm=None : self.lib.fft.fft2(u, s=s, axes=dim, norm=norm)
+            self.ifft2 = lambda u, s=None, dim=(-2, -1), norm=None : self.lib.fft.ifft2(u, s=s, axes=dim, norm=norm)
+            self.rfftn = lambda u, s=None, dim=None, norm=None : self.lib.fft.rfftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
+            self.irfftn = lambda u, s=None, dim=None, norm=None : self.lib.fft.irfftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
+            self.fftn = lambda u, s=None, dim=None, norm=None : self.lib.fft.fftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
+            self.ifftn = lambda u, s=None, dim=None, norm=None : self.lib.fft.ifftn(u, s=s, axes=dim if dim is not None else set_fftn_dim(u, s), norm=norm)
+            self.rfft.__doc__ = "return " + self.lib.__name__ + ".fft.rfft(u, n=n, axis=dim, norm=norm)"
+            self.irfft.__doc__ = "return " + self.lib.__name__ + ".fft.irfft(u, n=n, axis=dim, norm=norm)"
+            self.fft.__doc__ = "return " + self.lib.__name__ + ".fft.fft(u, n=n, axis=dim, norm=norm)"
+            self.ifft.__doc__ = "return " + self.lib.__name__ + ".fft.ifft(u, n=n, axis=dim, norm=norm)"
+            self.rfft2.__doc__ = "return " + self.lib.__name__ + ".fft.rfft2(u, n=n, axes=dim, norm=norm)"
+            self.irfft2.__doc__ = "return " + self.lib.__name__ + ".fft.irfft2(u, n=n, axes=dim, norm=norm)"
+            self.fft2.__doc__ = "return " + self.lib.__name__ + ".fft.fft2(u, n=n, axes=dim, norm=norm)"
+            self.ifft2.__doc__ = "return " + self.lib.__name__ + ".fft.ifft2(u, n=n, axes=dim, norm=norm)"
             self.rfftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.rfftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
+                "return " + self.lib.__name__ + ".fft.rfftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
             )
             self.irfftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.irfftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
+                "return " + self.lib.__name__ + ".fft.irfftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
             )
             self.fftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.fftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
+                "return " + self.lib.__name__ + ".fft.fftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1)) if dim is None and s is not None\n"                
             )
             self.ifftn.__doc__ = (
-                "return " + lib.__name__ + ".fft.ifftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
+                "return " + self.lib.__name__ + ".fft.ifftn(u, s=s, axes=g(u, s, dim), norm=norm)\n"
                 "where\n"
                 "+ g(u, s, dim) = dim if dim is not None\n"
                 "+ g(u, s, dim) = tuple(k for k in range(u.ndim)) if dim is None and s is None\n"
@@ -670,7 +687,7 @@ class Backend:
             
             # nufft support (use finufft for CPU device and cufinufft
             # for GPU device)
-            if lib.__name__ == "numpy":
+            if self.lib.__name__ in ("numpy", "autograd.numpy"):
                 import finufft
                 self.nufft2d = assign_finufft_nthreads(finufft.nufft2d2)
                 self.nufft3d = assign_finufft_nthreads(finufft.nufft3d2)
@@ -688,48 +705,48 @@ class Backend:
                 self.nufft_plan = cufinufft.Plan
                 self.nufft_setpts = lambda plan, *pts : plan.setpts(*pts)
                 self.nufft_execute = lambda plan, arr, out=None : plan.execute(arr, out=out)
-                        
+        
         else: # lib == torch
             
             # remap some lib-dependant methods using lambda functions
-            self.zeros = lambda *size, dtype=None : lib.zeros(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
-            self.ones = lambda *size, dtype=None : lib.ones(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
-            self.empty = lambda *size, dtype=None : lib.empty(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
-            self.arange = lambda *args, dtype=None : functools.partial(lib.arange, dtype=self.str_to_lib_dtypes[dtype], device=device)(*args)
-            self.linspace = lambda *args, dtype=None : functools.partial(lib.linspace, dtype=self.str_to_lib_dtypes[dtype], device=device)(*args)
-            self.rand = lambda *dims, dtype='float32' : lib.rand(*dims, dtype=self.str_to_lib_dtypes[dtype], device=device)
-            self.randperm = lambda n, dtype='int64' : lib.randperm(n, dtype=self.str_to_lib_dtypes[dtype], device=device)
-            self.randn = lambda *size, dtype='float32', mean=0., std=1. : mean + std * lib.randn(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
-            self.erfc = lambda x, out=None : lib.erfc(x, out=out)
+            self.zeros = lambda *size, dtype=None : self.lib.zeros(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
+            self.ones = lambda *size, dtype=None : self.lib.ones(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
+            self.empty = lambda *size, dtype=None : self.lib.empty(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
+            self.arange = lambda *args, dtype=None : functools.partial(self.lib.arange, dtype=self.str_to_lib_dtypes[dtype], device=device)(*args)
+            self.linspace = lambda *args, dtype=None : functools.partial(self.lib.linspace, dtype=self.str_to_lib_dtypes[dtype], device=device)(*args)
+            self.rand = lambda *dims, dtype='float32' : self.lib.rand(*dims, dtype=self.str_to_lib_dtypes[dtype], device=device)
+            self.randperm = lambda n, dtype='int64' : self.lib.randperm(n, dtype=self.str_to_lib_dtypes[dtype], device=device)
+            self.randn = lambda *size, dtype='float32', mean=0., std=1. : mean + std * self.lib.randn(*size, dtype=self.str_to_lib_dtypes[dtype], device=device)
+            self.erfc = lambda x, out=None : self.lib.erfc(x, out=out)
             self.is_complex = lambda x : x.is_complex()
             self.to_numpy = lambda x : x.detach().cpu().numpy()
-            self.from_numpy = lambda x : lib.from_numpy(x).to(device, copy=True) # conflict between pytorch and numpy 2.0.0
+            self.from_numpy = lambda x : self.lib.from_numpy(x).to(device, copy=True) # conflict between pytorch and numpy 2.0.0
             #self.from_numpy = lambda x : lib.Tensor(x).to(device, copy=True, dtype=self.str_to_lib_dtypes[str(x.dtype)]) # need explicit type
             self.cast = lambda x, dtype : x.type(self.str_to_lib_dtypes[dtype])
             self.transpose = lambda x : x.moveaxis((0,1),(1,0))
-            self.copy = lambda x : lib.clone(x).detach()
-            self.maximum = lambda x1, x2 : lib.maximum(lib.as_tensor(x1), lib.as_tensor(x2))
-            self.stack = lambda arrays, dim=0, out=None : lib.stack(arrays, dim=dim, out=out)
-            self.quantile = lambda u, q, dim=None, keepdim=False, out=None, interpolation='linear' : lib.quantile(u, q, dim=dim, keepdim=keepdim, out=out, interpolation=interpolation)
-            self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : lib.frombuffer(buffer, dtype=self.str_to_lib_dtypes[dtype], count=count, offset=offset)
+            self.copy = lambda x : self.lib.clone(x).detach()
+            self.maximum = lambda x1, x2 : self.lib.maximum(lib.as_tensor(x1), lib.as_tensor(x2))
+            self.stack = lambda arrays, dim=0, out=None : self.lib.stack(arrays, dim=dim, out=out)
+            self.quantile = lambda u, q, dim=None, keepdim=False, out=None, interpolation='linear' : self.lib.quantile(u, q, dim=dim, keepdim=keepdim, out=out, interpolation=interpolation)
+            self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : self.lib.frombuffer(buffer, dtype=self.str_to_lib_dtypes[dtype], count=count, offset=offset)
             
             # remap some other lib-dependent methods using direct
             # mappings
-            self.rfft = lib.fft.rfft
-            self.irfft = lib.fft.irfft
-            self.fft = lib.fft.fft
-            self.ifft = lib.fft.ifft
-            self.rfft2 = lib.fft.rfft2
-            self.irfft2 = lib.fft.irfft2
-            self.fft2 = lib.fft.fft2
-            self.ifft2 = lib.fft.ifft2
-            self.rfftn = lib.fft.rfftn
-            self.irfftn = lib.fft.irfftn
-            self.fftn = lib.fft.fftn
-            self.ifftn = lib.fft.ifftn
-            self.fftshift = lib.fft.fftshift
-            self.ifftshift = lib.fft.ifftshift
-            self.cumsum = lib.cumsum
+            self.rfft = self.lib.fft.rfft
+            self.irfft = self.lib.fft.irfft
+            self.fft = self.lib.fft.fft
+            self.ifft = self.lib.fft.ifft
+            self.rfft2 = self.lib.fft.rfft2
+            self.irfft2 = self.lib.fft.irfft2
+            self.fft2 = self.lib.fft.fft2
+            self.ifft2 = self.lib.fft.ifft2
+            self.rfftn = self.lib.fft.rfftn
+            self.irfftn = self.lib.fft.irfftn
+            self.fftn = self.lib.fft.fftn
+            self.ifftn = self.lib.fft.ifftn
+            self.fftshift = self.lib.fft.fftshift
+            self.ifftshift = self.lib.fft.ifftshift
+            self.cumsum = self.lib.cumsum
             
             # set minimal doc for the above defined lambda functions
             self.zeros.__doc__ = (
@@ -777,9 +794,9 @@ class Backend:
                 "class instance from wich this lambda function belongs to."
             )
             self.transpose.__doc__ = "return x.moveaxis((0,1),(1,0))"
-            self.copy.__doc__ = "return "+ lib.__name__ + ".clone(x).detach()"
-            self.maximum.__doc__ = "return "+ lib.__name__ + ".maximum(" + lib.__name__ + ".as_tensor(x1), " + lib.__name__ + ".as_tensor(x2))"
-            self.stack.__doc__ = "return " + lib.__name__ + ".stack(arrays, dim=dim, out=out)"
+            self.copy.__doc__ = "return "+ self.lib.__name__ + ".clone(x).detach()"
+            self.maximum.__doc__ = "return "+ self.lib.__name__ + ".maximum(" + self.lib.__name__ + ".as_tensor(x1), " + self.lib.__name__ + ".as_tensor(x2))"
+            self.stack.__doc__ = "return " + self.lib.__name__ + ".stack(arrays, dim=dim, out=out)"
             self.erfc.__doc__ = "return torch.erfc(x, out=out)"
             self.is_complex.__doc__ = "return x.is_complex()"
             self.to_numpy.__doc__ = "return x.detach().cpu().numpy()"
@@ -790,9 +807,9 @@ class Backend:
             #    "function belongs to."
             #)
             self.is_backend_compliant.__doc__ = "return all([isinstance(arg, torch.Tensor) for arg in args])"
-            self.quantile.__doc__ = "return "+ lib.__name__ + ".quantile(u, q, dim=dim, keepdim=keepdim, out=out, interpolation=interpolation)"
+            self.quantile.__doc__ = "return "+ self.lib.__name__ + ".quantile(u, q, dim=dim, keepdim=keepdim, out=out, interpolation=interpolation)"
             self.frombuffer.__doc__ = (
-                "return " + lib.__name__ + ".frombuffer(buffer, dtype=self.str_to_lib_dtypes[dtype], count=count, offset=offset)\n"
+                "return " + self.lib.__name__ + ".frombuffer(buffer, dtype=self.str_to_lib_dtypes[dtype], count=count, offset=offset)\n"
                 "where `self` denotes the backends.Backend class instance from wich this lambda\n"
                 "function belongs to."
             )
@@ -810,12 +827,12 @@ class Backend:
                     '''Decorator to cast torch.Tensor inputs of func into numpy.ndarray
                     and the numpy.ndarray output of func into
                     torch.Tensor.
-
+                    
                     '''
                     def numpyfied_func(*args, **kwargs):
-                        args2 = (a.numpy() if isinstance(a, lib.Tensor) else a for a in args)
-                        kwargs2 = {key: val.numpy() if isinstance(val, lib.Tensor) else val for key, val in kwargs.items()}
-                        return lib.from_numpy(func(*args2, **kwargs2))
+                        args2 = (a.numpy() if isinstance(a, self.lib.Tensor) else a for a in args)
+                        kwargs2 = {key: val.numpy() if isinstance(val, self.lib.Tensor) else val for key, val in kwargs.items()}
+                        return self.lib.from_numpy(func(*args2, **kwargs2))
                     return numpyfied_func
                 
                 # decorate finufft functions 
@@ -825,7 +842,7 @@ class Backend:
                 self.nufft3d_adjoint = numpyfy(assign_finufft_nthreads(finufft.nufft3d1))
                 self.nufft_plan = finufft.Plan
                 self.nufft_setpts = lambda plan, *pts : plan.setpts(*[point.numpy() for point in pts])
-                self.nufft_execute = lambda plan, arr, out=None : lib.from_numpy(plan.execute(arr.numpy(), out=(out if out is None else out.numpy())))
+                self.nufft_execute = lambda plan, arr, out=None : self.lib.from_numpy(plan.execute(arr.numpy(), out=(out if out is None else out.numpy())))
                 #self.nufft_execute = lambda plan, arr : numpyfy(plan.execute)(arr)
                 
                 # add short documentation

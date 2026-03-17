@@ -6,9 +6,12 @@
 
 ### Code
 	
+- added autograd.numpy backend support in
+  [backends.py](src/pyepri/backends.py) ([#31](../../pull/31))
+  
 - removed ``plt.ion()`` in [displayers.py](src/pyepri/displayers.py)
   ([#30](../../pull/30))
-   
+  
 ### Documentation
 
 - made the display persistent when the example codes are executed as
