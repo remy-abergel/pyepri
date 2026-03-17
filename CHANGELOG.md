@@ -6,9 +6,13 @@
 
 ### Code
 	
+- fixed lib remapping in [backends.py](src/pyepri/backends.py) to add
+  flexibility for manual lib update (eg. numpy -> autograd.numpy
+  remaping) ([#31](../../pull/31))
+
 - removed ``plt.ion()`` in [displayers.py](src/pyepri/displayers.py)
   ([#30](../../pull/30))
-   
+  
 ### Documentation
 
 - made the display persistent when the example codes are executed as
