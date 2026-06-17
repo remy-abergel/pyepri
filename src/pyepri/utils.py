@@ -624,7 +624,7 @@ def powerit(x0, A, backend=None, tol=1e-7, verbose=False, nitermax=None, notest=
         else:
             ndim = x0[0].ndim
             dtype = x0[0].dtype
-            checks._check_seq_(t=backend.cls, dtype=dtype, ndim=ndim, x0=x0)
+            checks._check_seq_(t=backend.cls, dtype=dtype, ndim=ndim, allow_array_like=True, x0=x0)
     
     # prepare loop iterations
     x = copy(x0)

@@ -201,13 +201,13 @@ def _check_backend_(backend, **kwargs):
     
     return True
 
-def _check_seq_(t=None, dtype=None, n=None, ndim=None, **kwargs):
+def _check_seq_(t=None, dtype=None, n=None, ndim=None, allow_array_like=False, **kwargs):
     """Perform consistency checks for sequence kwargs.
     
     Parameters
     ----------
     
-    t : <class 'type'>, optional
+    t : <class 'type'>, optional    
         if given, check that each non None item in ``kwargs`` is a
         sequence of elements with type `t`.
     
@@ -224,51 +224,79 @@ def _check_seq_(t=None, dtype=None, n=None, ndim=None, **kwargs):
         array_like and we check that those array_like elements have a
         number of dimensions equal to ``ndim``.
     
+    allow_array_like: boolean,
+        when set to True, we allow kwargs to be array_like (instead of
+        sequences) and perform the tests described above as if they
+        were sequences.
+    
     Return
     ------
-
+    
     no_error_flag : bool
         True if the test is successful (otherwise an exception is
         raised).
-
+    
     """
     for key, seq in kwargs.items():
         
         if seq is not None:
-        
-            # check seq of seq & flatten
+            
+            # check wether seq is a sequence or an array_like
+            array_like = hasattr(seq, "shape") and hasattr(seq, "__getitem__")
+            
+            # check seq
             if not isinstance(seq, (tuple, list)):
-                raise RuntimeError(
-                    "Parameter `%s` must be a sequence (= tuple or list)" % key
-                )
+                if not allow_array_like:
+                    raise RuntimeError(
+                        f"Parameter `{key}` must be a sequence (= tuple or list)"
+                    )
+                elif not array_like:
+                    raise RuntimeError(
+                        f"Parameter `{key}` must be a sequence (= tuple or list) or an array_like"
+                    )
             
             # check n (if given)
             if n is not None and n != len(seq):
                 raise RuntimeError(            
-                    "The sequence parameter `%s` must contain %d elements (len(%s) == %d)" % (key, n, key, n)
+                    f"Parameter `{key}` must have len equal to {n}"
                 )
             
             # check items type (if given)
-            if t is not None and not all([isinstance(item, t) for item in seq]):
-                raise RuntimeError(
-                    "All elements in `%s` must have type %s" % (key, t)
-                )
+            if t is not None:
+                if array_like and not isinstance(seq, t):                   
+                    raise RuntimeError(
+                        f"Parameter `{key}` must have type {t}"
+                    )
+                elif not all([isinstance(item, t) for item in seq]):
+                    raise RuntimeError(
+                        f"All elements in `{key}` must have type {t}"
+                    )
             
             # check items dtype (if given)
-            if dtype is not None and not all([dtype == item.dtype for item in seq]):
-                raise RuntimeError(
-                    "All elements in `%s` must have dtype %s" % (key, dtype)
-                )
-
+            if dtype is not None:
+                if array_like and dtype != seq.dtype:
+                    raise RuntimeError(
+                        f"Parameter `{key}` must have dtype {dtype}"
+                    )
+                elif not all([dtype == item.dtype for item in seq]):
+                    raise RuntimeError(
+                        f"All elements in `{key}` must have dtype {dtype}"
+                    )
+            
             # check ndim (if given)
-            if ndim is not None and not all([ndim == item.ndim for item in seq]):
-                raise RuntimeError(
-                    "All elements in `%s` must have a number of dimensions equal to %d" % ndim
-                )
-        
+            if ndim is not None:
+                if array_like and seq.ndim != ndim + 1:                    
+                    raise RuntimeError(
+                        f"The parameter `{key}` must satisfy {key}.ndim == {ndim + 1}"
+                    )
+                elif not all([ndim == item.ndim for item in seq]):
+                    raise RuntimeError(
+                        f"All elements in `{key}` must have a number of dimensions equal to {ndim}"
+                    )
+    
     return True
 
-def _check_seq_of_seq_(t=None, dtype=None, len0=None, len1=None, len2=None, ndim=None, tlen0=None, **kwargs):
+def _check_seq_of_seq_(t=None, dtype=None, len0=None, len1=None, len2=None, ndim=None, tlen0=None, allow_array_like=False, **kwargs):
     """Perform consistency checks for sequence of sequence kwargs.
     
     Parameters
@@ -289,7 +317,7 @@ def _check_seq_of_seq_(t=None, dtype=None, len0=None, len1=None, len2=None, ndim
     len1 : int, optional 
         if given, check that each non None item in ``kwargs`` is a
         sequence made of sequence(s) with length `len1`.
-
+    
     len2 : int, optional 
         if given, check that each non None leaf in ``kwargs`` has
         length `len2`.
@@ -297,10 +325,15 @@ def _check_seq_of_seq_(t=None, dtype=None, len0=None, len1=None, len2=None, ndim
     tlen0 : sequence of int, optional
         if given, check that each non None item in ``kwargs`` has
         length in `tlen0`.
-        
+    
     ndim : int, optional
         if given, check that each non None leaf in ``kwargs`` has
         a number of dimensions equal to `ndim`.
+    
+    allow_array_like: boolean,
+        when set to True, we allow kwargs to be array_like (instead of
+        sequences) and perform the tests described above as if they
+        were sequences.
     
     Return
     ------
@@ -313,61 +346,106 @@ def _check_seq_of_seq_(t=None, dtype=None, len0=None, len1=None, len2=None, ndim
     for key, seq in kwargs.items():
         
         if seq is not None:
-        
+            
+            # check wether seq is a sequence of sequences or an array_like
+            array_like = hasattr(seq, "shape") and hasattr(seq, "__getitem__")
+            seqofseq = isinstance(seq, (tuple, list)) and all((isinstance(s, (tuple, list)) for s in seq))
+            
             # check seq of seq & flatten
-            if not isinstance(seq, (tuple, list)) or not all((isinstance(s, (tuple, list)) for s in seq)):
-                raise RuntimeError(
-                    "Parameter `%s` must be a sequence of sequence(s)" % key
-                )
+            if not seqofseq:
+                if not allow_array_like:
+                    raise RuntimeError(
+                        f"Parameter `{key}` must be a sequence of sequence(s)"
+                    )
+                elif not array_like:
+                    raise RuntimeError(
+                        f"Parameter `{key}` must be a sequence of sequence(s) or an array_like"
+                    )
             
             # check len0 (if given)
             if len0 is not None and len0 != len(seq):
-                raise RuntimeError(            
-                    "The sequence of sequence(s) parameter `%s` must contain %d elements (len(%s) == %d)" % (key, len0, key, len0)
+                raise RuntimeError(
+                    f"Parameter `{key}` must satisfy len({key}) = {len0}"
                 )
             
             # check len1 (if given)
-            if len1 is not None and not all((len1 == len(s) for s in seq)):
-                raise RuntimeError(
-                    "All elements in `%s` must have length %d" % (key, len1)
-                )
+            if len1 is not None:
+                if array_like and not seq.shape[1] == len1:
+                    raise RuntimeError(
+                        f"Parameter `{key}` must satisfy {key}.shape[1] = {len1}"
+                    )
+                elif not all((len1 == len(s) for s in seq)):
+                    raise RuntimeError(
+                        f"All elements in `{key}` must have length {len1}"
+                    )
             
             # check len2 (if given)
-            if len2 is not None and not all((len2 == len(leaf) for subseq in seq for leaf in subseq)):
-                raise RuntimeError(
-                    "All leaf elements in `%s` must have length %d" % (key, len2)
-                )
+            if len2 is not None:
+                if array_like and not seq.shape[2] == len2:
+                    raise RuntimeError(
+                        f"Parameter `{key}` must satisfy {key}.shape[2] = {len2}"
+                    )
+                elif not all((len2 == len(leaf) for subseq in seq for leaf in subseq)):
+                    raise RuntimeError(
+                        f"All leaf elements in `{key}` must have length {len2}"
+                    )
             
             # check tlen0 (if given)
-            if tlen0 is not None and len(seq) not in tlen0:
-                raise RuntimeError(            
-                    "The sequence of sequence(s) parameter `%s` must have length in %s" % (key, tlen0)
-                )
+            if tlen0 is not None:
+                if array_like and seq.shape[0] not in tlen0:
+                    raise RuntimeError(
+                        f"Parameter `{key}` must satisfy {key}.shape[0] in {tlen0}"
+                    )
+                elif len(seq) not in tlen0:
+                    raise RuntimeError(            
+                        f"The sequence of sequence(s) parameter `{key}` must have length in {tlen0}"
+                    )
+            
             # check ndim (if given)
-            if ndim is not None and not all((ndim == leaf.ndim for subseq in seq for leaf in subseq)):
-                raise RuntimeError(
-                    "All leaf elements in `%s` must have a number of dimensions equal to %d" % (key, ndim)
-                )
+            if ndim is not None:
+                if array_like and not seq.ndim == ndim + 2:
+                    print(f"here, ndim={ndim}")
+                    raise RuntimeError(
+                        f"Parameter `{key}` must satisfy {key}.ndim == {ndim + 2}"
+                    )
+                elif not all((ndim == leaf.ndim for subseq in seq for leaf in subseq)):
+                    raise RuntimeError(
+                        f"All leaf elements in `{key}` must have a number of dimensions equal to {ndim}"
+                    )
             
             # check leaves type (if given)
-            if t is not None and not all([isinstance(leaf, t) for subseq in seq for leaf in subseq]):
-                raise RuntimeError(
-                    "All leaf elements in `%s` must have type %s" % (key, t)
-                )
+            if t is not None:
+                if array_like and not isinstance(seq, t):
+                    raise RuntimeError(
+                        f"Parameter `{key}` must have type {t}"
+                    )
+                elif not all([isinstance(leaf, t) for subseq in seq for leaf in subseq]):
+                    raise RuntimeError(
+                        f"All leaf elements in `{key}` must have type {t}"
+                    )
             
             # check leaves dtype (if given)
-            if dtype is not None and not all([dtype == leaf.dtype for subseq in seq for leaf in subseq]):
-                raise RuntimeError(
-                    "All leaf elements in `%s` must have dtype %s" % (key, dtype)
-                )
-        
+            if dtype is not None:
+                if array_like and not seq.dtype == dtype:
+                    raise RuntimeError(
+                        f"Parameter `{key}` must have dtype {dtype}"
+                    )
+                elif not all([dtype == leaf.dtype for subseq in seq for leaf in subseq]):
+                    raise RuntimeError(
+                        f"All leaf elements in `{key}` must have dtype {dtype}"
+                    )
+    
     return True
 
+def _is_array_like_(x):
+    """check wether or not x is an array_like"""
+    return hasattr(x, "shape") and hasattr(x, "__getitem__")
+
 def _max_len_(**kwargs):
-    """Compute max length of all sequence elements in kwargs (return None if no element in ``kwargs`` is a sequence).
+    """Compute max length of all elements in kwargs (return None if no element in ``kwargs`` is neither a sequence or an array_like).
     
     """
-    L = [len(value) if isinstance(value, (tuple, list)) else -1 for key, value in kwargs.items()]
+    L = [len(value) if isinstance(value, (tuple, list)) or _is_array_like_(value) else -1 for key, value in kwargs.items()]
     max_L = max(L)
     out = None if max_L == -1 else max_L
     return out
@@ -429,3 +507,4 @@ def _backend_inference_(**kwargs):
         )
     
     return backend
+

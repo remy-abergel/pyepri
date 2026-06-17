@@ -945,7 +945,7 @@ def _check_nd_inputs_(is_monosrc, backend, y=None, lbda=None, A=None,
     if is_monosrc:
         checks._check_backend_(backend, y=y, init=init, mask=mask)
     else:
-        checks._check_seq_(t=backend.cls, init=init)
+        checks._check_seq_(t=backend.cls, allow_array_like=True, init=init)
     
     # lbda: must be a nonnegative float
     if (lbda is not None) and ((not isinstance(lbda, (float, int))) or (lbda < 0)):
