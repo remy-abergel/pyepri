@@ -26,9 +26,10 @@ def proj2d(u, delta, B, h, fgrad, backend=None, eps=1e-06,
     ----------
     
     u : sequence of array_like (with type `backend.cls`)
-        A sequence with length `K` containing the source images. More
-        precisely, ``u[j]`` must be a 2D array corresponding to the
-        `j-th` source image of the mixture to be projected.
+        A sequence (or array_like) with length `K` containing the
+        source images. More precisely, ``u[j]`` must be a 2D array
+        corresponding to the `j-th` source image of the mixture to be
+        projected.
     
     delta : float
         Pixel size given in a length unit denoted below as
@@ -999,10 +1000,15 @@ def apply_2d_toeplitz_kernels(u, rfft2_phi, backend=None, notest=False):
     Parameters
     ----------
     
-    u : sequence of array_like (with type `backend.cls`)
+    u : sequence of array_like (with type `backend.cls`) OR array_like
         A sequence with length `K` containing the source images. More
         precisely, ``u[j]`` must be a 2D array corresponding to the
         `j-th` source image of the mixture to be projected.
+
+
+        NOTE: When all source images have the same shape (say ``(N1,
+        N2)``), ``u`` can be given as an array_like (instead of a
+        sequence of array_like) with shape ``(K, N1, N2)``.
     
     rfft2_phi : sequence of sequence of complex array_like (with type `backend.cls`)
         Sequence of real input FFT of the 2D cross sources Toeplitz
@@ -1023,9 +1029,13 @@ def apply_2d_toeplitz_kernels(u, rfft2_phi, backend=None, notest=False):
     Return 
     ------
     
-    out : sequence of array_like (with type `backend.cls`) 
+    out : sequence of array_like (with type `backend.cls`) OR array_like
         Sequence of output sources (stored in the same order as in
         ``u``).
+        
+        Note: when ``u`` is given as an array_like, ``out`` is
+        returned as an array_like as well (instead of a sequence of
+        array_like).
     
     
     See also
@@ -1048,7 +1058,10 @@ def apply_2d_toeplitz_kernels(u, rfft2_phi, backend=None, notest=False):
     dtype = backend.lib_to_str_dtypes[u[0].dtype]
     
     # memory allocation
-    out = [backend.zeros(im.shape, dtype=dtype) for im in u]
+    if checks._is_array_like_(u):
+        out = backend.zeros(u.shape, dtype=dtype)
+    else:
+        out = [backend.zeros(im.shape, dtype=dtype) for im in u]
     
     # main loop (store sources real FFTs into a dictionary to avoid
     # unnecessary recomputations)
@@ -2072,10 +2085,14 @@ def apply_3d_toeplitz_kernels(u, rfft3_phi, backend=None, notest=False):
     Parameters
     ----------
     
-    u : sequence of array_like (with type `backend.cls`)
+    u : sequence of array_like (with type `backend.cls`) OR array_like
         A sequence with length `K` containing the source images. More
         precisely, ``u[j]`` must be a 3D array corresponding to the
         `j-th` source image of the mixture to be projected.
+
+        NOTE: When all source images have the same shape (say ``(N1,
+        N2, N3)``), ``u`` can be given as an array_like (instead of a
+        sequence of array_like) with shape ``(K, N1, N2, N3)``.
     
     rfft3_phi : sequence of sequence of complex array_like (with type `backend.cls`)
         Sequence of real input FFT of the 3D cross sources Toeplitz
@@ -2096,10 +2113,13 @@ def apply_3d_toeplitz_kernels(u, rfft3_phi, backend=None, notest=False):
     Return 
     ------
     
-    out : sequence of array_like (with type `backend.cls`) 
+    out : sequence of array_like (with type `backend.cls`) OR array_like
         Sequence of output sources (stored in the same order as in
         ``u``).
-    
+
+        Note: when ``u`` is given as an array_like, ``out`` is
+        returned as an array_like as well (instead of a sequence of
+        array_like).
     
     See also
     --------
@@ -2121,7 +2141,10 @@ def apply_3d_toeplitz_kernels(u, rfft3_phi, backend=None, notest=False):
     dtype = backend.lib_to_str_dtypes[u[0].dtype]
     
     # memory allocation
-    out = [backend.zeros(im.shape, dtype=dtype) for im in u]
+    if checks._is_array_like_(u):
+        out = backend.zeros(u.shape, dtype=dtype)
+    else:
+        out = [backend.zeros(im.shape, dtype=dtype) for im in u]
     
     # main loop (store sources real FFTs into a dictionary to avoid
     # unnecessary recomputations)
@@ -2169,7 +2192,7 @@ def _check_nd_inputs_(ndims, backend, B=None, delta=None, fgrad=None,
     ################
     # start checks #
     ################
-    if B is not None: # every function except apply_2d_toeplitz_kernels
+    if B is not None: # all functions except apply_2d_toeplitz_kernels
                       # and apply_3d_toeplitz_kernels
         
         # retrieve number of magnetic field samples
@@ -2208,20 +2231,23 @@ def _check_nd_inputs_(ndims, backend, B=None, delta=None, fgrad=None,
                 "The array elements in `fgrad` must have %d rows each" % ndims
             )
         
-        # (u, out): sequences made of K array_like with dtype==dtype
+        # (u, out): sequences made of K array_like with dtype==dtype and
+        # ndim==dims OR array_like with same characteristics
         checks._check_seq_(t=backend.cls, dtype=dtype, n=K,
-                           ndim=ndims, u=u, out=out)
+                           ndim=ndims, allow_array_like=True, u=u,
+                           out=out)
         
         # out_shape & src_shape: sequences of sequences of ndim int
         checks._check_seq_of_seq_(t=int, len0=K, len1=ndims,
                                   out_shape=out_shape,
                                   src_shape=src_shape)
-                      
+        
         # check h: (check dtype == dtype, made of L or 1 sequence(s)
         # containing K element each, all leaves have ndim=1 & len =
         # Nb)
         checks._check_seq_of_seq_(t=backend.cls, dtype=dtype, ndim=1,
-                                  tlen0=(1,L), len1=K, len2=Nb)
+                                  tlen0=(1, L), len1=K, len2=Nb,
+                                  allow_array_like=True, h=h)
         
         # check fft_h, fft_h_conj, rfft_h, rfft_h_conj: check dtype ==
         # cdtype, number of elements, & all leaves have dim = 1 & len
@@ -2230,7 +2256,7 @@ def _check_nd_inputs_(ndims, backend, B=None, delta=None, fgrad=None,
                                   tlen0=(1,L), len1=K, len2=Nb,
                                   fft_h=fft_h, fft_h_conj=fft_h_conj)
         checks._check_seq_of_seq_(t=backend.cls, dtype=cdtype, ndim=1,
-                                  tlen0=(1,L), len1=K, len2=1+Nb//2,
+                                  tlen0=(1,L), len1=K, len2=1+(Nb//2),
                                   rfft_h=rfft_h,
                                   rfft_h_conj=rfft_h_conj)
         
@@ -2269,7 +2295,7 @@ def _check_nd_inputs_(ndims, backend, B=None, delta=None, fgrad=None,
                     raise RuntimeError(                    
                         "Inconsistent shape for %d-th element of `proj` (expected shape = (%d, %d))" % (i, Nproj, Nb)
                     )
-
+        
         # check out or out_shape is provided in backproj?d_* functions
         if (fft_proj is not None or rfft_proj is not None) and (out is None and out_shape is None):
             raise RuntimeError(
@@ -2337,9 +2363,9 @@ def _check_nd_inputs_(ndims, backend, B=None, delta=None, fgrad=None,
                     )
         
     else:
-        
-        # check u 
-        checks._check_seq_(t=backend.cls, n=K, ndim=ndims, u=u)
+    
+        # check u
+        checks._check_seq_(t=backend.cls, n=K, ndim=ndims, allow_array_like=True, u=u)
         dtype = u[0].dtype
         str_dtype = backend.lib_to_str_dtypes[dtype]
         str_cdtype = backend.mapping_to_complex_dtypes[str_dtype]
@@ -2350,5 +2376,5 @@ def _check_nd_inputs_(ndims, backend, B=None, delta=None, fgrad=None,
         
         # check rfft3_phi
         checks._check_seq_of_seq_(t=backend.cls, dtype=cdtype, len0=K, len1=K, ndim=3, rfft3_phi=rfft3_phi)
-        
+    
     return True

@@ -5,7 +5,10 @@
 ## Future v1.2.0
 
 ### Code
-	
+
+- allow source images to be passed as array-like objects in
+  [multisrc](src/pyepri/multisrc.py) ([#32](../../pull/32))
+  
 - added autograd.numpy backend support in
   [backends.py](src/pyepri/backends.py) ([#31](../../pull/31))
   
@@ -16,7 +19,7 @@
 
 - made the display persistent when the example codes are executed as
   scripts ([#30](../../pull/30))
-   
+  
 ### Packaging
 
 - added missing ``*.pkl`` and ``*.mat`` dataset in

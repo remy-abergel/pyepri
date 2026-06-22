@@ -1288,8 +1288,9 @@ def _check_inputs_(caller, backend, proj=None, B=None, fgrad=None,
     ##################
     
     # check backend consistency 
-    checks._check_backend_(backend, B=B, init=init, xgrid=xgrid,
-                           ygrid=ygrid, zgrid=zgrid)
+    checks._check_backend_(backend, B=B, xgrid=xgrid, ygrid=ygrid,
+                           zgrid=zgrid, init=None if caller ==
+                           "tv_multisrc" else init)
     
     # retrieve dtype & Nb
     dtype = B.dtype
@@ -1304,6 +1305,13 @@ def _check_inputs_(caller, backend, proj=None, B=None, fgrad=None,
     checks._check_type_(int, Ndisplay=Ndisplay, nitermax=nitermax)
     checks._check_ndim_(1, B=B, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid)
     Nb = len(B)
+
+    # custom check for tv_multisrc initialization
+    if caller == "tv_multisrc" and init is not None:
+        checks._check_seq_(t=backend.cls, dtype=dtype,
+                           n=len(out_shape), ndim=len(out_shape[0]),
+                           allow_array_like=False, init=init)
+
     
     # check lbda > 0 (if not None)
     if lbda is not None and (not isinstance(lbda, (float, int)) or lbda < 0):
@@ -1414,7 +1422,7 @@ def _check_inputs_(caller, backend, proj=None, B=None, fgrad=None,
     elif "tv_multisrc" == caller:
         
         # check outshape and retrieve problem dimensions
-        checks._check_seq_of_seq_(t=int, tlen0=(2, 3), out_shape=out_shape)
+        #checks._check_seq_of_seq_(t=int, tlen0=(2, 3), out_shape=out_shape) # wrong test
         K = len(out_shape)
         dim = len(out_shape[0])
         checks._check_seq_of_seq_(len0=K, len1=dim, out_shape=out_shape)
@@ -1442,11 +1450,12 @@ def _check_inputs_(caller, backend, proj=None, B=None, fgrad=None,
         # containing K element each, all leaves have ndim=1 & len =
         # Nb)
         checks._check_seq_of_seq_(t=backend.cls, dtype=dtype, ndim=1,
-                                  tlen0=(1,L), len1=K, len2=Nb)
+                                  tlen0=(1,L), len1=K, len2=Nb,
+                                  allow_array_like=True, h=h)
         
         # check init
         checks._check_seq_(t=backend.cls, dtype=dtype, n=K, ndim=dim,
-                           init=init)
+                           allow_array_like=True, init=init)
         if init is not None: 
             for j, im in enumerate(init):
                 if im.shape != tuple(out_shape[j]):
