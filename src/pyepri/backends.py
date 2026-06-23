@@ -257,7 +257,7 @@ def create_torch_backend(device):
             "Cannot create torch backend because torch module is not installed.\n"
             "Please install torch and try again."
         ) from e
-
+    
     
     # check device validity
     if not isinstance(device,str) or re.match('cpu$|cuda$|(cuda:[0-9]+)$',device) is None:
@@ -402,7 +402,7 @@ class Backend:
     coming from ``backend.lib`` but with standardized usage
     (e.g. ``backend.meshgrid`` can remap to ``{numpy or cupy or
     torch}.meshgrid`` depending on ``backend.lib``).
-
+    
     A mini documentation is provided for each standardized method and
     can be displayed using the ``help()`` function, as illustrated
     below.
@@ -416,7 +416,7 @@ class Backend:
     ...    return numpy.meshgrid(*xi, indexing=indexing)
     
     """
-
+    
     def __init__(self, lib, device):
         """Backend object constructor from the specified library and device.
         
@@ -430,7 +430,7 @@ class Backend:
         device : str
             Device identifier, possible values depends on the lib
             parameters, as described below
-        
+            
             +-------------------------+------------------------------------+
             | lib                     | possible values for device         |
             +=========================+====================================+
@@ -530,6 +530,7 @@ class Backend:
         self.abs = self.lib.abs
         self.tile = self.lib.tile
         self.moveaxis = self.lib.moveaxis
+        self.movedim = lambda arr, source, dest : self.lib.moveaxis(arr, source, dest)
         self.unique = self.lib.unique
         self.tile = self.lib.tile
         self.meshgrid = lambda *xi, indexing='xy' : self.lib.meshgrid(*xi, indexing=indexing)
@@ -538,6 +539,7 @@ class Backend:
         # set minimal doc for the above defined lambda functions
         self.meshgrid.__doc__ = "return " + self.lib.__name__ + ".meshgrid(*xi, indexing=indexing)\n"
         self.exp.__doc__ = "return " + self.lib.__name__ + ".exp(arr, out=out)"
+        self.movedim.__doc__ = "return " + self.lib.__name__ + ".moveaxis(arr, source, dest)"
         
         # prepare decorator for temporary fix for FINUFFT issue #596
         def assign_finufft_nthreads(func):
@@ -546,7 +548,7 @@ class Backend:
             def assigned_func(*args, **kwargs):
                 return func(*args, nthreads=nthreads, **kwargs) if 'nthreads' not in kwargs.keys() else func(*args, **kwargs)
             return assigned_func
-
+        
         # prepare function to unify default setting for axes/dim inputs of (r)fftn functions
         def set_fftn_dim(u, s):
             """Specify axes/dim along which to apply (i)(r)fftn transformation
@@ -573,7 +575,7 @@ class Backend:
                 return tuple(k for k in range(-u.ndim, 0, 1))
             else: # return the first len(s) dim
                 return tuple(k for k in range(-u.ndim, -u.ndim + len(s), 1))
-            
+        
         # set lib-dependent backends methods
         if self.lib.__name__ in ['numpy', 'autograd.numpy', 'cupy']: 
             
@@ -595,15 +597,33 @@ class Backend:
             self.transpose = lambda x : x.transpose()
             self.copy = lambda x : self.lib.copy(x)
             self.maximum = lambda x1, x2 : self.lib.maximum(x1, x2)
+            self.minimum = lambda x1, x2 : self.lib.minimum(x1, x2)
             self.stack = lambda arrays, dim=0, out=None : self.lib.stack(arrays, axis=dim, out=out)
+            self.unstack = lambda arr, dim=0 : self.lib.unstack(arr, axis=dim)
             self.quantile = lambda u, q, dim=None, keepdim=False, out=None, interpolation='linear' : self.lib.quantile(u, q, axis=dim, keepdims=keepdim, out=out, method=interpolation)
             self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : self.lib.frombuffer(buffer, dtype=dtype, count=count, offset=offset)
+            self.svd = lambda A, full_matrices=True : self.lib.linalg.svd(A, full_matrices=full_matrices)
+            
             if self.lib.__name__ in ('numpy', 'autograd.numpy'):
                 self.to_numpy = lambda x : x
                 self.from_numpy = lambda x : x
             else :
                 self.to_numpy = lambda x : self.lib.asnumpy(x)
                 self.from_numpy = lambda x : self.lib.asarray(x)
+
+            if self.lib.__name__ == 'cupy':
+                self.unstack = lambda arr, dim=0 : tuple(self.lib.moveaxis(arr, dim, 0))
+                self.unstack.__doc__ = "return  tuple(" + self.lib.__name__ + ".moveaxis(arr, axis=dim, 0))"
+            else:
+                self.unstack = lambda arr, dim=0 : self.lib.unstack(arr, axis=dim)
+                self.unstack.__doc__ = "return " + self.lib.__name__ + ".unstack(arr, axis=dim)"
+
+            if self.lib.__name__ == 'autograd.numpy':
+                self.concatenate = lambda arrlist, dim=0, out=None : self.lib.concatenate(arrlist, axis=dim)
+                self.concatenate.__doc__ = "return " + self.lib.__name__ + ".concatenate(arrlist, axis=dim)"
+            else:
+                self.concatenate = lambda arrlist, dim=0, out=None : self.lib.concatenate(arrlist, axis=dim, out=out)
+                self.concatenate.__doc__ = "return " + self.lib.__name__ + ".concatenate(arrlist, axis=dim, out=out)"
             
             # set minimal doc for the above defined lambda functions
             self.zeros.__doc__ = "return " + self.lib.__name__ + ".zeros(*size, dtype=" + lib.__name__ + ".dtype(dtype))"
@@ -620,6 +640,7 @@ class Backend:
             self.transpose.__doc__ = "return x.transpose()"
             self.copy.__doc__ = "return " + self.lib.__name__ + ".copy(x)"
             self.maximum.__doc__ = "return " + self.lib.__name__ + ".maximum(x1, x2)"
+            self.minimum.__doc__ = "return " + self.lib.__name__ + ".minimum(x1, x2)"
             self.erfc.__doc__ = "return scipy.special.erfc(x, out=out)"
             self.is_complex.__doc__ = "return" + self.lib.__name__ + ".iscomplexobj(x)"
             self.to_numpy.__doc__ = "return " + ("x" if 'numpy' == self.lib.__name__ else "cupy.asnumpy(x)")
@@ -634,6 +655,7 @@ class Backend:
             self.stack.__doc__ = "return " + self.lib.__name__ + ".stack(arrays, axis=dim, out=out)"
             self.quantile.__doc__ = "return " + self.lib.__name__ + ".quantile(u, q, axis=dim, keepdims=keepdim, out=out, method=interpolation)"
             self.frombuffer.__doc__ = "return " + self.lib.__name__ + ".frombuffer(buffer, dtype=" + self.lib.__name__ + ".dtype(dtype), count=count, offset=offset)"
+            self.svd.__doc__ = "return " + self.lib.__name__ + ".linalg.svd(A, full_matrices=full_matrices)"
             
             # deal with FFT support
             self.rfft = lambda u, n=None, dim=-1, norm=None : self.lib.fft.rfft(u, n=n, axis=dim, norm=norm)
@@ -726,9 +748,13 @@ class Backend:
             self.transpose = lambda x : x.moveaxis((0,1),(1,0))
             self.copy = lambda x : self.lib.clone(x).detach()
             self.maximum = lambda x1, x2 : self.lib.maximum(lib.as_tensor(x1), lib.as_tensor(x2))
+            self.minimum = lambda x1, x2 : self.lib.minimum(lib.as_tensor(x1), lib.as_tensor(x2))
             self.stack = lambda arrays, dim=0, out=None : self.lib.stack(arrays, dim=dim, out=out)
+            self.unstack = lambda arr, dim=0 : self.lib.unbind(arr, dim=dim)
             self.quantile = lambda u, q, dim=None, keepdim=False, out=None, interpolation='linear' : self.lib.quantile(u, q, dim=dim, keepdim=keepdim, out=out, interpolation=interpolation)
             self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : self.lib.frombuffer(buffer, dtype=self.str_to_lib_dtypes[dtype], count=count, offset=offset)
+            self.svd = lambda A, full_matrices=True : self.lib.linalg.svd(A, full_matrices=full_matrices)
+            self.concatenate = lambda arrlist, dim=0, out=None : self.lib.concatenate(arrlist, dim=dim, out=out)
             
             # remap some other lib-dependent methods using direct
             # mappings
@@ -796,7 +822,9 @@ class Backend:
             self.transpose.__doc__ = "return x.moveaxis((0,1),(1,0))"
             self.copy.__doc__ = "return "+ self.lib.__name__ + ".clone(x).detach()"
             self.maximum.__doc__ = "return "+ self.lib.__name__ + ".maximum(" + self.lib.__name__ + ".as_tensor(x1), " + self.lib.__name__ + ".as_tensor(x2))"
+            self.minimum.__doc__ = "return "+ self.lib.__name__ + ".minimum(" + self.lib.__name__ + ".as_tensor(x1), " + self.lib.__name__ + ".as_tensor(x2))"
             self.stack.__doc__ = "return " + self.lib.__name__ + ".stack(arrays, dim=dim, out=out)"
+            self.unstack.__doc__ = "return " + self.lib.__name__ + ".unbind(arr, dim=dim)"
             self.erfc.__doc__ = "return torch.erfc(x, out=out)"
             self.is_complex.__doc__ = "return x.is_complex()"
             self.to_numpy.__doc__ = "return x.detach().cpu().numpy()"
@@ -813,6 +841,8 @@ class Backend:
                 "where `self` denotes the backends.Backend class instance from wich this lambda\n"
                 "function belongs to."
             )
+            self.svd.__doc__ = "return " + self.lib.__name__ + ".linalg.svd(A, full_matrices=full_matrices)"
+            self.concatenate.__doc__ = "return " + self.lib.__name__ + ".concatenate(arrlist, dim=dim, out=out)"
             
             # nufft support (use finufft for CPU device and cufinufft
             # for GPU device)
