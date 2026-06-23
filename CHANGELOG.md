@@ -6,8 +6,12 @@
 
 ### Code
 
+- added support for several functions (minimum, svd, movedim,
+  concatenate, unstack) in [backends.py](src/pyepri/backends.py)
+  ([#33](../../pull/33))
+  
 - allow source images to be passed as array-like objects in
-  [multisrc](src/pyepri/multisrc.py) ([#32](../../pull/32))
+  [multisrc.py](src/pyepri/multisrc.py) ([#32](../../pull/32))
   
 - added autograd.numpy backend support in
   [backends.py](src/pyepri/backends.py) ([#31](../../pull/31))
