@@ -59,7 +59,7 @@ def grad1d(u, backend=None, notest=False):
     G = backend.zeros(u.shape, dtype=dtype)
     
     # fill output array    
-    G[:-1] = u[1::] - u[:-1]
+    G[:-1] = u[1:] - u[:-1]
     
     return G
 
@@ -108,14 +108,13 @@ def div1d(P, backend=None, notest=False):
     
     # retrieve dimensions & data type and allocate memory of the
     # output
-    K = len(P)
     dtype = backend.lib_to_str_dtypes[P.dtype]
     div = backend.zeros(P.shape, dtype=dtype)
     
     # fill output array
-    div[1:K-1] =  P[1:K-1] - P[0:K-2]
-    div[0]     =  P[0]
-    div[K-1]   = -P[K-2]
+    div[1:-1] =  P[1:-1] - P[:-2]
+    div[0]    =  P[0]
+    div[-1]   = -P[-2]
     
     return div
 
@@ -185,13 +184,13 @@ def compute_2d_gradient_masks(mask, backend=None, notest=False):
     # fill the output array (masks) with values that indicate whether    
     # or not the forward neighboring pixel (along the X, Y or Z axis)
     # falls inside the input mask    
-    M[0][:-1,   :] = mask[1::,   :]
-    M[1][  :, :-1] = mask[  :, 1::]
+    M[0, :-1,   :] = mask[ 1:,   :]
+    M[1,   :, :-1] = mask[  :,  1:]
     
     # restrict the mask components to pixels that fall inside the
     # input mask
-    M[0] *= mask 
-    M[1] *= mask 
+    M[0] *= mask
+    M[1] *= mask
     
     return M
 
@@ -249,8 +248,8 @@ def grad2d(u, masks=None, backend=None, notest=False):
     G = backend.zeros((2, *u.shape), dtype=dtype)
     
     # fill output array
-    G[0][:-1,   :] = u[1::,   :] - u[:-1,   :]
-    G[1][  :, :-1] = u[  :, 1::] - u[  :, :-1]
+    G[0, :-1,   :] = u[1:,  :] - u[:-1,   :]
+    G[1,   :, :-1] = u[ :, 1:] - u[  :, :-1]
     
     # deal with masks option
     if masks is not None:
@@ -288,7 +287,7 @@ def div2d(P, masks=None, backend=None, notest=False):
         Two dimensional array with shape ``(Ny, Nx)`` corresponding to
         the discrete divergence (or opposite adjoint of the ``grad2d``
         operator) of the input field vector array ``P``.
-
+    
     
     See also
     --------
@@ -315,14 +314,14 @@ def div2d(P, masks=None, backend=None, notest=False):
         div = backend.zeros((ny, nx), dtype=dtype)
         
         # process the first component of the input field (column axis)
-        div[1:ny-1, :] =  P[0][1:ny-1, :] - P[0][0:ny-2, :]
-        div[     0, :] =  P[0][     0, :]
-        div[  ny-1, :] = -P[0][  ny-2, :]
+        div[1:-1, :] =  P[0, 1:-1, :] - P[0, :-2, :]
+        div[   0, :] =  P[0,    0, :]
+        div[  -1, :] = -P[0,   -2, :]
         
         # process the second component of the input field (row axis)
-        div[:, 1:nx-1] += P[1][:, 1:nx-1] - P[1][:, 0:nx-2]
-        div[:,      0] += P[1][:,      0]
-        div[:,   nx-1] -= P[1][:,   nx-2]
+        div[:, 1:-1] += P[1, :, 1:-1] - P[1, :, :-2]
+        div[:,    0] += P[1, :,    0]
+        div[:,   -1] -= P[1, :,   -2]
     
     else:
         
@@ -397,15 +396,15 @@ def compute_3d_gradient_masks(mask, backend=None, notest=False):
     # fill the output array (masks) with values that indicate whether    
     # or not the forward neighboring pixel (along the X, Y or Z axis)
     # falls inside the input mask    
-    M[0][:-1,   :,   :] = mask[1::,   :,   :] 
-    M[1][  :, :-1,   :] = mask[  :, 1::,   :] 
-    M[2][  :,   :, :-1] = mask[  :,   :, 1::]
+    M[0, :-1,   :,   :] = mask[1:,   :,  :]
+    M[1,   :, :-1,   :] = mask[  :, 1:,  :]
+    M[2,   :,   :, :-1] = mask[  :,  :, 1:]
     
     # restrict the mask components to pixels that fall inside the
     # input mask
-    M[0] *= mask 
-    M[1] *= mask 
-    M[2] *= mask 
+    M[0] *= mask
+    M[1] *= mask
+    M[2] *= mask
     
     return M
 
@@ -463,9 +462,9 @@ def grad3d(u, masks=None, backend=None, notest=False):
     G = backend.zeros((3, *u.shape), dtype=dtype)
     
     # fill output array
-    G[0][:-1,   :,   :] = u[1::,   :,   :] - u[:-1,   :,   :]
-    G[1][  :, :-1,   :] = u[  :, 1::,   :] - u[  :, :-1,   :]
-    G[2][  :,   :, :-1] = u[  :,   :, 1::] - u[  :,   :, :-1]
+    G[0, :-1,   :,   :] = u[1:,   :,  :] - u[:-1,   :,   :]
+    G[1,  :, :-1,   :] = u[  :, 1:,  :] - u[  :, :-1,   :]
+    G[2,  :,   :, :-1] = u[  :,  :, 1:] - u[  :,   :, :-1]
     
     # deal with masks option
     if masks is not None:
@@ -526,24 +525,23 @@ def div3d(P, masks=None, backend=None, notest=False):
         
         # retrieve dimensions & data type and allocate memory of the
         # output
-        ny, nx, nz = P[0].shape
         dtype = backend.lib_to_str_dtypes[P.dtype]
-        div = backend.zeros((ny, nx, nz), dtype=dtype)
+        div = backend.zeros(P.shape[1:], dtype=dtype)
         
         # process the first component of the input field (column axis)
-        div[1:ny-1, :, :] =  P[0][1:ny-1, :, :] - P[0][0:ny-2, :, :]
-        div[     0, :, :] =  P[0][     0, :, :]
-        div[  ny-1, :, :] = -P[0][  ny-2, :, :]
+        div[1:-1, :, :] =  P[0, 1:-1, :, :] - P[0, :-2, :, :]
+        div[   0, :, :] =  P[0,    0, :, :]
+        div[  -1, :, :] = -P[0,   -2, :, :]
         
         # process the second component of the input field (row axis)
-        div[:, 1:nx-1, :] += P[1][:, 1:nx-1, :] - P[1][:, 0:nx-2, :]
-        div[:,      0, :] += P[1][:,      0, :]
-        div[:,   nx-1, :] -= P[1][:,   nx-2, :]
+        div[:, 1:-1, :] += P[1, :, 1:-1, :] - P[1, :, :-2, :]
+        div[:,    0, :] += P[1, :,    0, :]
+        div[:,   -1, :] -= P[1, :,   -2, :]
         
         # process the third component of the input field (depth axis)
-        div[:, :, 1:nz-1] += P[2][: , :, 1:nz-1] - P[2][:, :, 0:nz-2]
-        div[:, :,      0] += P[2][: , :,      0]
-        div[:, :,   nz-1] -= P[2][: , :,   nz-2]
+        div[:, :, 1:-1] += P[2, : , :, 1:-1] - P[2, :, :, :-2]
+        div[:, :,    0] += P[2, : , :,    0]
+        div[:, :,   -1] -= P[2, : , :,   -2]
     
     else: # compute discrete divergence of masks * P
         
