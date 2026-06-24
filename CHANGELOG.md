@@ -6,6 +6,9 @@
 
 ### Code
 
+- added positivity option to source separation algorithms
+  ([#35](../../pull/35))
+  
 - added 4D spectral-spatial gradient and divergence operators
   (including sliced variants) in [utils.py](src/pyepri/utils.py) along
   with corresponding unit tests in
@@ -28,6 +31,9 @@
   ([#30](../../pull/30))
   
 ### Documentation
+
+- added positivity option to source separation tutorials
+  ([#35](../../pull/35))
 
 - made the display persistent when the example codes are executed as
   scripts ([#30](../../pull/30))

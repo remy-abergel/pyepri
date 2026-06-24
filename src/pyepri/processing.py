@@ -352,11 +352,11 @@ def tv_monosrc(proj, B, fgrad, delta, h, lbda, out_shape,
     return out['u']
 
 def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
-                backend=None, init=None, tol=1e-5, nitermax=1000000,
-                eval_energy=False, disable_toeplitz_kernel=False,
-                verbose=False, video=False, Ndisplay=20,
-                displayer=None, eps=1e-6, lipschitz_const="auto",
-                notest=False):
+                backend=None, init=None, positivity=False, tol=1e-5,
+                nitermax=1000000, eval_energy=False,
+                disable_toeplitz_kernel=False, verbose=False,
+                video=False, Ndisplay=20, displayer=None, eps=1e-6,
+                lipschitz_const="auto", notest=False):
     r"""EPR source separation using TV-regularized least-squares.
     
     This function implements the multi-sources EPR image
@@ -453,6 +453,10 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
         
         When backend is None, a default backend is inferred from the
         input arrays ``(proj, B, fgrad)``.
+    
+    positivity : bool, optional
+        Use ``positivity=True`` to impose a positivity constraint for
+        all reconstructed source images.
     
     init : sequence of array_like (with type `backend.cls`)
         A sequence of length L used as initializer for the numerical
@@ -582,7 +586,8 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
                        verbose=verbose, video=video,
                        displayer=displayer, eps=eps,
                        Ndisplay=Ndisplay,
-                       lipschitz_const=lipschitz_const)
+                       lipschitz_const=lipschitz_const,
+                       positivity=positivity)
     
     # retrieve number of dimensions (2D/3D)
     ndim = fgrad[0].shape[0]
@@ -670,6 +675,9 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
         evalE = None
     if init is None:
         init = [im / (delta**ndim * im.sum()) for im in v]
+        if positivity:
+            for j in range(len(init)):
+                init[j] = backend.maximum(init[j], 0)
     
     # compute a Lipschitz constant (Lf) of gradf
     if lipschitz_const == "upper-bound":
@@ -702,9 +710,9 @@ def tv_multisrc(proj, B, fgrad, delta, h, lbda, out_shape,
     # run generic TV solver
     solver = optimization.tvsolver_cp2016_multisrc
     out = solver(init, gradf, Lf, lbda_unrm, grad, div, Lgrad,
-                 backend=backend, tol=tol, nitermax=nitermax,
-                 evalE=evalE, verbose=verbose, video=video,
-                 Ndisplay=Ndisplay, displayer=displayer)
+                 backend=backend, positivity=positivity, tol=tol,
+                 nitermax=nitermax, evalE=evalE, verbose=verbose,
+                 video=video, Ndisplay=Ndisplay, displayer=displayer)
     
     return out['u']
 

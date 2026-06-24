@@ -181,6 +181,8 @@ video = True # enable video display
 Ndisplay = 20 # refresh display rate (iteration per refresh)
 eval_energy = False # disable TV-regularized least-square energy
                     # evaluation each Ndisplay iteration
+positivity = False # select whether positivity constraints should be
+                   # applied to the reconstructed source images.
 
 # ---------------------------------------------------------- #
 # Customize 2D multi-sources image displayer (optional, used #
@@ -220,7 +222,7 @@ displayer = displayers.create_2d_displayer(nsrc=2, units=unit,
 # --------------------------------------------------------------------- #
 out = processing.tv_multisrc(proj, B, fgrad, delta, h, lbda,
                              out_shape, backend=backend, tol=1e-5,
-                             nitermax=nitermax,
+                             nitermax=nitermax, positivity=positivity,
                              eval_energy=eval_energy, video=video,
                              verbose=verbose, Ndisplay=Ndisplay,
                              displayer=displayer)	   
