@@ -7,7 +7,9 @@
 ### Code
 
 - added 4D spectral-spatial gradient and divergence operators
-  (including sliced operators) in [utils.py](src/pyepri/utils.py)
+  (including sliced operators) in [utils.py](src/pyepri/utils.py) and
+  corresponding unit tests in
+  [test_grad_and_div.py](tests/test_grad_and_div.py)
   ([#34](../../pull/34))
   
 - added support for several functions (minimum, svd, movedim,
