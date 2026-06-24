@@ -11,7 +11,7 @@ import pyepri.checks as checks
 # ------------------------- #
 
 def grad1d(u, backend=None, notest=False):
-    """Gradient (= forward finite differences) of a mono-dimensional array with Neumann boundary condition.
+    """Gradient (= forward finite differences with Neumann boundary condition) of a mono-dimensional array.
     
     Parameters
     ----------
@@ -59,7 +59,7 @@ def grad1d(u, backend=None, notest=False):
     G = backend.zeros(u.shape, dtype=dtype)
     
     # fill output array    
-    G[:-1] = u[1::] - u[:-1]
+    G[:-1] = u[1:] - u[:-1]
     
     return G
 
@@ -89,13 +89,13 @@ def div1d(P, backend=None, notest=False):
     div : array_like (with type `backend.cls`)
         Mono-dimensional array with same shape as ``u`` corresponding
         to the discrete divergence (or opposite adjoint of the
-        ``grad1d`` operator) of the input array ``P``.
+        :py:func:`grad1d` operator) of the input array ``P``.
     
     See also
     --------
     
     grad1d
-    
+
     """
     
     # backend inference (if necessary)
@@ -108,14 +108,13 @@ def div1d(P, backend=None, notest=False):
     
     # retrieve dimensions & data type and allocate memory of the
     # output
-    K = len(P)
     dtype = backend.lib_to_str_dtypes[P.dtype]
     div = backend.zeros(P.shape, dtype=dtype)
     
     # fill output array
-    div[1:K-1] =  P[1:K-1] - P[0:K-2]
-    div[0]     =  P[0]
-    div[K-1]   = -P[K-2]
+    div[1:-1] =  P[1:-1] - P[:-2]
+    div[0]    =  P[0]
+    div[-1]   = -P[-2]
     
     return div
 
@@ -185,18 +184,18 @@ def compute_2d_gradient_masks(mask, backend=None, notest=False):
     # fill the output array (masks) with values that indicate whether    
     # or not the forward neighboring pixel (along the X, Y or Z axis)
     # falls inside the input mask    
-    M[0][:-1,   :] = mask[1::,   :]
-    M[1][  :, :-1] = mask[  :, 1::]
+    M[0, :-1,   :] = mask[ 1:,   :]
+    M[1,   :, :-1] = mask[  :,  1:]
     
     # restrict the mask components to pixels that fall inside the
     # input mask
-    M[0] *= mask 
-    M[1] *= mask 
+    M[0] *= mask
+    M[1] *= mask
     
     return M
 
 def grad2d(u, masks=None, backend=None, notest=False):
-    """Gradient (= forward finite differences) of a 2-dimensional array with Neumann boundary condition.
+    """Gradient (= forward finite differences with Neumann boundary condition) of a 2-dimensional array.
     
     Parameters
     ----------
@@ -225,7 +224,7 @@ def grad2d(u, masks=None, backend=None, notest=False):
     G : array_like (with type `backend.cls`)
         Output array with shape ``(2,) + u.shape`` such that ``G[j]``
         correspond to the forward finite differences of ``u`` along
-        its `j-th` dimension (for ``j in range(1)``).
+        its `j-th` dimension (for ``j in range(2)``).
     
     
     See also
@@ -249,8 +248,8 @@ def grad2d(u, masks=None, backend=None, notest=False):
     G = backend.zeros((2, *u.shape), dtype=dtype)
     
     # fill output array
-    G[0][:-1,   :] = u[1::,   :] - u[:-1,   :]
-    G[1][  :, :-1] = u[  :, 1::] - u[  :, :-1]
+    G[0, :-1,   :] = u[1:,  :] - u[:-1,   :]
+    G[1,   :, :-1] = u[ :, 1:] - u[  :, :-1]
     
     # deal with masks option
     if masks is not None:
@@ -286,16 +285,17 @@ def div2d(P, masks=None, backend=None, notest=False):
     
     div : array_like (with type `backend.cls`)
         Two dimensional array with shape ``(Ny, Nx)`` corresponding to
-        the discrete divergence (or opposite adjoint of the ``grad2d``
-        operator) of the input field vector array ``P``.
-
+        the discrete divergence (or opposite adjoint of the
+        :py:func:`grad2d` operator) of the input field vector array
+        ``P``.
+    
     
     See also
     --------
     
     grad2d
     compute_2d_gradient_masks
-    
+
     """
     
     if masks is None:
@@ -315,14 +315,14 @@ def div2d(P, masks=None, backend=None, notest=False):
         div = backend.zeros((ny, nx), dtype=dtype)
         
         # process the first component of the input field (column axis)
-        div[1:ny-1, :] =  P[0][1:ny-1, :] - P[0][0:ny-2, :]
-        div[     0, :] =  P[0][     0, :]
-        div[  ny-1, :] = -P[0][  ny-2, :]
+        div[1:-1, :] =  P[0, 1:-1, :] - P[0, :-2, :]
+        div[   0, :] =  P[0,    0, :]
+        div[  -1, :] = -P[0,   -2, :]
         
         # process the second component of the input field (row axis)
-        div[:, 1:nx-1] += P[1][:, 1:nx-1] - P[1][:, 0:nx-2]
-        div[:,      0] += P[1][:,      0]
-        div[:,   nx-1] -= P[1][:,   nx-2]
+        div[:, 1:-1] += P[1, :, 1:-1] - P[1, :, :-2]
+        div[:,    0] += P[1, :,    0]
+        div[:,   -1] -= P[1, :,   -2]
     
     else:
         
@@ -397,20 +397,20 @@ def compute_3d_gradient_masks(mask, backend=None, notest=False):
     # fill the output array (masks) with values that indicate whether    
     # or not the forward neighboring pixel (along the X, Y or Z axis)
     # falls inside the input mask    
-    M[0][:-1,   :,   :] = mask[1::,   :,   :] 
-    M[1][  :, :-1,   :] = mask[  :, 1::,   :] 
-    M[2][  :,   :, :-1] = mask[  :,   :, 1::]
+    M[0, :-1,   :,   :] = mask[1:,   :,  :]
+    M[1,   :, :-1,   :] = mask[  :, 1:,  :]
+    M[2,   :,   :, :-1] = mask[  :,  :, 1:]
     
     # restrict the mask components to pixels that fall inside the
     # input mask
-    M[0] *= mask 
-    M[1] *= mask 
-    M[2] *= mask 
+    M[0] *= mask
+    M[1] *= mask
+    M[2] *= mask
     
     return M
 
 def grad3d(u, masks=None, backend=None, notest=False):
-    """Gradient (= forward finite differences) of a 3-dimensional array with Neumann boundary condition.
+    """Gradient (= forward finite differences with Neumann boundary condition) of a 3-dimensional array.
     
     Parameters
     ----------
@@ -463,9 +463,9 @@ def grad3d(u, masks=None, backend=None, notest=False):
     G = backend.zeros((3, *u.shape), dtype=dtype)
     
     # fill output array
-    G[0][:-1,   :,   :] = u[1::,   :,   :] - u[:-1,   :,   :]
-    G[1][  :, :-1,   :] = u[  :, 1::,   :] - u[  :, :-1,   :]
-    G[2][  :,   :, :-1] = u[  :,   :, 1::] - u[  :,   :, :-1]
+    G[0, :-1,   :,   :] = u[1:,   :,  :] - u[:-1,   :,   :]
+    G[1,   :, :-1,   :] = u[  :, 1:,  :] - u[  :, :-1,   :]
+    G[2,   :,   :, :-1] = u[  :,  :, 1:] - u[  :,   :, :-1]
     
     # deal with masks option
     if masks is not None:
@@ -503,15 +503,15 @@ def div3d(P, masks=None, backend=None, notest=False):
     div : array_like (with type `backend.cls`)
         Three dimensional array with shape ``(Ny, Nx, Nz)``
         corresponding to the discrete divergence (or opposite adjoint
-        of the ``grad3d`` operator) of the input field vector array
-        ``P``.
+        of the :py:func:`grad3d` operator) of the input field vector
+        array ``P``.
     
     See also
     --------
     
     grad3d
     compute_3d_gradient_masks
-    
+
     """
     
     if masks is None: # compute discrete divergence of P
@@ -526,28 +526,728 @@ def div3d(P, masks=None, backend=None, notest=False):
         
         # retrieve dimensions & data type and allocate memory of the
         # output
-        ny, nx, nz = P[0].shape
         dtype = backend.lib_to_str_dtypes[P.dtype]
-        div = backend.zeros((ny, nx, nz), dtype=dtype)
+        div = backend.zeros(P.shape[1:], dtype=dtype)
         
         # process the first component of the input field (column axis)
-        div[1:ny-1, :, :] =  P[0][1:ny-1, :, :] - P[0][0:ny-2, :, :]
-        div[     0, :, :] =  P[0][     0, :, :]
-        div[  ny-1, :, :] = -P[0][  ny-2, :, :]
+        div[1:-1, :, :] =  P[0, 1:-1, :, :] - P[0, :-2, :, :]
+        div[   0, :, :] =  P[0,    0, :, :]
+        div[  -1, :, :] = -P[0,   -2, :, :]
         
         # process the second component of the input field (row axis)
-        div[:, 1:nx-1, :] += P[1][:, 1:nx-1, :] - P[1][:, 0:nx-2, :]
-        div[:,      0, :] += P[1][:,      0, :]
-        div[:,   nx-1, :] -= P[1][:,   nx-2, :]
+        div[:, 1:-1, :] += P[1, :, 1:-1, :] - P[1, :, :-2, :]
+        div[:,    0, :] += P[1, :,    0, :]
+        div[:,   -1, :] -= P[1, :,   -2, :]
         
         # process the third component of the input field (depth axis)
-        div[:, :, 1:nz-1] += P[2][: , :, 1:nz-1] - P[2][:, :, 0:nz-2]
-        div[:, :,      0] += P[2][: , :,      0]
-        div[:, :,   nz-1] -= P[2][: , :,   nz-2]
+        div[:, :, 1:-1] += P[2, : , :, 1:-1] - P[2, :, :, :-2]
+        div[:, :,    0] += P[2, : , :,    0]
+        div[:, :,   -1] -= P[2, : , :,   -2]
     
     else: # compute discrete divergence of masks * P
         
         div = div3d(P * masks, masks=None, backend=backend, notest=notest)
+    
+    # return output divergence
+    return div
+
+# ------------------------------- #
+# 4D Spectral-spatial operators   #
+#                                 #
+# - spatial = dimension 0         #
+# - spectral = dimensions 1, 2, 3 #
+# ------------------------------- #
+
+def grad4d0(u, backend=None, notest=False):
+    """Gradient (= forward finite differences with Neumann boundary condition) of a 4-dimensional array along its dimension 0.
+    
+    Parameters
+    ----------
+    
+    u : array_like (with type `backend.cls`)
+        Four-dimensional array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``u``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    G : array_like (with type `backend.cls`)    
+        Output array with same shape as ``u`` corresponding to the
+        forward finite differences of ``u`` along its dimension 0.
+    
+    
+    See also
+    --------
+    
+    div4d0
+    
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(u=u)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, u=u)
+    
+    # retrieve data type and allocate memory for the output
+    dtype = backend.lib_to_str_dtypes[u.dtype]
+    G = backend.zeros(u.shape, dtype=dtype)
+    
+    # fill output array
+    G[:-1, :, :, :] = u[1:, :, :, :] - u[:-1, :, :, :]
+    
+    return G
+
+
+def div4d0(G, backend=None, notest=False):
+    """Opposite adjoint of grad4d0.
+    
+    Parameters
+    ----------
+    
+    G : array_like (with type `backend.cls`)
+        Four-dimensional array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``G``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    div : array_like (with type `backend.cls`)
+        Four dimensional array with same shape as ``u`` corresponding
+        to the opposite adjoint of the :py:func:`grad4d0` operator
+        applied to the input field vector array ``G``.
+    
+    See also
+    --------
+    
+    grad4d0
+
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(G=G)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, G=G)
+    
+    # retrieve dimensions & data type and allocate memory of the
+    # output
+    dtype = backend.lib_to_str_dtypes[G.dtype]
+    div = backend.zeros(G.shape, dtype=dtype)
+    
+    # compute output divergence
+    div[1:-1, :, :, :] =  G[1:-1, :, :, :] - G[:-2, :, :, :]
+    div[   0, :, :, :] =  G[   0, :, :, :]
+    div[  -1, :, :, :] = -G[  -2, :, :, :]
+    
+    # return output divergence
+    return div
+
+
+def grad4d1(u, backend=None, notest=False):
+    """Gradient (= forward finite differences with Neumann boundary condition) of a 4-dimensional array along its dimension 1.
+    
+    Parameters
+    ----------
+    
+    u : array_like (with type `backend.cls`)
+        Four-dimensional array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``u``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    G : array_like (with type `backend.cls`)
+        Output array with same shape as ``u`` corresponding to the
+        forward finite differences of ``u`` along its dimension 1.
+    
+    
+    See also
+    --------
+    
+    div4d1
+    
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(u=u)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, u=u)
+    
+    # retrieve data type and allocate memory for the output
+    dtype = backend.lib_to_str_dtypes[u.dtype]
+    G = backend.zeros(u.shape, dtype=dtype)
+    
+    # fill output array
+    G[:, :-1, :, :] = u[:, 1:, :, :] - u[:, :-1, :, :]
+    
+    return G
+
+
+def div4d1(G, backend=None, notest=False):
+    """Opposite adjoint of grad4d1.
+    
+    Parameters
+    ----------
+    
+    G : array_like (with type `backend.cls`)
+        Four-dimensional array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``G``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    div : array_like (with type `backend.cls`)
+        Four dimensional array with same shape as ``u`` corresponding
+        to the opposite adjoint of the :py:func:`grad4d1` operator
+        applied to the input field vector array ``G``.
+    
+    See also
+    --------
+    
+    grad4d1
+
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(G=G)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, G=G)
+    
+    # retrieve dimensions & data type and allocate memory of the
+    # output
+    dtype = backend.lib_to_str_dtypes[G.dtype]
+    div = backend.zeros(G.shape, dtype=dtype)
+    
+    # compute output divergence
+    div[:, 1:-1, :, :] =  G[:, 1:-1, :, :] - G[:, :-2, :, :]
+    div[:,    0, :, :] =  G[:,    0, :, :]
+    div[:,   -1, :, :] = -G[:,   -2, :, :]
+    
+    # return output divergence
+    return div
+
+
+def grad4d2(u, backend=None, notest=False):
+    """Gradient (= forward finite differences with Neumann boundary condition) of a 4-dimensional array along its dimension 2.
+    
+    Parameters
+    ----------
+    
+    u : array_like (with type `backend.cls`)
+        Four-dimensional array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``u``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    G : array_like (with type `backend.cls`)
+        Output array with same shape as ``u`` corresponding to the
+        forward finite differences of ``u`` along its dimension 2.
+    
+    
+    See also
+    --------
+    
+    div4d2
+    
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(u=u)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, u=u)
+    
+    # retrieve data type and allocate memory for the output
+    dtype = backend.lib_to_str_dtypes[u.dtype]
+    G = backend.zeros(u.shape, dtype=dtype)
+    
+    # fill output array
+    G[:, :, :-1, :] = u[:, :, 1:, :] - u[:, :, :-1, :]
+    
+    return G
+
+
+def div4d2(G, backend=None, notest=False):
+    """Opposite adjoint of grad4d2.
+    
+    Parameters
+    ----------
+    
+    G : array_like (with type `backend.cls`)
+        Four-dimensional array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``G``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    div : array_like (with type `backend.cls`)
+        Four dimensional array with same shape as ``u`` corresponding
+        to the opposite adjoint of the :py:func:`grad4d2` operator
+        applied to the input field vector array ``G``.
+    
+    See also
+    --------
+    
+    grad4d2
+
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(G=G)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, G=G)
+    
+    # retrieve dimensions & data type and allocate memory of the
+    # output
+    dtype = backend.lib_to_str_dtypes[G.dtype]
+    div = backend.zeros(G.shape, dtype=dtype)
+    
+    # compute output divergence
+    div[:, :, 1:-1, :] =  G[:, :, 1:-1, :] - G[:, :, :-2, :]
+    div[:, :,    0, :] =  G[:, :,    0, :]
+    div[:, :,   -1, :] = -G[:, :,   -2, :]
+    
+    # return output divergence
+    return div
+
+
+def grad4d3(u, backend=None, notest=False):
+    """Gradient (= forward finite differences with Neumann boundary condition) of a 4-dimensional array along its dimension 3.
+    
+    Parameters
+    ----------
+    
+    u : array_like (with type `backend.cls`)
+        Four-dimensional array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``u``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    G : array_like (with type `backend.cls`)
+        Output array with same shape as ``u`` corresponding to the
+        forward finite differences of ``u`` along its dimension 3.
+    
+    
+    See also
+    --------
+    
+    div4d3
+    
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(u=u)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, u=u)
+    
+    # retrieve data type and allocate memory for the output
+    dtype = backend.lib_to_str_dtypes[u.dtype]
+    G = backend.zeros(u.shape, dtype=dtype)
+    
+    # fill output array
+    G[:, :, :, :-1] = u[:, :, :, 1:] - u[:, :, :, :-1]
+    
+    return G
+
+
+def div4d3(G, backend=None, notest=False):
+    """Opposite adjoint of grad4d3.
+    
+    Parameters
+    ----------
+    
+    G : array_like (with type `backend.cls`)
+        Four-dimensional array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``G``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    div : array_like (with type `backend.cls`)
+        Four dimensional array with same shape as ``u`` corresponding
+        to the opposite adjoint of the :py:func:`grad4d3` operator
+        applied to the input field vector array ``G``.
+    
+    See also
+    --------
+    
+    grad4d3
+
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(G=G)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, G=G)
+    
+    # retrieve dimensions & data type and allocate memory of the
+    # output
+    dtype = backend.lib_to_str_dtypes[G.dtype]
+    div = backend.zeros(G.shape, dtype=dtype)
+    
+    # compute output divergence
+    div[:, :, :, 1:-1] =  G[:, :, :, 1:-1] - G[:, :, :, :-2]
+    div[:, :, :,    0] =  G[:, :, :,    0]
+    div[:, :, :,   -1] = -G[:, :, :,   -2]
+    
+    # return output divergence
+    return div
+
+
+def grad4d123(u, backend=None, notest=False):
+    """Gradient (= forward finite differences with Neumann boundary condition) of a 4-dimensional array along its dimensions 1, 2, and 3.
+    
+    Parameters
+    ----------
+    
+    u : array_like (with type `backend.cls`)
+        Four-dimensional array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``u``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    G : array_like (with type `backend.cls`)
+        Output array with shape ``(3,) + u.shape`` such that ``G[j]``
+        correspond to the forward finite differences of ``u`` along
+        its ``j+1``-th dimension (for ``j in range(3)``).
+    
+    
+    See also
+    --------
+    
+    div4d123
+    
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(u=u)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, u=u)
+    
+    # retrieve data type and allocate memory for the output
+    dtype = backend.lib_to_str_dtypes[u.dtype]
+    G = backend.zeros((3, *u.shape), dtype=dtype)
+    
+    # fill output array
+    G[0, :, :-1,   :,   :] = u[:, 1:,  :,  :] - u[:, :-1,   :,   :]
+    G[1, :,   :, :-1,   :] = u[:,  :, 1:,  :] - u[:,   :, :-1,   :]
+    G[2, :,   :,   :, :-1] = u[:,  :,  :, 1:] - u[:,   :,   :, :-1]
+    
+    return G
+
+
+def div4d123(G, backend=None, notest=False):
+    """Opposite adjoint of grad4d123.
+    
+    Parameters
+    ----------
+    
+    G : array_like (with type `backend.cls`)
+        Five-dimensional array with shape ``(3, Nb, Ny, Nx, Nz)``.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``G``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    div : array_like (with type `backend.cls`)
+        Four dimensional array with shape ``(Nb, Ny, Nx, Nz)``
+        corresponding to the discrete divergence (or opposite adjoint
+        of the :py:func:`grad4d123` operator) of the input field vector
+        array ``G``.
+    
+    See also
+    --------
+    
+    grad4d123
+    
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(G=G)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(5, backend, G=G)
+    
+    # retrieve dimensions & data type and allocate memory of the
+    # output
+    dtype = backend.lib_to_str_dtypes[G.dtype]
+    div = backend.zeros(G.shape[1:], dtype=dtype)
+    
+    # process input field vector along dimension 1
+    div[:, 1:-1, :, :] =  G[0, :, 1:-1, :, :] - G[0, :, :-2, :, :]
+    div[:,    0, :, :] =  G[0, :,    0, :, :]
+    div[:,   -1, :, :] = -G[0, :,   -2, :, :]
+    
+    # process input field vector along dimension 2
+    div[:, :, 1:-1, :] += G[1, :, :, 1:-1, :] - G[1, :, :, :-2, :]
+    div[:, :,    0, :] += G[1, :, :,    0, :]
+    div[:, :,   -1, :] -= G[1, :, :,   -2, :]
+        
+    # process input field vector along dimension 3
+    div[:, :, :, 1:-1] += G[2, : , :, :, 1:-1] - G[2, :, :, :, :-2]
+    div[:, :, :,    0] += G[2, : , :, :,    0]
+    div[:, :, :,   -1] -= G[2, : , :, :,   -2]
+        
+    # return output divergence
+    return div
+
+
+def grad4d(u, weights=None, backend=None, notest=False):
+    """Gradient (= forward finite differences with Neumann boundary condition) of a 4-dimensional array.
+    
+    Parameters
+    ----------
+    
+    u : array_like (with type `backend.cls`)
+        Four-dimensional array.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``u``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    G : array_like (with type `backend.cls`)
+        Output array with shape ``(4, *u.shape)`` such that ``G[j]``
+        correspond to the forward finite differences of ``u`` along
+        its `j-th` dimension (for ``j in range(4)``).
+    
+    
+    See also
+    --------
+    
+    div4d
+    
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(u=u)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, u=u)
+    
+    # retrieve data type and allocate memory for the output
+    dtype = backend.lib_to_str_dtypes[u.dtype]
+    G = backend.zeros((4, *u.shape), dtype=dtype)
+    
+    # fill output array
+    G[0, :-1,   :,   :,   :] = u[1:,  :,  :,  :] - u[:-1,   :,   :,   :]
+    G[1,  :,  :-1,   :,   :] = u[ :, 1:,  :,  :] - u[  :, :-1,   :,   :]
+    G[2,  :,    :, :-1,   :] = u[ :,  :, 1:,  :] - u[  :,   :, :-1,   :]
+    G[3,  :,    :,   :, :-1] = u[ :,  :,  :, 1:] - u[  :,   :,   :, :-1]
+    
+    return G
+
+
+def div4d(P, masks=None, backend=None, notest=False):
+    """Discrete divergence of a 4D field vector (opposite adjoint of grad4d).
+    
+    Parameters
+    ----------
+    
+    P : array_like (with type `backend.cls`)
+        Four-dimensional vector field array with shape ``(4, Nb, Ny,
+        Nx, Nz)``.
+    
+    backend : <class 'pyepri.backends.Backend'> or None, optional
+        A numpy, cupy or torch backend (see :py:mod:`pyepri.backends`
+        module).
+        
+        When backend is None, a default backend is inferred from the
+        input array ``P``.
+    
+    notest : bool, optional
+        Set ``notest=True`` to disable consistency checks.
+    
+    
+    Return
+    ------
+    
+    div : array_like (with type `backend.cls`)
+        Four dimensional array with shape ``(Nb, Ny, Nx, Nz)``
+        corresponding to the discrete divergence (or opposite adjoint
+        of the :py:func:`grad4d` operator) of the input field vector
+        array ``P``.
+    
+    See also
+    --------
+    
+    grad4d
+    
+    """
+    
+    # backend inference (if necessary)
+    if backend is None:
+        backend = checks._backend_inference_(P=P)
+    
+    # consistency checks
+    if not notest:
+        _check_nd_inputs_(4, backend, P=P)
+    
+    # retrieve dimensions & data type and allocate memory of the
+    # output
+    dtype = backend.lib_to_str_dtypes[P.dtype]
+    div = backend.zeros(P.shape[1:], dtype=dtype)
+    
+    # process the first component of the input field (spectral B axis)
+    div[1:-1, :, :, :] =  P[0, 1:-1, :, :, :] - P[0, :-2, :, :, :]
+    div[   0, :, :, :] =  P[0,    0, :, :, :]
+    div[  -1, :, :, :] = -P[0,   -2, :, :, :]
+    
+    # process the second component of the input field (spatial Y axis)
+    div[:, 1:-1, :, :] += P[1, :, 1:-1, :, :] - P[1, :, :-2, :, :]
+    div[:,    0, :, :] += P[1, :,    0, :, :]
+    div[:,   -1, :, :] -= P[1, :,   -2, :, :]
+    
+    # process the third component of the input field (spatial X axis)
+    div[:, :, 1:-1, :] += P[2, : , :, 1:-1, :] - P[2, :, :, :-2, :]
+    div[:, :,    0, :] += P[2, : , :,    0, :]
+    div[:, :,   -1, :] -= P[2, : , :,   -2, :]
+    
+    # process the fourth component of the input field (spatial Z axis)
+    div[:, :, :, 1:-1] += P[3, : , :, :, 1:-1] - P[3, :, :, :, :-2]
+    div[:, :, :,    0] += P[3, : , :, :,    0]
+    div[:, :, :,   -1] -= P[3, : , :, :,   -2]
     
     # return output divergence
     return div
@@ -791,14 +1491,14 @@ def _relerr_(u, v, backend=None, nrm=None, notest=False):
 # Internal consistency checks #
 # --------------------------- #
 
-def _check_nd_inputs_(ndims, backend, u=None, P=None, mask=None, masks=None):
+def _check_nd_inputs_(ndims, backend, u=None, P=None, G=None, mask=None, masks=None):
     """Factorized consistency checks for functions in the :py:mod:`pyepri.utils` submodule."""
     
     # check backend consistency 
     checks._check_backend_(backend, u=u, P=P, mask=mask, masks=masks)
     
     # check number of dimensions
-    checks._check_ndim_(ndims, u=u, mask=mask)
+    checks._check_ndim_(ndims, u=u, G=G, mask=mask)
     checks._check_ndim_(ndims if ndims == 1 else ndims + 1, P=P, masks=masks)
     
     # other checks
