@@ -148,6 +148,8 @@ video = True # enable video display
 Ndisplay = 10 # refresh display rate (iteration per refresh)
 eval_energy = False # disable TV-regularized least-square energy
                     # evaluation each Ndisplay iteration
+positivity = False # select whether positivity constraints should be
+                   # applied to the reconstructed source images.
 
 # ---------------------------------------------------------- #
 # Customize 3D multi-sources image displayer (optional, used #
@@ -186,7 +188,7 @@ displayer = displayers.create_3d_displayer(nsrc=2,
 # --------------------------------------------------------------------- #
 out = processing.tv_multisrc(proj, B, fgrad, delta, h, lbda,
                              out_shape, backend=backend, tol=1e-5,
-                             nitermax=nitermax,
+                             nitermax=nitermax, positivity=positivity,
                              eval_energy=eval_energy, video=video,
                              verbose=verbose, Ndisplay=Ndisplay,
                              displayer=displayer)
@@ -204,6 +206,7 @@ plt.show() # to keep the display persistent when the code is executed as a scrip
 
 # additional import (pyvista)
 import pyvista as pv # tools for rendering 3D volumes
+from pyepri.utils import otsu_threshold # helpful to automatically select an isosurface
 
 # prepare isosurface display
 x_tam, y_tam, z_tam = np.meshgrid(xgrid_tam, ygrid_tam, zgrid_tam, indexing='xy')
@@ -214,10 +217,8 @@ grid_tempo = pv.StructuredGrid(x_tempo, y_tempo, z_tempo)
 # compute TAM isosurface
 vol = np.moveaxis(backend.to_numpy(out[0]), (0,1,2), (2,1,0))
 grid_tam["vol"] = vol.flatten()
-l1 = vol.max()
-l0 = .5 * l1
-isolevels = np.linspace(l0, l1, 10)
-contours_tam = grid_tam.contour(isolevels)
+isoval_tam = otsu_threshold(vol)
+contours_tam = grid_tam.contour([isoval_tam])
 
 # compute TEMPO isosurface (mask half of the reconstructed volume so
 # that we can see inside)
@@ -225,9 +226,8 @@ mask = (x_tempo > -.3).astype(dtype)
 vol_left = backend.to_numpy(out[1]) * mask
 vol_left = np.moveaxis(vol_left, (0,1,2), (2,1,0))
 grid_tempo["vol"] = vol_left.flatten()
-l0 = 0.11 * l1
-isolevels = np.linspace(l0, l1, 10)
-contours_tempo = grid_tempo.contour(isolevels)
+isoval_tempo = otsu_threshold(vol_left)
+contours_tempo = grid_tempo.contour([isoval_tempo])
 
 # display isosurfaces (green = TAM, red = TEMPO)
 p = pv.Plotter()
