@@ -672,7 +672,8 @@ def tvsolver_cp2016(init, gradf, Lf, lbda, grad, div, Lgrad,
 
 def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
                              backend=None, tol=1e-7, nitermax=1000000,
-                             evalE=None, verbose=False, video=False,
+                             positivity=False, evalE=None,
+                             verbose=False, video=False,
                              displayer=None, Ndisplay=1, notest=False):
     r"""Generic solver for inverse problems similar to :py:func:`tvsolver_cp2016` but with primal variable defined as a sequence of subvariables. 
     
@@ -736,6 +737,10 @@ def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
     nitermax : int, optional
         Maximal number of iterations for the numerical optimization
         scheme.
+    
+    positivity : bool, optional
+        Use ``positivity=True`` to impose a positivity constraint for
+        ``u`` in the TV-regularized inverse problem defined above.
     
     evalE : <class 'function'>
         A function with prototype ``e = evalE(u)`` that takes as input
@@ -879,6 +884,8 @@ def tvsolver_cp2016_multisrc(init, gradf, Lf, lbda, grad, div, Lgrad,
             # update u[j] and ubar[j] from p[j]
             ubar[j] = -u[j]
             u[j] += tau * (lbda * div(p[j]) - gfu[j])
+            if positivity:
+                u[j] = backend.maximum(u[j], 0)
             ubar[j] += 2. * u[j]
             
             # compute relative error between u[j]^{iter+1} and
