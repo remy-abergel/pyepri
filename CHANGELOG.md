@@ -6,6 +6,10 @@
 
 ### Code
 
+- added 4D spectral-spatial gradient and divergence operators
+  (including sliced operators) in [utils.py](src/pyepri/utils.py)
+  ([#34](../../pull/34))
+  
 - added support for several functions (minimum, svd, movedim,
   concatenate, unstack) in [backends.py](src/pyepri/backends.py)
   ([#33](../../pull/33))
