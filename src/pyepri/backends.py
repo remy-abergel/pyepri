@@ -603,6 +603,10 @@ class Backend:
             self.quantile = lambda u, q, dim=None, keepdim=False, out=None, interpolation='linear' : self.lib.quantile(u, q, axis=dim, keepdims=keepdim, out=out, method=interpolation)
             self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : self.lib.frombuffer(buffer, dtype=dtype, count=count, offset=offset)
             self.svd = lambda A, full_matrices=True : self.lib.linalg.svd(A, full_matrices=full_matrices)
+            self.from_scalar = lambda scal, dtype=None: self.lib.array(scal, dtype=self.str_to_lib_dtypes[dtype])
+            self.from_seq = lambda seq, dtype=None: self.lib.array(seq, dtype=self.str_to_lib_dtypes[dtype])
+            self.argmin = lambda arr, dim=None: self.lib.argmin(arr, axis=dim)
+            self.argmax = lambda arr, dim=None: self.lib.argmax(arr, axis=dim)
             
             if self.lib.__name__ in ('numpy', 'autograd.numpy'):
                 self.to_numpy = lambda x : x
@@ -610,14 +614,14 @@ class Backend:
             else :
                 self.to_numpy = lambda x : self.lib.asnumpy(x)
                 self.from_numpy = lambda x : self.lib.asarray(x)
-
+            
             if self.lib.__name__ == 'cupy':
                 self.unstack = lambda arr, dim=0 : tuple(self.lib.moveaxis(arr, dim, 0))
                 self.unstack.__doc__ = "return  tuple(" + self.lib.__name__ + ".moveaxis(arr, axis=dim, 0))"
             else:
                 self.unstack = lambda arr, dim=0 : self.lib.unstack(arr, axis=dim)
                 self.unstack.__doc__ = "return " + self.lib.__name__ + ".unstack(arr, axis=dim)"
-
+            
             if self.lib.__name__ == 'autograd.numpy':
                 self.concatenate = lambda arrlist, dim=0, out=None : self.lib.concatenate(arrlist, axis=dim)
                 self.concatenate.__doc__ = "return " + self.lib.__name__ + ".concatenate(arrlist, axis=dim)"
@@ -656,6 +660,10 @@ class Backend:
             self.quantile.__doc__ = "return " + self.lib.__name__ + ".quantile(u, q, axis=dim, keepdims=keepdim, out=out, method=interpolation)"
             self.frombuffer.__doc__ = "return " + self.lib.__name__ + ".frombuffer(buffer, dtype=" + self.lib.__name__ + ".dtype(dtype), count=count, offset=offset)"
             self.svd.__doc__ = "return " + self.lib.__name__ + ".linalg.svd(A, full_matrices=full_matrices)"
+            self.from_scalar.__doc__ = "return " + self.lib.__name__ + ".array(scal, dtype=" + lib.__name__ + ".dtype(dtype))"
+            self.from_seq.__doc__ = "return " + self.lib.__name__ + ".array(seq, dtype=" + lib.__name__ + ".dtype(dtype))"
+            self.argmin.__doc__ = "return " + self.lib.__name__ + ".argmin(arr, axis=dim)"
+            self.argmax.__doc__ = "return " + self.lib.__name__ + ".argmax(arr, axis=dim)"
             
             # deal with FFT support
             self.rfft = lambda u, n=None, dim=-1, norm=None : self.lib.fft.rfft(u, n=n, axis=dim, norm=norm)
@@ -755,6 +763,10 @@ class Backend:
             self.frombuffer = lambda buffer, dtype='float32', count=-1, offset=0 : self.lib.frombuffer(buffer, dtype=self.str_to_lib_dtypes[dtype], count=count, offset=offset)
             self.svd = lambda A, full_matrices=True : self.lib.linalg.svd(A, full_matrices=full_matrices)
             self.concatenate = lambda arrlist, dim=0, out=None : self.lib.concatenate(arrlist, dim=dim, out=out)
+            self.from_scalar = lambda scal, dtype=None: self.lib.tensor(scal, dtype=self.str_to_lib_dtypes[dtype], device=self.device)
+            self.from_seq = lambda seq, dtype=None: self.lib.tensor(seq, dtype=self.str_to_lib_dtypes[dtype], device=self.device)
+            self.argmin = lambda arr, dim=None: self.lib.argmin(arr, dim=dim)
+            self.argmax = lambda arr, dim=None: self.lib.argmax(arr, dim=dim)
             
             # remap some other lib-dependent methods using direct
             # mappings
@@ -843,6 +855,16 @@ class Backend:
             )
             self.svd.__doc__ = "return " + self.lib.__name__ + ".linalg.svd(A, full_matrices=full_matrices)"
             self.concatenate.__doc__ = "return " + self.lib.__name__ + ".concatenate(arrlist, dim=dim, out=out)"
+            self.from_scalar.__doc__ = (
+                "return self.lib.tensor(scal, dtype=self.str_to_lib_dtypes[dtype], device=self.device) where\n"
+                "`self` denotes the backends.Backend class instance from wich this lambda function belongs to."
+            )
+            self.from_seq.__doc__ = (
+                "return self.lib.tensor(seq, dtype=self.str_to_lib_dtypes[dtype], device=self.device) where\n"
+                "`self` denotes the backends.Backend class instance from wich this lambda function belongs to."
+            )
+            self.argmin.__doc__ = "return "+ self.lib.__name__ + ".argmin(arr, dim=dim)"
+            self.argmax.__doc__ = "return "+ self.lib.__name__ + ".argmax(arr, dim=dim)"
             
             # nufft support (use finufft for CPU device and cufinufft
             # for GPU device)
