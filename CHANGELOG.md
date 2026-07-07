@@ -18,8 +18,9 @@
   ([#34](../../pull/34))
   
 - added support for several functions (minimum, svd, movedim,
-  concatenate, unstack) in [backends.py](src/pyepri/backends.py)
-  ([#33](../../pull/33))
+  concatenate, unstack, from_seq, from_scal, argmin, argmax) in
+  [backends.py](src/pyepri/backends.py) ([#33](../../pull/33),
+  [#36](../../pull/36))
   
 - allow source images to be passed as array-like objects in
   [multisrc.py](src/pyepri/multisrc.py) ([#32](../../pull/32))
