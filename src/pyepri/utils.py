@@ -1117,7 +1117,7 @@ def div4d123(G, backend=None, notest=False):
     div[:, :, :, 1:-1] += G[2, : , :, :, 1:-1] - G[2, :, :, :, :-2]
     div[:, :, :,    0] += G[2, : , :, :,    0]
     div[:, :, :,   -1] -= G[2, : , :, :,   -2]
-        
+    
     # return output divergence
     return div
 
